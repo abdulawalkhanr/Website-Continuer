@@ -1,0 +1,70 @@
+Here is a comprehensive, production-ready prompt designed for an AI code generator, Replicate, or an autonomous software agent to build the entire "CIR Consultation Service" fintech platform from scratch.
+# System Prompt for Replicate / Agent: Premium Fintech Platform Builder
+## Project Architecture & Core Objective
+Build a complete, enterprise-grade, mobile-responsive Fintech website and customer/admin management ecosystem for **CIR Consultation Service**. The final application must look and feel like a modern financial tech company (matching the UX, smooth animations, and layout authority of platforms like PaisaBazaar, Razorpay, or CRED).
+### 1. Technology Stack Requirements
+ * **Frontend:** Next.js (App Router), React, Tailwind CSS, Lucide React (Icons), Framer Motion (Animations), Tremor or Chart.js (Dashboard Analytics Charts).
+ * **Backend & DB:** PostgreSQL database layer interfacing through Prisma ORM.
+ * **Authentication:** JWT-based sessions, Google OAuth, and Mobile Number + OTP mockup flow.
+ * **Integrations:** Razorpay Payment Gateway integration (mock / webhook handler structure), Cloud Storage configuration hooks for document processing.
+ * **Security:** Role-Based Access Control (RBAC), Data Encryption structures for PII, and secure file validation logic.
+### 2. Design System & Branding Tokens
+Implement a **Premium Cotton Candy FinTech Theme** using glassmorphism, soft gradients, explicit drop shadows, and responsive rounded cards (rounded-2xl).
+ * **Primary Accent:** #A7D8FF (Soft Sky Blue)
+ * **Secondary Accent:** #FFD6E8 (Sweet Pink)
+ * **Accent Glow:** #DCC6FF (Pastel Purple)
+ * **Highlight Canvas:** #D8F5E5 (Success Light Green)
+ * **Background Surface:** #FDFDFD (Clean White)
+ * **Text Hierarchy:** #2C3E50 (Slate Navy)
+## Technical Specifications: Database Schema (Prisma)
+Generate a clean, scalable Prisma schema (schema.prisma) containing the following core entities:
+ * User: Fields for id, email, passwordHash, name, mobile, role (OWNER, MANAGER, EXECUTIVE, SUPPORT, CUSTOMER), createdAt.
+ * Lead: Fields for id, name, mobile, email, city, serviceRequired, stage (NEW, CONTACTED, SCHEDULED, CONVERTED, COMPLETED), source (HOMEPAGE, CONTACT, CHATBOT, REFERRAL), createdAt.
+ * Case: Fields for id (format: CIR-2026-XXXX), customerId, assignedToId, serviceType, currentStatus (DOCUMENTS_SUBMITTED, CASE_REVIEW, DOCUMENTATION_VERIFIED, DISPUTE_SUBMITTED, BUREAU_LENDER_REVIEW, FOLLOW_UP, COMPLETED), progressPercentage, expectedCompletionDate, notes, updatedAt.
+ * Document: Fields for id, caseId, name, type (PAN, AADHAAR, CREDIT_REPORT, NOC, CLOSURE_LETTER), fileUrl, status, verifiedAt.
+ * Payment: Fields for id, caseId, serviceFee, advancePaid, pendingAmount, paymentStatus (PAID, PARTIAL, PENDING), receiptUrl, agreementUrl.
+ * Referral: Fields for id, referrerId, refereeName, refereeMobile, rewardAmount, status (PENDING, APPROVED, PAID).
+## Module Breakdown & UI Engine
+### Module 1: Sticky Navigation & Global Shell
+ * **Header Architecture:** Dynamic backdrop blur (backdrop-blur-md bg-white/70). Left section features logo placeholder and corporate typography. Center section handles a multi-link navigation layout (Home, About Us, Services, Process, Pricing, Referral, Success Stories, Blog, FAQ, Contact). Right section exposes two high-visibility, CTA-styled buttons: **Customer Portal** and **Admin Panel**.
+ * **Global Layout:** Fixed-action utility tray containing persistent floating elements: Call Now (01169310902), WhatsApp Support (+91 9864920810), and a smart, sliding AI Chatbot interface.
+### Module 2: High-Conversion Marketing Architecture
+#### A. Homepage (Hero & Aggregator)
+ * **Hero Frame:** Split-screen or centered card cluster showing the headline: "Resolve Credit Issues With Confidence" with subheadline detailing core agency actions (Credit Report Rectification, Score Guidance, Dispute Assistance). Provide primary conversion CTAs: Get Free Consultation (opens lead capture module), WhatsApp Us, and Call Now.
+ * **Interactive Components:** Include an active Canvas/CSS-driven animated credit score gauge tracking smoothly from 300 to 850.
+ * **Target Segments Section ("Who We Help"):** 6-column grid featuring responsive data blocks for Salaried Employees, Business Owners, Self Employed, Loan Applicants, Credit Card Holders, and Individuals Facing Credit Issues.
+ * **Value Pillars ("Why Choose Us"):** Dynamic card matrix for Professional Service, Transparent Process, Dedicated Support, Confidential Handling, Regular Updates, and Customer-First Focus.
+#### B. Content & Trust Verticals
+ * **Services Matrix:** Detailed descriptive sections for CIBIL Rectification, Credit Report Correction, Score Improvement Guidance, Written Off / Settled / Closed Account Rectification, and Bank/NBFC Dispute Management.
+ * **Problem Resolution Matrix:** Interactive grid displaying the 9 major pain points solved (e.g., Wrong Loan Showing, Duplicate Accounts, Unknown Loan Entries, Personal Info Errors).
+ * **Process Roadmap:** Clear sequential steps layout: Share Report \rightarrow Evaluation \rightarrow Review \rightarrow Verification \rightarrow Dispute Submitted \rightarrow Follow Up \rightarrow Resolution.
+ * **Pricing Grid:** Tiered structure showing a Basic Review plan at ₹999, a Standard Consultation plan at ₹4,999, and a custom tier for Premium Assistance.
+ * **Referral Engine:** Page displaying headline "Refer. Help. Earn." showing rewards ranging from ₹1,000 to ₹3,000. Features a dynamic file upload interface accepting required items ([PAN Card Omitted], [Aadhaar Card Omitted], Bank Details, Photo) alongside an embedded submission tracking component.
+ * **FAQ System:** Accordion interface populated with 20 detailed entries resolving common questions about CIBIL timelines, dispute workflows, security parameters, and payment structures.
+### Module 3: Customer Portal & Lifecycle Hub
+ * **Auth Gate:** Secure dual-modality authentication interface (Mobile + OTP layout and Email + Password).
+ * **Client Dashboard Home:** High-visibility overview workspace rendering Client Identity details, unique Case Token (CIR-2026-XXXX), Assigned Management Representative, and an active progress bar linked to the case status.
+ * **Dynamic Pipeline Visualizer:** Horizontal or vertical milestone stepper mapping real-time operational execution from initial document validation through final verification stages.
+ * **Document Vault:** File interaction terminal handling storage assets. Display clean document line-items while securely handling sensitive payloads:
+   * [PAN Omitted] status check
+   * [Aadhaar Omitted] status check
+   * Credit Report, NOC, and Closure Documents
+ * **Financial Center:** Clear overview ledger reporting total agreement values, advance payments applied, remaining outstanding fees, and clean download endpoints for system-generated Receipts and Client Terms Agreements.
+### Module 4: Operations & Administration Console
+ * **Metrics Engine:** Top-level executive analytical row mapping key operational metrics: Total Client Volume, Open Operations, Completed Accounts, Inflow Revenue, Delinquent/Pending Receivables, and New Leads Ingested Today. Include real-time trend visualization graphs for monthly tracking.
+ * **Lead Control Desk:** Filterable interaction grid sorting incoming prospects across standard funnels (New Lead, Contacted, Scheduled, Converted, Completed).
+ * **Case Orchestration Suite:** Operational command desk allowing administrators to modify service types, shift pipeline indicators, reassign personnel, insert persistent internal log annotations, and issue secure digital documentation updates.
+ * **System Tools:** Include comprehensive workflow sub-tabs for managing referrals, tracking multi-channel communication logs (WhatsApp, Email, SMS alerts), and downloading custom analytical data (PDF/CSV/Excel formatting).
+## Built-In Technical Tooling
+### 1. Embedded AI Financial Chatbot Component
+Create a stateful conversational component (AIChatbot.tsx) that:
+ * Initiates a guided dialogue sequence to smoothly collect user info: Name, Mobile, Email, City, and Selected Issue Area.
+ * Executes an internal state dispatch to automatically send data to the /api/leads/create route upon completion.
+### 2. Loan Eligibility Calculator Component
+Create an interactive calculator component (LoanEligibilityCalculator.tsx) that computes a user's Debt-to-Income (DTI) ratio based on monthly income and existing EMIs. Use the following formula logic to determine and display estimated available borrowing room:
+## Verification & Execution Instructions
+ 1. Establish a modern, structured folder environment using the Next.js App Router paradigm.
+ 2. Initialize and configure the global CSS configuration using standard Tailwind utility frameworks.
+ 3. Construct all core core transactional backend endpoints within the app/api/ routing structure.
+ 4. Build all interface components with robust mobile-first scaling and clean viewport handling.
+ 5. Ensure all code outputs are fully written out, clean, and completely production-ready without using any incomplete placeholders. Run compilation checks and execute the code deployment process directly.

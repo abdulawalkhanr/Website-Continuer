@@ -1,22 +1,38 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CIR Consultation Service API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: leads
+    description: Lead management
+  - name: cases
+    description: Case management
+  - name: customers
+    description: Customer management
+  - name: documents
+    description: Document management
+  - name: payments
+    description: Payment management
+  - name: referrals
+    description: Referral management
+  - name: tickets
+    description: Support ticket management
+  - name: admin
+    description: Admin operations
+  - name: auth
+    description: Authentication
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +40,678 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # AUTH
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthorized
+
+  # LEADS
+  /leads:
+    get:
+      operationId: listLeads
+      tags: [leads]
+      summary: List all leads
+      parameters:
+        - in: query
+          name: stage
+          schema:
+            type: string
+            enum: [NEW, CONTACTED, SCHEDULED, CONVERTED, COMPLETED]
+        - in: query
+          name: source
+          schema:
+            type: string
+            enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL]
+      responses:
+        "200":
+          description: List of leads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lead"
+    post:
+      operationId: createLead
+      tags: [leads]
+      summary: Create a new lead
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadInput"
+      responses:
+        "201":
+          description: Lead created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /leads/{id}:
+    get:
+      operationId: getLead
+      tags: [leads]
+      summary: Get a lead by ID
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lead details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+    patch:
+      operationId: updateLead
+      tags: [leads]
+      summary: Update a lead
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LeadUpdate"
+      responses:
+        "200":
+          description: Lead updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lead"
+
+  /leads/stats:
+    get:
+      operationId: getLeadStats
+      tags: [leads]
+      summary: Get lead statistics
+      responses:
+        "200":
+          description: Lead stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeadStats"
+
+  # CUSTOMERS
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List customers
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Customer"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "201":
+          description: Customer created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  /customers/{id}:
+    get:
+      operationId: getCustomer
+      tags: [customers]
+      summary: Get a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+    patch:
+      operationId: updateCustomer
+      tags: [customers]
+      summary: Update a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerUpdate"
+      responses:
+        "200":
+          description: Customer updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+
+  # CASES
+  /cases:
+    get:
+      operationId: listCases
+      tags: [cases]
+      summary: List all cases
+      parameters:
+        - in: query
+          name: customerId
+          schema:
+            type: integer
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [DOCUMENTS_SUBMITTED, CASE_REVIEW, DOCUMENTATION_VERIFIED, DISPUTE_SUBMITTED, BUREAU_LENDER_REVIEW, FOLLOW_UP, COMPLETED]
+      responses:
+        "200":
+          description: List of cases
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Case"
+    post:
+      operationId: createCase
+      tags: [cases]
+      summary: Create a new case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseInput"
+      responses:
+        "201":
+          description: Case created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+
+  /cases/{id}:
+    get:
+      operationId: getCase
+      tags: [cases]
+      summary: Get case details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Case details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+    patch:
+      operationId: updateCase
+      tags: [cases]
+      summary: Update a case
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseUpdate"
+      responses:
+        "200":
+          description: Case updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+
+  /cases/track:
+    get:
+      operationId: trackCase
+      tags: [cases]
+      summary: Track case by case number or mobile
+      parameters:
+        - in: query
+          name: caseNumber
+          schema:
+            type: string
+        - in: query
+          name: mobile
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Case tracking info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseTracking"
+        "404":
+          description: Not found
+
+  /cases/stats:
+    get:
+      operationId: getCaseStats
+      tags: [cases]
+      summary: Get case statistics
+      responses:
+        "200":
+          description: Case stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseStats"
+
+  # DOCUMENTS
+  /documents:
+    get:
+      operationId: listDocuments
+      tags: [documents]
+      summary: List documents for a case
+      parameters:
+        - in: query
+          name: caseId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+    post:
+      operationId: createDocument
+      tags: [documents]
+      summary: Upload document metadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  /documents/{id}:
+    patch:
+      operationId: updateDocument
+      tags: [documents]
+      summary: Update document status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUpdate"
+      responses:
+        "200":
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+  # PAYMENTS
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payments
+      parameters:
+        - in: query
+          name: caseId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: createPayment
+      tags: [payments]
+      summary: Create a payment record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentInput"
+      responses:
+        "201":
+          description: Payment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get payment details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+    patch:
+      operationId: updatePayment
+      tags: [payments]
+      summary: Update payment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentUpdate"
+      responses:
+        "200":
+          description: Payment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /payments/stats:
+    get:
+      operationId: getPaymentStats
+      tags: [payments]
+      summary: Get payment/revenue statistics
+      responses:
+        "200":
+          description: Payment stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentStats"
+
+  # REFERRALS
+  /referrals:
+    get:
+      operationId: listReferrals
+      tags: [referrals]
+      summary: List all referrals
+      responses:
+        "200":
+          description: List of referrals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Referral"
+    post:
+      operationId: createReferral
+      tags: [referrals]
+      summary: Submit a referral
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferralInput"
+      responses:
+        "201":
+          description: Referral created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Referral"
+
+  /referrals/{id}:
+    patch:
+      operationId: updateReferral
+      tags: [referrals]
+      summary: Update referral status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReferralUpdate"
+      responses:
+        "200":
+          description: Referral updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Referral"
+
+  # SUPPORT TICKETS
+  /tickets:
+    get:
+      operationId: listTickets
+      tags: [tickets]
+      summary: List support tickets
+      parameters:
+        - in: query
+          name: customerId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ticket"
+    post:
+      operationId: createTicket
+      tags: [tickets]
+      summary: Create support ticket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketInput"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  /tickets/{id}:
+    get:
+      operationId: getTicket
+      tags: [tickets]
+      summary: Get ticket details
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+    patch:
+      operationId: updateTicket
+      tags: [tickets]
+      summary: Update ticket
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TicketUpdate"
+      responses:
+        "200":
+          description: Ticket updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+
+  # ADMIN DASHBOARD
+  /admin/dashboard:
+    get:
+      operationId: getAdminDashboard
+      tags: [admin]
+      summary: Get admin dashboard summary
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminDashboard"
+
+  /admin/monthly-stats:
+    get:
+      operationId: getMonthlyStats
+      tags: [admin]
+      summary: Get monthly stats for charts
+      responses:
+        "200":
+          description: Monthly stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyStat"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +722,363 @@ components:
       required:
         - status
 
+    # AUTH
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string }
+        password: { type: string }
+
+    AuthResponse:
+      type: object
+      required: [user, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token: { type: string }
+
+    User:
+      type: object
+      required: [id, email, name, role, createdAt]
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        name: { type: string }
+        mobile: { type: ["string", "null"] }
+        role:
+          type: string
+          enum: [OWNER, MANAGER, EXECUTIVE, SUPPORT, CUSTOMER]
+        createdAt: { type: string }
+
+    # LEADS
+    Lead:
+      type: object
+      required: [id, name, mobile, stage, source, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        mobile: { type: string }
+        email: { type: ["string", "null"] }
+        city: { type: ["string", "null"] }
+        serviceRequired: { type: ["string", "null"] }
+        stage:
+          type: string
+          enum: [NEW, CONTACTED, SCHEDULED, CONVERTED, COMPLETED]
+        source:
+          type: string
+          enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL]
+        createdAt: { type: string }
+
+    LeadInput:
+      type: object
+      required: [name, mobile, source]
+      properties:
+        name: { type: string }
+        mobile: { type: string }
+        email: { type: string }
+        city: { type: string }
+        serviceRequired: { type: string }
+        source:
+          type: string
+          enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL]
+          default: HOMEPAGE
+
+    LeadUpdate:
+      type: object
+      properties:
+        stage:
+          type: string
+          enum: [NEW, CONTACTED, SCHEDULED, CONVERTED, COMPLETED]
+        email: { type: string }
+        city: { type: string }
+        serviceRequired: { type: string }
+
+    LeadStats:
+      type: object
+      required: [total, new, contacted, scheduled, converted, completed, todayCount]
+      properties:
+        total: { type: integer }
+        new: { type: integer }
+        contacted: { type: integer }
+        scheduled: { type: integer }
+        converted: { type: integer }
+        completed: { type: integer }
+        todayCount: { type: integer }
+
+    # CUSTOMERS
+    Customer:
+      type: object
+      required: [id, name, mobile, email, createdAt]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        mobile: { type: string }
+        email: { type: string }
+        city: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    CustomerInput:
+      type: object
+      required: [name, mobile, email]
+      properties:
+        name: { type: string }
+        mobile: { type: string }
+        email: { type: string }
+        city: { type: string }
+        password: { type: string }
+
+    CustomerUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        mobile: { type: string }
+        email: { type: string }
+        city: { type: string }
+
+    # CASES
+    Case:
+      type: object
+      required: [id, caseNumber, customerId, serviceType, status, progressPercentage, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        caseNumber: { type: string }
+        customerId: { type: integer }
+        customerName: { type: ["string", "null"] }
+        customerMobile: { type: ["string", "null"] }
+        assignedToId: { type: ["integer", "null"] }
+        assignedToName: { type: ["string", "null"] }
+        serviceType: { type: string }
+        status:
+          type: string
+          enum: [DOCUMENTS_SUBMITTED, CASE_REVIEW, DOCUMENTATION_VERIFIED, DISPUTE_SUBMITTED, BUREAU_LENDER_REVIEW, FOLLOW_UP, COMPLETED]
+        progressPercentage: { type: integer }
+        notes: { type: ["string", "null"] }
+        expectedCompletionDate: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    CaseInput:
+      type: object
+      required: [customerId, serviceType]
+      properties:
+        customerId: { type: integer }
+        serviceType: { type: string }
+        assignedToId: { type: integer }
+        notes: { type: string }
+        expectedCompletionDate: { type: string }
+
+    CaseUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [DOCUMENTS_SUBMITTED, CASE_REVIEW, DOCUMENTATION_VERIFIED, DISPUTE_SUBMITTED, BUREAU_LENDER_REVIEW, FOLLOW_UP, COMPLETED]
+        progressPercentage: { type: integer }
+        assignedToId: { type: integer }
+        notes: { type: string }
+        serviceType: { type: string }
+        expectedCompletionDate: { type: string }
+
+    CaseTracking:
+      type: object
+      required: [caseNumber, customerName, serviceType, status, progressPercentage, updatedAt]
+      properties:
+        caseNumber: { type: string }
+        customerName: { type: string }
+        serviceType: { type: string }
+        status: { type: string }
+        progressPercentage: { type: integer }
+        expectedCompletionDate: { type: ["string", "null"] }
+        updatedAt: { type: string }
+
+    CaseStats:
+      type: object
+      required: [total, active, completed, inProgress]
+      properties:
+        total: { type: integer }
+        active: { type: integer }
+        completed: { type: integer }
+        inProgress: { type: integer }
+        documentsSubmitted: { type: integer }
+        disputeSubmitted: { type: integer }
+
+    # DOCUMENTS
+    Document:
+      type: object
+      required: [id, caseId, name, type, status, createdAt]
+      properties:
+        id: { type: integer }
+        caseId: { type: integer }
+        name: { type: string }
+        type:
+          type: string
+          enum: [PAN, AADHAAR, CREDIT_REPORT, NOC, CLOSURE_LETTER, OTHER]
+        fileUrl: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [PENDING, UPLOADED, VERIFIED, REJECTED]
+        verifiedAt: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    DocumentInput:
+      type: object
+      required: [caseId, name, type]
+      properties:
+        caseId: { type: integer }
+        name: { type: string }
+        type:
+          type: string
+          enum: [PAN, AADHAAR, CREDIT_REPORT, NOC, CLOSURE_LETTER, OTHER]
+        fileUrl: { type: string }
+
+    DocumentUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, UPLOADED, VERIFIED, REJECTED]
+        fileUrl: { type: string }
+        verifiedAt: { type: string }
+
+    # PAYMENTS
+    Payment:
+      type: object
+      required: [id, caseId, serviceFee, advancePaid, pendingAmount, paymentStatus, createdAt]
+      properties:
+        id: { type: integer }
+        caseId: { type: integer }
+        caseNumber: { type: ["string", "null"] }
+        serviceFee: { type: number }
+        advancePaid: { type: number }
+        pendingAmount: { type: number }
+        paymentStatus:
+          type: string
+          enum: [PAID, PARTIAL, PENDING]
+        receiptUrl: { type: ["string", "null"] }
+        agreementUrl: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    PaymentInput:
+      type: object
+      required: [caseId, serviceFee]
+      properties:
+        caseId: { type: integer }
+        serviceFee: { type: number }
+        advancePaid: { type: number }
+
+    PaymentUpdate:
+      type: object
+      properties:
+        advancePaid: { type: number }
+        paymentStatus:
+          type: string
+          enum: [PAID, PARTIAL, PENDING]
+        receiptUrl: { type: string }
+        agreementUrl: { type: string }
+
+    PaymentStats:
+      type: object
+      required: [totalRevenue, pendingRevenue, collectedRevenue, totalCases]
+      properties:
+        totalRevenue: { type: number }
+        pendingRevenue: { type: number }
+        collectedRevenue: { type: number }
+        totalCases: { type: integer }
+
+    # REFERRALS
+    Referral:
+      type: object
+      required: [id, referrerName, referrerMobile, refereeName, refereeMobile, rewardAmount, status, createdAt]
+      properties:
+        id: { type: integer }
+        referrerName: { type: string }
+        referrerMobile: { type: string }
+        referrerEmail: { type: ["string", "null"] }
+        refereeName: { type: string }
+        refereeMobile: { type: string }
+        rewardAmount: { type: number }
+        status:
+          type: string
+          enum: [PENDING, APPROVED, PAID]
+        createdAt: { type: string }
+
+    ReferralInput:
+      type: object
+      required: [referrerName, referrerMobile, refereeName, refereeMobile]
+      properties:
+        referrerName: { type: string }
+        referrerMobile: { type: string }
+        referrerEmail: { type: string }
+        referrerCity: { type: string }
+        refereeName: { type: string }
+        refereeMobile: { type: string }
+        rewardAmount: { type: number }
+
+    ReferralUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [PENDING, APPROVED, PAID]
+        rewardAmount: { type: number }
+
+    # TICKETS
+    Ticket:
+      type: object
+      required: [id, customerId, subject, description, status, createdAt]
+      properties:
+        id: { type: integer }
+        customerId: { type: integer }
+        customerName: { type: ["string", "null"] }
+        caseId: { type: ["integer", "null"] }
+        subject: { type: string }
+        description: { type: string }
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+        response: { type: ["string", "null"] }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    TicketInput:
+      type: object
+      required: [customerId, subject, description]
+      properties:
+        customerId: { type: integer }
+        caseId: { type: integer }
+        subject: { type: string }
+        description: { type: string }
+
+    TicketUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
+        response: { type: string }
+
+    # ADMIN
+    AdminDashboard:
+      type: object
+      required: [totalCustomers, activeCases, completedCases, pendingCases, totalRevenue, pendingRevenue, todayLeads, totalLeads]
+      properties:
+        totalCustomers: { type: integer }
+        activeCases: { type: integer }
+        completedCases: { type: integer }
+        pendingCases: { type: integer }
+        totalRevenue: { type: number }
+        pendingRevenue: { type: number }
+        todayLeads: { type: integer }
+        totalLeads: { type: integer }
+        openTickets: { type: integer }
+        pendingReferrals: { type: integer }
+
+    MonthlyStat:
+      type: object
+      required: [month, leads, cases, revenue]
+      properties:
+        month: { type: string }
+        leads: { type: integer }
+        cases: { type: integer }
+        revenue: { type: number }

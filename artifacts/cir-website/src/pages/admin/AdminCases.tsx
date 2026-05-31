@@ -1,0 +1,173 @@
+import { useState } from "react";
+import { useListCases, useUpdateCase, useGetCaseStats, getListCasesQueryKey, getGetCaseStatsQueryKey, ListCasesStatus } from "@workspace/api-client-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Edit, Phone } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+const STATUSES = ["DOCUMENTS_SUBMITTED", "CASE_REVIEW", "DOCUMENTATION_VERIFIED", "DISPUTE_SUBMITTED", "BUREAU_LENDER_REVIEW", "FOLLOW_UP", "COMPLETED"];
+const STATUS_PCT: Record<string, number> = { DOCUMENTS_SUBMITTED: 10, CASE_REVIEW: 25, DOCUMENTATION_VERIFIED: 40, DISPUTE_SUBMITTED: 60, BUREAU_LENDER_REVIEW: 75, FOLLOW_UP: 88, COMPLETED: 100 };
+
+const STATUS_COLORS: Record<string, string> = {
+  DOCUMENTS_SUBMITTED: "bg-yellow-50 text-yellow-700 border-yellow-200",
+  CASE_REVIEW: "bg-blue-50 text-blue-700 border-blue-200",
+  DOCUMENTATION_VERIFIED: "bg-purple-50 text-purple-700 border-purple-200",
+  DISPUTE_SUBMITTED: "bg-primary/10 text-primary border-primary/20",
+  BUREAU_LENDER_REVIEW: "bg-orange-50 text-orange-700 border-orange-200",
+  FOLLOW_UP: "bg-teal-50 text-teal-700 border-teal-200",
+  COMPLETED: "bg-green-50 text-green-700 border-green-200",
+};
+
+type CaseItem = {
+  id: number; caseNumber: string; customerId: number; status: string; serviceType: string;
+  progressPercentage: number; notes?: string | null; expectedCompletionDate?: string | null;
+  customerName?: string | null; customerMobile?: string | null; assignedToName?: string | null;
+  createdAt: string | Date; updatedAt: string | Date;
+};
+
+export default function AdminCases() {
+  const [statusFilter, setStatusFilter] = useState("");
+  const [editCase, setEditCase] = useState<CaseItem | null>(null);
+  const [editStatus, setEditStatus] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [editExpected, setEditExpected] = useState("");
+  const { data: cases, isLoading } = useListCases(statusFilter ? { status: statusFilter as ListCasesStatus } : {}, { query: { queryKey: getListCasesQueryKey(statusFilter ? { status: statusFilter as ListCasesStatus } : {}) } });
+  const { data: stats } = useGetCaseStats({ query: { queryKey: getGetCaseStatsQueryKey() } });
+  const updateCase = useUpdateCase();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const openEdit = (c: CaseItem) => {
+    setEditCase(c);
+    setEditStatus(c.status);
+    setEditNotes(c.notes || "");
+    setEditExpected(c.expectedCompletionDate || "");
+  };
+
+  const handleSave = () => {
+    if (!editCase) return;
+    const pct = STATUS_PCT[editStatus];
+    updateCase.mutate({ id: editCase.id, data: { status: editStatus as "DOCUMENTS_SUBMITTED" | "CASE_REVIEW" | "DOCUMENTATION_VERIFIED" | "DISPUTE_SUBMITTED" | "BUREAU_LENDER_REVIEW" | "FOLLOW_UP" | "COMPLETED", notes: editNotes, progressPercentage: pct, expectedCompletionDate: editExpected } }, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListCasesQueryKey({}) });
+        queryClient.invalidateQueries({ queryKey: getGetCaseStatsQueryKey() });
+        setEditCase(null);
+        toast({ title: "Case updated" });
+      },
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Case Management</h1>
+        <p className="text-muted-foreground text-sm mt-1">Manage all customer cases and update their status</p>
+      </div>
+
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="stat-card rounded-xl p-4 text-center"><div className="text-2xl font-bold">{stats.total}</div><div className="text-xs text-muted-foreground">Total</div></div>
+          <div className="rounded-xl p-4 text-center bg-blue-50 border border-blue-200"><div className="text-2xl font-bold text-blue-700">{stats.active}</div><div className="text-xs text-muted-foreground">Active</div></div>
+          <div className="rounded-xl p-4 text-center bg-green-50 border border-green-200"><div className="text-2xl font-bold text-green-700">{stats.completed}</div><div className="text-xs text-muted-foreground">Completed</div></div>
+          <div className="rounded-xl p-4 text-center bg-yellow-50 border border-yellow-200"><div className="text-2xl font-bold text-yellow-700">{stats.documentsSubmitted}</div><div className="text-xs text-muted-foreground">Pending Review</div></div>
+        </div>
+      )}
+
+      <div className="flex gap-3">
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-52" data-testid="cases-status-filter"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Statuses</SelectItem>
+            {STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="glass-card rounded-2xl overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Case #</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Service</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead>Expected</TableHead>
+              <TableHead>Updated</TableHead>
+              <TableHead>Edit</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+            ) : !cases?.length ? (
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No cases found</TableCell></TableRow>
+            ) : cases.map(c => (
+              <TableRow key={c.id} className="hover:bg-muted/30">
+                <TableCell className="font-mono font-medium text-xs">{c.caseNumber}</TableCell>
+                <TableCell>
+                  <div>
+                    <div className="font-medium text-sm">{(c as unknown as Record<string, unknown>).customerName as string || "—"}</div>
+                    {!!(c as unknown as Record<string, unknown>).customerMobile && <div className="flex items-center gap-1 text-xs text-muted-foreground"><a href={`tel:${(c as unknown as Record<string, unknown>).customerMobile as string}`}><Phone size={11} className="text-primary" /></a> {(c as unknown as Record<string, unknown>).customerMobile as string}</div>}
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm max-w-[120px] truncate">{c.serviceType}</TableCell>
+                <TableCell><Badge className={`text-xs ${STATUS_COLORS[c.status]}`}>{c.status.replace(/_/g, " ")}</Badge></TableCell>
+                <TableCell>
+                  <div className="w-24">
+                    <Progress value={c.progressPercentage} className="h-1.5 mb-0.5" />
+                    <span className="text-xs text-muted-foreground">{c.progressPercentage}%</span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-xs text-muted-foreground">{c.expectedCompletionDate || "—"}</TableCell>
+                <TableCell className="text-xs text-muted-foreground">{new Date(c.updatedAt).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => openEdit(c as CaseItem)} data-testid={`edit-case-${c.id}`}>
+                    <Edit size={14} />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog open={!!editCase} onOpenChange={(o) => !o && setEditCase(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Update Case — {editCase?.caseNumber}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Expected Completion Date</Label>
+              <Input value={editExpected} onChange={e => setEditExpected(e.target.value)} placeholder="e.g. June 30, 2026" />
+            </div>
+            <div className="space-y-2">
+              <Label>Notes for Customer</Label>
+              <Textarea value={editNotes} onChange={e => setEditNotes(e.target.value)} rows={3} placeholder="Update notes visible to customer..." />
+            </div>
+            <div className="flex gap-3">
+              <Button className="flex-1 btn-gradient border-0 text-white" onClick={handleSave} disabled={updateCase.isPending}>
+                {updateCase.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button variant="outline" onClick={() => setEditCase(null)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

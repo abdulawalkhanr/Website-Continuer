@@ -1,0 +1,611 @@
+IMPORTANT: Read this entire prompt first. Do not stop in between. Do not ask follow-up questions. Do not generate partial results. Build the complete project from start to finish using the information provided below. Make professional decisions where needed and continue development automatically until the entire platform is completed.
+
+Build a complete premium fintech-grade website and customer management platform for CIR Consultation Service.
+
+Company Details:
+
+Company Name: CIR Consultation Service
+
+Tagline: Your Partner in Financial Health
+
+Customer Support Number: 01169310902
+
+WhatsApp Number: +91 9864920810
+
+Use all uploaded company logos, referral posters, branding images and marketing materials throughout the website.
+
+The website should look as professional as PaisaBazaar, BankBazaar, PolicyBazaar, Razorpay and CRED. It should not look like a local consultancy website. It should feel like a large nationwide financial consultation and credit assistance company.
+
+Use a Premium Cotton Candy FinTech Theme.
+
+Primary Color: #A7D8FF
+
+Secondary Color: #FFD6E8
+
+Accent Color: #DCC6FF
+
+Highlight Color: #D8F5E5
+
+Background Color: #FDFDFD
+
+Text Color: #2C3E50
+
+Use premium gradients, glassmorphism, smooth animations, fintech illustrations, rounded cards, premium typography, soft shadows and modern dashboard layouts.
+
+Create a sticky header with logo and navigation menu.
+
+Menu Items:
+
+Home
+
+About Us
+
+Services
+
+Process
+
+Pricing
+
+Referral Program
+
+Success Stories
+
+Blog
+
+FAQ
+
+Contact Us
+
+Customer Login
+
+Admin Login
+
+Customer Login and Admin Login must be clearly visible buttons in the website header and mobile menu.
+
+Homepage:
+
+Create a premium hero section.
+
+Headline:
+
+Resolve Credit Issues With Confidence
+
+Subheadline:
+
+Professional Credit Consultation, Credit Report Rectification, Credit Score Guidance, Credit Profile Review and Dispute Assistance for Individuals and Businesses.
+
+Buttons:
+
+Get Free Consultation
+
+WhatsApp Us
+
+Call Now
+
+Add animated credit score meter, trust badges, professional illustrations, growth charts, statistics counters and strong call-to-action sections.
+
+Who We Help:
+
+Salaried Employees
+
+Business Owners
+
+Self Employed Professionals
+
+Loan Applicants
+
+Credit Card Holders
+
+Individuals Facing Credit Issues
+
+Why Choose Us:
+
+Professional Service
+
+Transparent Process
+
+Dedicated Support
+
+Confidential Handling
+
+Regular Updates
+
+Customer Focused Approach
+
+About Us Page:
+
+Company Introduction
+
+Mission
+
+Vision
+
+Core Values
+
+Founder Introduction
+
+Why CIR Consultation Service
+
+Services Page:
+
+CIBIL Rectification
+
+Credit Report Correction
+
+Credit Score Improvement Guidance
+
+Written Off Account Rectification
+
+Settled Account Rectification
+
+Closed Account Rectification
+
+Credit Profile Review
+
+Bank Dispute Assistance
+
+NBFC Dispute Assistance
+
+Documentation Assistance
+
+Financial Consultation
+
+Common Problems We Solve:
+
+Wrong Loan Showing
+
+Duplicate Accounts
+
+Written Off Status
+
+Settled Status Issues
+
+Closed Account Not Updated
+
+Wrong Personal Information
+
+Low Credit Score
+
+Unknown Loan Entries
+
+Credit Card Reporting Errors
+
+Process Page:
+
+Share Credit Report
+
+Case Evaluation
+
+Documentation Review
+
+Verification
+
+Dispute Assistance
+
+Follow Up
+
+Resolution
+
+Pricing Page:
+
+Basic Review ₹999
+
+Standard Consultation ₹4,999
+
+Premium Assistance Custom Pricing
+
+Referral Program Page:
+
+Headline: Refer. Help. Earn.
+
+Referral Reward: ₹1,000 to ₹3,000
+
+Required Documents:
+
+PAN Card
+
+Aadhaar Card
+
+Bank Details
+
+Passport Size Photo
+
+Create referral registration form and referral tracking system.
+
+Success Stories Page:
+
+Display professional case studies showing Issue, Process and Outcome.
+
+Blog Section:
+
+Credit Score Tips
+
+Credit Education
+
+Financial Awareness
+
+Banking Guidance
+
+FAQ Section:
+
+Create at least 20 detailed FAQs.
+
+Contact Page:
+
+Display prominently:
+
+Customer Support Number: 01169310902
+
+WhatsApp Number: +91 9864920810
+
+Email: support@circonsultationservice.site
+
+Website: circonsultationservice.site
+
+Contact Form Fields:
+
+Name
+
+Mobile Number
+
+Email
+
+City
+
+Service Required
+
+Message
+
+Create floating buttons:
+
+WhatsApp
+
+Call Now
+
+Free Consultation
+
+WhatsApp button should connect to +91 9864920810.
+
+Call button should connect to 01169310902.
+
+Create AI Chatbot.
+
+Collect:
+
+Name
+
+Mobile Number
+
+Email
+
+City
+
+Service Required
+
+Store all lead information automatically.
+
+Customer Portal:
+
+Create secure login using:
+
+Mobile Number + OTP
+
+Email + Password
+
+Google Login
+
+Customer Dashboard:
+
+Customer Name
+
+Case ID
+
+Service Type
+
+Assigned Executive
+
+Current Status
+
+Progress Percentage
+
+Case Timeline
+
+Documents
+
+Payments
+
+Support Tickets
+
+Notifications
+
+Case Tracking System:
+
+Documents Submitted
+
+Case Review Started
+
+Documentation Verified
+
+Dispute Submitted
+
+Bureau/Lender Review
+
+Follow Up In Progress
+
+Completed
+
+Show progress percentage and expected completion.
+
+Case Status Check:
+
+Allow tracking through Mobile Number or Case ID.
+
+Document Center:
+
+Upload and Download:
+
+PAN
+
+Aadhaar
+
+Credit Report
+
+NOC
+
+Closure Letter
+
+Supporting Documents
+
+Support PDF, JPG and PNG.
+
+Payment Section:
+
+Service Fee
+
+Advance Paid
+
+Pending Amount
+
+Final Amount
+
+Payment Status
+
+Download Receipt
+
+Download Agreement
+
+Support Ticket System:
+
+Customers can create tickets and track responses.
+
+Notifications:
+
+WhatsApp
+
+Email
+
+SMS
+
+Admin Portal:
+
+Create separate Admin Login.
+
+Roles:
+
+Owner
+
+Manager
+
+Executive
+
+Support Staff
+
+Admin Dashboard:
+
+Total Customers
+
+Active Cases
+
+Completed Cases
+
+Pending Cases
+
+Revenue
+
+Pending Payments
+
+Today's Leads
+
+Monthly Growth
+
+Analytics Charts
+
+Customer Management:
+
+Search by Name
+
+Search by Mobile Number
+
+Search by Case ID
+
+View and Edit Customer Profiles
+
+Case Management:
+
+Create Cases
+
+Assign Cases
+
+Update Status
+
+Update Progress
+
+Upload Documents
+
+Add Notes
+
+Auto Generate Case IDs such as CIR-2026-0001
+
+Lead Management:
+
+Capture leads from Homepage Forms, Contact Forms, Chatbot, Referral Forms and Consultation Requests.
+
+Lead Stages:
+
+New Lead
+
+Contacted
+
+Consultation Scheduled
+
+Converted
+
+Completed
+
+Payment Management:
+
+Advance Payments
+
+Pending Payments
+
+Revenue Tracking
+
+Receipt Generation
+
+Agreement Generation
+
+Referral Management:
+
+Referrer
+
+Customer
+
+Reward Amount
+
+Status
+
+Pending
+
+Approved
+
+Paid
+
+Communication Center:
+
+WhatsApp Messages
+
+Emails
+
+SMS
+
+Reports:
+
+Daily Reports
+
+Weekly Reports
+
+Monthly Reports
+
+Export PDF
+
+Export Excel
+
+Export CSV
+
+Additional Premium Features:
+
+Loan Eligibility Calculator
+
+Appointment Booking System
+
+Credit Score Information Center
+
+Activity Logs
+
+Dashboard Notifications
+
+Lead Analytics
+
+Revenue Analytics
+
+Google Analytics Integration
+
+Legal Pages:
+
+Privacy Policy
+
+Terms and Conditions
+
+Refund Policy
+
+Disclaimer
+
+Technology Stack:
+
+Next.js
+
+React
+
+Tailwind CSS
+
+PostgreSQL
+
+Prisma ORM
+
+JWT Authentication
+
+OTP Authentication
+
+Google OAuth
+
+Razorpay Payment Gateway
+
+Cloud Storage
+
+Customer Dashboard
+
+Admin Dashboard
+
+Security:
+
+SSL
+
+Secure Login
+
+OTP Verification
+
+Data Encryption
+
+Role Based Access
+
+Daily Backup
+
+Secure File Upload
+
+SEO:
+
+Meta Tags
+
+Open Graph Tags
+
+Sitemap.xml
+
+Robots.txt
+
+Structured Data
+
+Target Keywords:
+
+CIBIL Rectification
+
+Credit Report Correction
+
+Credit Score Improvement
+
+Financial Consultation India
+
+Credit Consultation Services
+
+Final Objective:
+
+Build a complete, production-ready, mobile-responsive fintech platform for CIR Consultation Service that matches the quality, trust, user experience and professionalism of PaisaBazaar while incorporating the company's branding, referral program, customer management system, case tracking system, admin dashboard, customer dashboard, lead generation system, payment management system and communication tools.
