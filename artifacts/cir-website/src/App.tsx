@@ -23,6 +23,7 @@ import TrackCasePage from "@/pages/TrackCasePage";
 
 // Auth pages
 import LoginPage from "@/pages/LoginPage";
+import RegisterPage from "@/pages/RegisterPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
 
 // Dashboard pages
@@ -84,6 +85,7 @@ function Router() {
 
       {/* Auth */}
       <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       <Route path="/admin/login" component={AdminLoginPage} />
 
       {/* Customer Dashboard */}

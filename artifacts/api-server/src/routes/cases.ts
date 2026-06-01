@@ -1,49 +1,59 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { casesTable, usersTable } from "@workspace/db";
-import { eq, desc, and } from "drizzle-orm";
-import { CreateCaseBody, UpdateCaseBody, ListCasesQueryParams, TrackCaseQueryParams } from "@workspace/api-zod";
+import { casesTable, usersTable, documentsTable, paymentsTable, notificationsTable } from "@workspace/db";
+import { eq, desc, and, sql } from "drizzle-orm";
+import {
+  ListCasesQueryParams, CreateCaseBody, UpdateCaseParams, UpdateCaseBody, DeleteCaseParams,
+  TrackCaseQueryParams
+} from "@workspace/api-zod";
 
 const router = Router();
 
-function generateCaseNumber(): string {
+async function generateCaseNumber(): Promise<string> {
   const year = new Date().getFullYear();
-  const num = Math.floor(Math.random() * 9000) + 1000;
-  return `CIR-${year}-${num}`;
+  const [result] = await db.select({ count: sql<number>`count(*)` }).from(casesTable);
+  const seq = Number(result?.count || 0) + 1;
+  return `CIR-${year}-${String(seq).padStart(4, "0")}`;
 }
 
+async function enrichCase(c: typeof casesTable.$inferSelect) {
+  const [customer] = await db.select().from(usersTable).where(eq(usersTable.id, c.customerId)).limit(1);
+  const assignedTo = c.assignedToId
+    ? (await db.select().from(usersTable).where(eq(usersTable.id, c.assignedToId)).limit(1))[0]
+    : null;
+  return { ...c, customerName: customer?.name || null, customerMobile: customer?.mobile || null, assignedToName: assignedTo?.name || null };
+}
+
+// GET /cases/track
 router.get("/cases/track", async (req, res): Promise<void> => {
   const parsed = TrackCaseQueryParams.safeParse(req.query);
-  if (!parsed.success) {
-    res.status(400).json({ error: "Invalid query" });
-    return;
-  }
-  const { caseNumber, mobile } = parsed.data;
+  const { caseNumber, mobile } = parsed.success ? parsed.data : { caseNumber: undefined, mobile: undefined };
+  if (!caseNumber && !mobile) { res.status(400).json({ error: "Provide caseNumber or mobile" }); return; }
   let caseRow;
   if (caseNumber) {
-    [caseRow] = await db.select().from(casesTable).where(eq(casesTable.caseNumber, caseNumber)).limit(1);
+    [caseRow] = await db.select().from(casesTable).where(eq(casesTable.caseNumber, caseNumber.trim())).limit(1);
   } else if (mobile) {
-    const [customer] = await db.select().from(usersTable).where(eq(usersTable.mobile, mobile)).limit(1);
+    const [customer] = await db.select().from(usersTable).where(eq(usersTable.mobile, mobile.trim())).limit(1);
     if (customer) {
       [caseRow] = await db.select().from(casesTable).where(eq(casesTable.customerId, customer.id)).orderBy(desc(casesTable.createdAt)).limit(1);
     }
   }
-  if (!caseRow) {
-    res.status(404).json({ error: "Case not found" });
-    return;
-  }
-  const [customer] = await db.select().from(usersTable).where(eq(usersTable.id, caseRow.customerId)).limit(1);
+  if (!caseRow) { res.status(404).json({ error: "Case not found. Please check your Case ID or mobile number." }); return; }
+  const enriched = await enrichCase(caseRow);
   res.json({
     caseNumber: caseRow.caseNumber,
-    customerName: customer?.name || "Customer",
+    customerName: enriched.customerName || "Customer",
     serviceType: caseRow.serviceType,
     status: caseRow.status,
     progressPercentage: caseRow.progressPercentage,
     expectedCompletionDate: caseRow.expectedCompletionDate,
+    assignedToName: enriched.assignedToName,
+    notes: caseRow.notes,
     updatedAt: caseRow.updatedAt.toISOString(),
   });
 });
 
+// GET /cases/stats
 router.get("/cases/stats", async (req, res): Promise<void> => {
   const all = await db.select().from(casesTable);
   res.json({
@@ -56,70 +66,80 @@ router.get("/cases/stats", async (req, res): Promise<void> => {
   });
 });
 
+// GET /cases
 router.get("/cases", async (req, res): Promise<void> => {
   const parsed = ListCasesQueryParams.safeParse(req.query);
   const conditions = [];
   if (parsed.success) {
-    if (parsed.data.customerId) {
-      conditions.push(eq(casesTable.customerId, parsed.data.customerId));
-    }
-    if (parsed.data.status) {
-      conditions.push(eq(casesTable.status, parsed.data.status as "DOCUMENTS_SUBMITTED" | "CASE_REVIEW" | "DOCUMENTATION_VERIFIED" | "DISPUTE_SUBMITTED" | "BUREAU_LENDER_REVIEW" | "FOLLOW_UP" | "COMPLETED"));
-    }
+    if (parsed.data.customerId) conditions.push(eq(casesTable.customerId, parsed.data.customerId));
+    if (parsed.data.status) conditions.push(eq(casesTable.status, parsed.data.status));
   }
   const cases = conditions.length > 0
     ? await db.select().from(casesTable).where(and(...conditions)).orderBy(desc(casesTable.createdAt))
     : await db.select().from(casesTable).orderBy(desc(casesTable.createdAt));
-  
-  const enriched = await Promise.all(cases.map(async (c) => {
-    const [customer] = await db.select().from(usersTable).where(eq(usersTable.id, c.customerId)).limit(1);
-    const assignedTo = c.assignedToId
-      ? (await db.select().from(usersTable).where(eq(usersTable.id, c.assignedToId)).limit(1))[0]
-      : null;
-    return {
-      ...c,
-      customerName: customer?.name || null,
-      customerMobile: customer?.mobile || null,
-      assignedToName: assignedTo?.name || null,
-    };
-  }));
+  const enriched = await Promise.all(cases.map(enrichCase));
   res.json(enriched);
 });
 
+// POST /cases
 router.post("/cases", async (req, res): Promise<void> => {
   const parsed = CreateCaseBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const caseNumber = generateCaseNumber();
+  if (!parsed.success) { res.status(400).json({ error: "customerId and serviceType are required" }); return; }
+  const caseNumber = await generateCaseNumber();
   const [caseRow] = await db.insert(casesTable).values({ ...parsed.data, caseNumber }).returning();
-  const [customer] = await db.select().from(usersTable).where(eq(usersTable.id, caseRow.customerId)).limit(1);
-  res.status(201).json({ ...caseRow, customerName: customer?.name || null, customerMobile: customer?.mobile || null, assignedToName: null });
+  const enriched = await enrichCase(caseRow);
+  await db.insert(notificationsTable).values({
+    userId: caseRow.customerId,
+    title: "Case Registered Successfully",
+    message: `Your case ${caseNumber} has been registered for ${caseRow.serviceType}. Our team will contact you within 24 hours.`,
+    type: "CASE_UPDATE",
+  }).catch(() => {});
+  res.status(201).json(enriched);
 });
 
+// GET /cases/:id
 router.get("/cases/:id", async (req, res): Promise<void> => {
   const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
   const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id)).limit(1);
-  if (!caseRow) { res.status(404).json({ error: "Not found" }); return; }
-  const [customer] = await db.select().from(usersTable).where(eq(usersTable.id, caseRow.customerId)).limit(1);
-  const assignedTo = caseRow.assignedToId
-    ? (await db.select().from(usersTable).where(eq(usersTable.id, caseRow.assignedToId)).limit(1))[0]
-    : null;
-  res.json({ ...caseRow, customerName: customer?.name || null, customerMobile: customer?.mobile || null, assignedToName: assignedTo?.name || null });
+  if (!caseRow) { res.status(404).json({ error: "Case not found" }); return; }
+  res.json(await enrichCase(caseRow));
 });
 
+// PATCH /cases/:id
 router.patch("/cases/:id", async (req, res): Promise<void> => {
-  const id = parseInt(req.params.id);
-  const parsed = UpdateCaseBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
+  const pParsed = UpdateCaseParams.safeParse(req.params);
+  if (!pParsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }
+  const bParsed = UpdateCaseBody.safeParse(req.body);
+  if (!bParsed.success) { res.status(400).json({ error: bParsed.error.message }); return; }
+  const [caseRow] = await db.update(casesTable).set(bParsed.data).where(eq(casesTable.id, pParsed.data.id)).returning();
+  if (!caseRow) { res.status(404).json({ error: "Case not found" }); return; }
+  const enriched = await enrichCase(caseRow);
+  if (bParsed.data.status && enriched.customerName) {
+    const statusLabel = bParsed.data.status.replace(/_/g, " ");
+    await db.insert(notificationsTable).values({
+      userId: caseRow.customerId,
+      title: "Case Status Updated",
+      message: `Your case ${caseRow.caseNumber} status: ${statusLabel}. ${caseRow.notes ? `Note: ${caseRow.notes}` : ""}`,
+      type: "CASE_UPDATE",
+    }).catch(() => {});
   }
-  const [caseRow] = await db.update(casesTable).set(parsed.data).where(eq(casesTable.id, id)).returning();
-  if (!caseRow) { res.status(404).json({ error: "Not found" }); return; }
-  const [customer] = await db.select().from(usersTable).where(eq(usersTable.id, caseRow.customerId)).limit(1);
-  res.json({ ...caseRow, customerName: customer?.name || null, customerMobile: customer?.mobile || null, assignedToName: null });
+  res.json(enriched);
+});
+
+// DELETE /cases/:id
+router.delete("/cases/:id", async (req, res): Promise<void> => {
+  const pParsed = DeleteCaseParams.safeParse(req.params);
+  if (!pParsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }
+  const { id } = pParsed.data;
+  try {
+    await db.delete(documentsTable).where(eq(documentsTable.caseId, id));
+    await db.delete(paymentsTable).where(eq(paymentsTable.caseId, id));
+    await db.delete(casesTable).where(eq(casesTable.id, id));
+    res.json({ success: true, message: "Case deleted" });
+  } catch {
+    res.status(500).json({ error: "Failed to delete case" });
+  }
 });
 
 export default router;

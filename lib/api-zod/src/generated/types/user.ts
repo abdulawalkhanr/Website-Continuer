@@ -13,6 +13,8 @@ export interface User {
   name: string;
   /** @nullable */
   mobile?: string | null;
+  /** @nullable */
+  city?: string | null;
   role: UserRole;
   createdAt: string;
 }

@@ -41,7 +41,8 @@ router.post("/payments", async (req, res): Promise<void> => {
   const pendingAmount = serviceFee - advancePaid;
   const paymentStatus = advancePaid >= serviceFee ? "PAID" : advancePaid > 0 ? "PARTIAL" : "PENDING";
   const [payment] = await db.insert(paymentsTable).values({
-    ...parsed.data,
+    caseId: parsed.data.caseId,
+    serviceFee: String(serviceFee),
     advancePaid: String(advancePaid),
     pendingAmount: String(pendingAmount),
     paymentStatus,

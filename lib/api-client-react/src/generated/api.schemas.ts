@@ -9,9 +9,30 @@ export interface HealthStatus {
   status: string;
 }
 
+export interface DeleteResponse {
+  success: boolean;
+  message?: string;
+}
+
 export interface LoginInput {
   email: string;
   password: string;
+}
+
+export interface RegisterInput {
+  name: string;
+  email: string;
+  password: string;
+  mobile: string;
+  city?: string;
+}
+
+export interface ProfileUpdate {
+  name?: string;
+  mobile?: string;
+  city?: string;
+  password?: string;
+  currentPassword?: string;
 }
 
 export type UserRole = typeof UserRole[keyof typeof UserRole];
@@ -31,6 +52,8 @@ export interface User {
   name: string;
   /** @nullable */
   mobile?: string | null;
+  /** @nullable */
+  city?: string | null;
   role: UserRole;
   createdAt: string;
 }
@@ -286,6 +309,8 @@ export interface DocumentInput {
   name: string;
   type: DocumentInputType;
   fileUrl?: string;
+  fileData?: string;
+  fileName?: string;
 }
 
 export type DocumentUpdateStatus = typeof DocumentUpdateStatus[keyof typeof DocumentUpdateStatus];
@@ -452,6 +477,53 @@ export interface TicketUpdate {
   response?: string;
 }
 
+export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
+
+
+export const NotificationType = {
+  CASE_UPDATE: 'CASE_UPDATE',
+  DOCUMENT: 'DOCUMENT',
+  PAYMENT: 'PAYMENT',
+  TICKET: 'TICKET',
+  GENERAL: 'GENERAL',
+} as const;
+
+export interface Notification {
+  id: number;
+  userId: number;
+  title: string;
+  message: string;
+  type: NotificationType;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export type NotificationInputType = typeof NotificationInputType[keyof typeof NotificationInputType];
+
+
+export const NotificationInputType = {
+  CASE_UPDATE: 'CASE_UPDATE',
+  DOCUMENT: 'DOCUMENT',
+  PAYMENT: 'PAYMENT',
+  TICKET: 'TICKET',
+  GENERAL: 'GENERAL',
+} as const;
+
+export interface NotificationInput {
+  userId: number;
+  title: string;
+  message: string;
+  type?: NotificationInputType;
+}
+
+export interface NotificationUpdate {
+  isRead?: boolean;
+}
+
+export interface MarkAllReadInput {
+  userId: number;
+}
+
 export interface AdminDashboard {
   totalCustomers: number;
   activeCases: number;
@@ -535,5 +607,9 @@ caseId?: number;
 
 export type ListTicketsParams = {
 customerId?: number;
+};
+
+export type ListNotificationsParams = {
+userId?: number;
 };
 

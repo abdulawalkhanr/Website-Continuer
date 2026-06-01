@@ -12,4 +12,6 @@ export interface DocumentInput {
   name: string;
   type: DocumentInputType;
   fileUrl?: string;
+  fileData?: string;
+  fileName?: string;
 }

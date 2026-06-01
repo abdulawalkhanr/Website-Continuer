@@ -30,10 +30,23 @@ export const LoginResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
   "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
   "createdAt": zod.string()
 }),
   "token": zod.string()
+})
+
+
+/**
+ * @summary Register a new customer account
+ */
+export const RegisterBody = zod.object({
+  "name": zod.string(),
+  "email": zod.string(),
+  "password": zod.string(),
+  "mobile": zod.string(),
+  "city": zod.string().optional()
 })
 
 
@@ -45,6 +58,29 @@ export const GetMeResponse = zod.object({
   "email": zod.string(),
   "name": zod.string(),
   "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Update current user profile
+ */
+export const UpdateProfileBody = zod.object({
+  "name": zod.string().optional(),
+  "mobile": zod.string().optional(),
+  "city": zod.string().optional(),
+  "password": zod.string().optional(),
+  "currentPassword": zod.string().optional()
+})
+
+export const UpdateProfileResponse = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
   "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
   "createdAt": zod.string()
 })
@@ -220,6 +256,19 @@ export const UpdateCustomerResponse = zod.object({
 
 
 /**
+ * @summary Delete a customer
+ */
+export const DeleteCustomerParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteCustomerResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
  * @summary List all cases
  */
 export const ListCasesQueryParams = zod.object({
@@ -318,6 +367,19 @@ export const UpdateCaseResponse = zod.object({
 
 
 /**
+ * @summary Delete a case
+ */
+export const DeleteCaseParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteCaseResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
  * @summary Track case by case number or mobile
  */
 export const TrackCaseQueryParams = zod.object({
@@ -370,13 +432,15 @@ export const ListDocumentsResponse = zod.array(ListDocumentsResponseItem)
 
 
 /**
- * @summary Upload document metadata
+ * @summary Upload document metadata or file
  */
 export const CreateDocumentBody = zod.object({
   "caseId": zod.number(),
   "name": zod.string(),
   "type": zod.enum(['PAN', 'AADHAAR', 'CREDIT_REPORT', 'NOC', 'CLOSURE_LETTER', 'OTHER']),
-  "fileUrl": zod.string().optional()
+  "fileUrl": zod.string().optional(),
+  "fileData": zod.string().optional(),
+  "fileName": zod.string().optional()
 })
 
 
@@ -402,6 +466,19 @@ export const UpdateDocumentResponse = zod.object({
   "status": zod.enum(['PENDING', 'UPLOADED', 'VERIFIED', 'REJECTED']),
   "verifiedAt": zod.string().nullish(),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Delete a document
+ */
+export const DeleteDocumentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteDocumentResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
 })
 
 
@@ -634,6 +711,71 @@ export const UpdateTicketResponse = zod.object({
 
 
 /**
+ * @summary List notifications for current user
+ */
+export const ListNotificationsQueryParams = zod.object({
+  "userId": zod.coerce.number().optional()
+})
+
+export const ListNotificationsResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "type": zod.enum(['CASE_UPDATE', 'DOCUMENT', 'PAYMENT', 'TICKET', 'GENERAL']),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string()
+})
+export const ListNotificationsResponse = zod.array(ListNotificationsResponseItem)
+
+
+/**
+ * @summary Create a notification
+ */
+export const CreateNotificationBody = zod.object({
+  "userId": zod.number(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "type": zod.enum(['CASE_UPDATE', 'DOCUMENT', 'PAYMENT', 'TICKET', 'GENERAL']).optional()
+})
+
+
+/**
+ * @summary Mark notification as read
+ */
+export const UpdateNotificationParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateNotificationBody = zod.object({
+  "isRead": zod.boolean().optional()
+})
+
+export const UpdateNotificationResponse = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "title": zod.string(),
+  "message": zod.string(),
+  "type": zod.enum(['CASE_UPDATE', 'DOCUMENT', 'PAYMENT', 'TICKET', 'GENERAL']),
+  "isRead": zod.boolean(),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Mark all notifications as read for a user
+ */
+export const MarkAllNotificationsReadBody = zod.object({
+  "userId": zod.number()
+})
+
+export const MarkAllNotificationsReadResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
  * @summary Get admin dashboard summary
  */
 export const GetAdminDashboardResponse = zod.object({
@@ -660,5 +802,20 @@ export const GetMonthlyStatsResponseItem = zod.object({
   "revenue": zod.number()
 })
 export const GetMonthlyStatsResponse = zod.array(GetMonthlyStatsResponseItem)
+
+
+/**
+ * @summary List all executive/manager users for assignment
+ */
+export const ListExecutivesResponseItem = zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
+  "createdAt": zod.string()
+})
+export const ListExecutivesResponse = zod.array(ListExecutivesResponseItem)
 
 

@@ -8,6 +8,7 @@ import documentsRouter from "./documents";
 import paymentsRouter from "./payments";
 import referralsRouter from "./referrals";
 import ticketsRouter from "./tickets";
+import notificationsRouter from "./notifications";
 import adminRouter from "./admin";
 
 const router: IRouter = Router();
@@ -21,6 +22,7 @@ router.use(documentsRouter);
 router.use(paymentsRouter);
 router.use(referralsRouter);
 router.use(ticketsRouter);
+router.use(notificationsRouter);
 router.use(adminRouter);
 
 export default router;

@@ -23,6 +23,8 @@ tags:
     description: Referral management
   - name: tickets
     description: Support ticket management
+  - name: notifications
+    description: Notification management
   - name: admin
     description: Admin operations
   - name: auth
@@ -63,6 +65,27 @@ paths:
         "401":
           description: Invalid credentials
 
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new customer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          description: Email already exists
+
   /auth/logout:
     post:
       operationId: logout
@@ -86,6 +109,25 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           description: Unauthorized
+
+  /auth/profile:
+    patch:
+      operationId: updateProfile
+      tags: [auth]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
 
   # LEADS
   /leads:
@@ -265,6 +307,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Customer"
+    delete:
+      operationId: deleteCustomer
+      tags: [customers]
+      summary: Delete a customer
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Customer deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
 
   # CASES
   /cases:
@@ -350,6 +409,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Case"
+    delete:
+      operationId: deleteCase
+      tags: [cases]
+      summary: Delete a case
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Case deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
 
   /cases/track:
     get:
@@ -412,7 +488,7 @@ paths:
     post:
       operationId: createDocument
       tags: [documents]
-      summary: Upload document metadata
+      summary: Upload document metadata or file
       requestBody:
         required: true
         content:
@@ -451,6 +527,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Document"
+    delete:
+      operationId: deleteDocument
+      tags: [documents]
+      summary: Delete a document
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Document deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
 
   # PAYMENTS
   /payments:
@@ -683,6 +776,88 @@ paths:
               schema:
                 $ref: "#/components/schemas/Ticket"
 
+  # NOTIFICATIONS
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List notifications for current user
+      parameters:
+        - in: query
+          name: userId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+    post:
+      operationId: createNotification
+      tags: [notifications]
+      summary: Create a notification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationInput"
+      responses:
+        "201":
+          description: Notification created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}:
+    patch:
+      operationId: updateNotification
+      tags: [notifications]
+      summary: Mark notification as read
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationUpdate"
+      responses:
+        "200":
+          description: Notification updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+
+  /notifications/mark-all-read:
+    post:
+      operationId: markAllNotificationsRead
+      tags: [notifications]
+      summary: Mark all notifications as read for a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MarkAllReadInput"
+      responses:
+        "200":
+          description: All marked read
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+
   # ADMIN DASHBOARD
   /admin/dashboard:
     get:
@@ -712,6 +887,21 @@ paths:
                 items:
                   $ref: "#/components/schemas/MonthlyStat"
 
+  /admin/executives:
+    get:
+      operationId: listExecutives
+      tags: [admin]
+      summary: List all executive/manager users for assignment
+      responses:
+        "200":
+          description: List of executives
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
 components:
   schemas:
     HealthStatus:
@@ -722,6 +912,13 @@ components:
       required:
         - status
 
+    DeleteResponse:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean }
+        message: { type: string }
+
     # AUTH
     LoginInput:
       type: object
@@ -729,6 +926,25 @@ components:
       properties:
         email: { type: string }
         password: { type: string }
+
+    RegisterInput:
+      type: object
+      required: [name, email, password, mobile]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        password: { type: string }
+        mobile: { type: string }
+        city: { type: string }
+
+    ProfileUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        mobile: { type: string }
+        city: { type: string }
+        password: { type: string }
+        currentPassword: { type: string }
 
     AuthResponse:
       type: object
@@ -746,6 +962,7 @@ components:
         email: { type: string }
         name: { type: string }
         mobile: { type: ["string", "null"] }
+        city: { type: ["string", "null"] }
         role:
           type: string
           enum: [OWNER, MANAGER, EXECUTIVE, SUPPORT, CUSTOMER]
@@ -931,6 +1148,8 @@ components:
           type: string
           enum: [PAN, AADHAAR, CREDIT_REPORT, NOC, CLOSURE_LETTER, OTHER]
         fileUrl: { type: string }
+        fileData: { type: string }
+        fileName: { type: string }
 
     DocumentUpdate:
       type: object
@@ -1057,6 +1276,43 @@ components:
           type: string
           enum: [OPEN, IN_PROGRESS, RESOLVED, CLOSED]
         response: { type: string }
+
+    # NOTIFICATIONS
+    Notification:
+      type: object
+      required: [id, userId, title, message, type, isRead, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        title: { type: string }
+        message: { type: string }
+        type:
+          type: string
+          enum: [CASE_UPDATE, DOCUMENT, PAYMENT, TICKET, GENERAL]
+        isRead: { type: boolean }
+        createdAt: { type: string }
+
+    NotificationInput:
+      type: object
+      required: [userId, title, message]
+      properties:
+        userId: { type: integer }
+        title: { type: string }
+        message: { type: string }
+        type:
+          type: string
+          enum: [CASE_UPDATE, DOCUMENT, PAYMENT, TICKET, GENERAL]
+
+    NotificationUpdate:
+      type: object
+      properties:
+        isRead: { type: boolean }
+
+    MarkAllReadInput:
+      type: object
+      required: [userId]
+      properties:
+        userId: { type: integer }
 
     # ADMIN
     AdminDashboard:

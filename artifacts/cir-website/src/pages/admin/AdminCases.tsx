@@ -1,20 +1,25 @@
 import { useState } from "react";
-import { useListCases, useUpdateCase, useGetCaseStats, getListCasesQueryKey, getGetCaseStatsQueryKey, ListCasesStatus } from "@workspace/api-client-react";
+import {
+  useListCases, useCreateCase, useUpdateCase, useDeleteCase, useGetCaseStats, useListCustomers, useListExecutives,
+  getListCasesQueryKey, getGetCaseStatsQueryKey
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Edit, Phone } from "lucide-react";
+import { Edit, Phone, Plus, Trash2, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const STATUSES = ["DOCUMENTS_SUBMITTED", "CASE_REVIEW", "DOCUMENTATION_VERIFIED", "DISPUTE_SUBMITTED", "BUREAU_LENDER_REVIEW", "FOLLOW_UP", "COMPLETED"];
 const STATUS_PCT: Record<string, number> = { DOCUMENTS_SUBMITTED: 10, CASE_REVIEW: 25, DOCUMENTATION_VERIFIED: 40, DISPUTE_SUBMITTED: 60, BUREAU_LENDER_REVIEW: 75, FOLLOW_UP: 88, COMPLETED: 100 };
+const SERVICE_TYPES = ["CIBIL Score Improvement", "Credit Report Dispute", "Loan Settlement Dispute", "Credit Card Dispute", "EMI Default Rectification", "Written-off Account Recovery", "Bank NOC & Closure Letter", "Multiple Account Issues"];
 
 const STATUS_COLORS: Record<string, string> = {
   DOCUMENTS_SUBMITTED: "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -29,47 +34,111 @@ const STATUS_COLORS: Record<string, string> = {
 type CaseItem = {
   id: number; caseNumber: string; customerId: number; status: string; serviceType: string;
   progressPercentage: number; notes?: string | null; expectedCompletionDate?: string | null;
-  customerName?: string | null; customerMobile?: string | null; assignedToName?: string | null;
-  createdAt: string | Date; updatedAt: string | Date;
+  customerName?: string | null; customerMobile?: string | null; assignedToId?: number | null;
+  assignedToName?: string | null; createdAt: string | Date; updatedAt: string | Date;
 };
 
 export default function AdminCases() {
   const [statusFilter, setStatusFilter] = useState("");
+  const [showCreate, setShowCreate] = useState(false);
   const [editCase, setEditCase] = useState<CaseItem | null>(null);
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editExpected, setEditExpected] = useState("");
-  const { data: cases, isLoading } = useListCases(statusFilter ? { status: statusFilter as ListCasesStatus } : {}, { query: { queryKey: getListCasesQueryKey(statusFilter ? { status: statusFilter as ListCasesStatus } : {}) } });
+  const [editAssigned, setEditAssigned] = useState("");
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  // Create form state
+  const [newCustomerId, setNewCustomerId] = useState("");
+  const [newService, setNewService] = useState("");
+  const [newAssigned, setNewAssigned] = useState("");
+  const [newNotes, setNewNotes] = useState("");
+  const [newExpected, setNewExpected] = useState("");
+
+  const { data: cases, isLoading } = useListCases(
+    statusFilter ? { status: statusFilter as "DOCUMENTS_SUBMITTED" | "CASE_REVIEW" | "DOCUMENTATION_VERIFIED" | "DISPUTE_SUBMITTED" | "BUREAU_LENDER_REVIEW" | "FOLLOW_UP" | "COMPLETED" } : {},
+    { query: { queryKey: getListCasesQueryKey(statusFilter ? { status: statusFilter as "DOCUMENTS_SUBMITTED" } : {}) } }
+  );
   const { data: stats } = useGetCaseStats({ query: { queryKey: getGetCaseStatsQueryKey() } });
+  const { data: customers } = useListCustomers({});
+  const { data: executives } = useListExecutives({});
+
+  const createCase = useCreateCase();
   const updateCase = useUpdateCase();
+  const deleteCase = useDeleteCase();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: getListCasesQueryKey({}) });
+    queryClient.invalidateQueries({ queryKey: getGetCaseStatsQueryKey() });
+  };
 
   const openEdit = (c: CaseItem) => {
     setEditCase(c);
     setEditStatus(c.status);
     setEditNotes(c.notes || "");
     setEditExpected(c.expectedCompletionDate || "");
+    setEditAssigned(c.assignedToId ? String(c.assignedToId) : "");
+  };
+
+  const handleCreate = () => {
+    if (!newCustomerId || !newService) { toast({ title: "Customer and service type are required", variant: "destructive" }); return; }
+    createCase.mutate({
+      data: {
+        customerId: parseInt(newCustomerId),
+        serviceType: newService,
+        assignedToId: newAssigned ? parseInt(newAssigned) : undefined,
+        notes: newNotes || undefined,
+        expectedCompletionDate: newExpected || undefined,
+      }
+    }, {
+      onSuccess: () => {
+        invalidate();
+        setShowCreate(false);
+        setNewCustomerId(""); setNewService(""); setNewAssigned(""); setNewNotes(""); setNewExpected("");
+        toast({ title: "Case created successfully" });
+      },
+      onError: () => toast({ title: "Failed to create case", variant: "destructive" }),
+    });
   };
 
   const handleSave = () => {
     if (!editCase) return;
     const pct = STATUS_PCT[editStatus];
-    updateCase.mutate({ id: editCase.id, data: { status: editStatus as "DOCUMENTS_SUBMITTED" | "CASE_REVIEW" | "DOCUMENTATION_VERIFIED" | "DISPUTE_SUBMITTED" | "BUREAU_LENDER_REVIEW" | "FOLLOW_UP" | "COMPLETED", notes: editNotes, progressPercentage: pct, expectedCompletionDate: editExpected } }, {
-      onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListCasesQueryKey({}) });
-        queryClient.invalidateQueries({ queryKey: getGetCaseStatsQueryKey() });
-        setEditCase(null);
-        toast({ title: "Case updated" });
-      },
+    updateCase.mutate({
+      id: editCase.id,
+      data: {
+        status: editStatus as "DOCUMENTS_SUBMITTED",
+        notes: editNotes,
+        progressPercentage: pct,
+        expectedCompletionDate: editExpected,
+        assignedToId: editAssigned ? parseInt(editAssigned) : undefined,
+      }
+    }, {
+      onSuccess: () => { invalidate(); setEditCase(null); toast({ title: "Case updated" }); },
+      onError: () => toast({ title: "Failed to update case", variant: "destructive" }),
+    });
+  };
+
+  const handleDelete = () => {
+    if (deleteId === null) return;
+    deleteCase.mutate({ id: deleteId }, {
+      onSuccess: () => { invalidate(); setDeleteId(null); toast({ title: "Case deleted" }); },
+      onError: () => toast({ title: "Failed to delete case", variant: "destructive" }),
     });
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Case Management</h1>
-        <p className="text-muted-foreground text-sm mt-1">Manage all customer cases and update their status</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Case Management</h1>
+          <p className="text-muted-foreground text-sm mt-1">Create, manage, and update all customer cases</p>
+        </div>
+        <Button className="btn-gradient border-0 text-white gap-2" onClick={() => setShowCreate(true)}>
+          <Plus size={16} /> New Case
+        </Button>
       </div>
 
       {stats && (
@@ -83,7 +152,7 @@ export default function AdminCases() {
 
       <div className="flex gap-3">
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-52" data-testid="cases-status-filter"><SelectValue placeholder="All Statuses" /></SelectTrigger>
+          <SelectTrigger className="w-52"><SelectValue placeholder="All Statuses" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="">All Statuses</SelectItem>
             {STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>)}
@@ -102,7 +171,7 @@ export default function AdminCases() {
               <TableHead>Progress</TableHead>
               <TableHead>Expected</TableHead>
               <TableHead>Updated</TableHead>
-              <TableHead>Edit</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -115,8 +184,13 @@ export default function AdminCases() {
                 <TableCell className="font-mono font-medium text-xs">{c.caseNumber}</TableCell>
                 <TableCell>
                   <div>
-                    <div className="font-medium text-sm">{(c as unknown as Record<string, unknown>).customerName as string || "—"}</div>
-                    {!!(c as unknown as Record<string, unknown>).customerMobile && <div className="flex items-center gap-1 text-xs text-muted-foreground"><a href={`tel:${(c as unknown as Record<string, unknown>).customerMobile as string}`}><Phone size={11} className="text-primary" /></a> {(c as unknown as Record<string, unknown>).customerMobile as string}</div>}
+                    <div className="font-medium text-sm">{(c as unknown as CaseItem).customerName || "—"}</div>
+                    {!!(c as unknown as CaseItem).customerMobile && (
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <a href={`tel:${(c as unknown as CaseItem).customerMobile}`}><Phone size={11} className="text-primary" /></a>
+                        {(c as unknown as CaseItem).customerMobile}
+                      </div>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-sm max-w-[120px] truncate">{c.serviceType}</TableCell>
@@ -130,9 +204,14 @@ export default function AdminCases() {
                 <TableCell className="text-xs text-muted-foreground">{c.expectedCompletionDate || "—"}</TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(c.updatedAt).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => openEdit(c as CaseItem)} data-testid={`edit-case-${c.id}`}>
-                    <Edit size={14} />
-                  </Button>
+                  <div className="flex items-center gap-1 justify-end">
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEdit(c as CaseItem)} title="Edit">
+                      <Edit size={14} className="text-primary" />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setDeleteId(c.id)} title="Delete">
+                      <Trash2 size={13} className="text-destructive" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -140,6 +219,64 @@ export default function AdminCases() {
         </Table>
       </div>
 
+      {/* Create Case Dialog */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Briefcase size={20} className="text-primary" /> Create New Case</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Customer *</Label>
+              <Select value={newCustomerId} onValueChange={setNewCustomerId}>
+                <SelectTrigger><SelectValue placeholder="Select customer..." /></SelectTrigger>
+                <SelectContent>
+                  {customers?.map(c => (
+                    <SelectItem key={c.id} value={String(c.id)}>{c.name} — {c.mobile || c.email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Service Type *</Label>
+              <Select value={newService} onValueChange={setNewService}>
+                <SelectTrigger><SelectValue placeholder="Select service..." /></SelectTrigger>
+                <SelectContent>
+                  {SERVICE_TYPES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Assign To (Executive/Manager)</Label>
+              <Select value={newAssigned} onValueChange={setNewAssigned}>
+                <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Unassigned</SelectItem>
+                  {executives?.map(e => (
+                    <SelectItem key={e.id} value={String(e.id)}>{e.name} ({e.role})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Expected Completion Date</Label>
+              <Input value={newExpected} onChange={e => setNewExpected(e.target.value)} placeholder="e.g. September 30, 2026" />
+            </div>
+            <div className="space-y-2">
+              <Label>Initial Notes</Label>
+              <Textarea value={newNotes} onChange={e => setNewNotes(e.target.value)} rows={2} placeholder="Case details or special instructions..." />
+            </div>
+            <div className="flex gap-3">
+              <Button className="flex-1 btn-gradient border-0 text-white" onClick={handleCreate} disabled={createCase.isPending || !newCustomerId || !newService}>
+                {createCase.isPending ? "Creating..." : "Create Case"}
+              </Button>
+              <Button variant="outline" onClick={() => setShowCreate(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
       <Dialog open={!!editCase} onOpenChange={(o) => !o && setEditCase(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Update Case — {editCase?.caseNumber}</DialogTitle></DialogHeader>
@@ -149,6 +286,18 @@ export default function AdminCases() {
               <Select value={editStatus} onValueChange={setEditStatus}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Assign To</Label>
+              <Select value={editAssigned} onValueChange={setEditAssigned}>
+                <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Unassigned</SelectItem>
+                  {executives?.map(e => (
+                    <SelectItem key={e.id} value={String(e.id)}>{e.name} ({e.role})</SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
@@ -168,6 +317,24 @@ export default function AdminCases() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={deleteId !== null} onOpenChange={o => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Case?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the case along with all associated documents and payments. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
+              {deleteCase.isPending ? "Deleting..." : "Delete Case"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
