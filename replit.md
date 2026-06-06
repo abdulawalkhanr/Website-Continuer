@@ -53,9 +53,9 @@ A premium fintech-grade website and customer management platform for credit repo
 
 | Role | Email | Password |
 |------|-------|----------|
-| Admin (OWNER) | admin@circonsultationservice.site | Admin@2026 |
-| Manager | manager@circonsultationservice.site | Manager@2026 |
-| Executive | exec@circonsultationservice.site | Exec@2026 |
+| Admin (OWNER) | admin@circonsultationservice.in | Admin@2026 |
+| Manager | manager@circonsultationservice.in | Manager@2026 |
+| Executive | exec@circonsultationservice.in | Exec@2026 |
 | Test Customer | customer@example.com | Customer@2026 |
 
 ## Contact info embedded in UI

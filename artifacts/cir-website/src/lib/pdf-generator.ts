@@ -3,8 +3,8 @@ const COMPANY = {
   tagline: "Your Partner in Financial Health",
   phone: "01169310902",
   whatsapp: "+91 9864920810",
-  email: "support@circonsultationservice.site",
-  website: "www.circonsultationservice.site",
+  email: "support@circonsultationservice.in",
+  website: "www.circonsultationservice.in",
   address: "India",
 };
 

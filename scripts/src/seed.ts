@@ -10,7 +10,7 @@ async function seed() {
   console.log("Seeding database...");
 
   const [admin] = await db.insert(schema.usersTable).values({
-    email: "admin@circonsultationservice.site",
+    email: "admin@circonsultationservice.in",
     passwordHash: hash("Admin@2026"),
     name: "CIR Admin",
     mobile: "9999999999",
@@ -19,7 +19,7 @@ async function seed() {
   console.log("Admin user:", admin?.email ?? "already exists");
 
   const [manager] = await db.insert(schema.usersTable).values({
-    email: "manager@circonsultationservice.site",
+    email: "manager@circonsultationservice.in",
     passwordHash: hash("Manager@2026"),
     name: "Priya Sharma",
     mobile: "9888888888",
@@ -27,7 +27,7 @@ async function seed() {
   }).onConflictDoNothing().returning();
 
   const [exec] = await db.insert(schema.usersTable).values({
-    email: "exec@circonsultationservice.site",
+    email: "exec@circonsultationservice.in",
     passwordHash: hash("Exec@2026"),
     name: "Rahul Verma",
     mobile: "9777777777",
@@ -110,8 +110,8 @@ async function seed() {
   }
 
   console.log("\n=== SEED COMPLETE ===");
-  console.log("Admin:    admin@circonsultationservice.site  / Admin@2026");
-  console.log("Manager:  manager@circonsultationservice.site / Manager@2026");
+  console.log("Admin:    admin@circonsultationservice.in  / Admin@2026");
+  console.log("Manager:  manager@circonsultationservice.in / Manager@2026");
   console.log("Customer: customer@example.com / Customer@2026");
   process.exit(0);
 }

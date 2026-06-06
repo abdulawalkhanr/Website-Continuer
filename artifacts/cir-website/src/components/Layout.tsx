@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Phone, Mail } from "lucide-react";
 import { useState, useEffect } from "react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -23,19 +23,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleLogout = () => {
-    logout.mutate(undefined, {
-      onSuccess: () => {
-        window.location.href = "/";
-      },
-    });
+    logout.mutate(undefined, { onSuccess: () => { window.location.href = "/"; } });
   };
 
   const navLinks = [
@@ -59,12 +53,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-              CIR
-            </span>
-            <span className="hidden sm:inline-block text-sm font-medium text-muted-foreground tracking-tight">
-              Consultation Service
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5">
+            <img
+              src="/cir-logo.jpg"
+              alt="CIR Consultation Service"
+              className="h-10 w-auto object-contain rounded-md"
+              onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+            <span className="hidden sm:inline-block text-sm font-semibold text-foreground/80 tracking-tight leading-tight max-w-[120px]">
+              CIR Consultation Service
             </span>
           </Link>
 
@@ -98,22 +96,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <div className="flex items-center justify-start gap-2 p-2">
                     <div className="flex flex-col space-y-1 leading-none">
                       <p className="font-medium">{user.name}</p>
-                      <p className="w-[200px] truncate text-sm text-muted-foreground">
-                        {user.email}
-                      </p>
+                      <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
                     </div>
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href={user.role === "CUSTOMER" ? "/dashboard" : "/admin"}>
-                      Dashboard
-                    </Link>
+                    <Link href={user.role === "CUSTOMER" ? "/dashboard" : "/admin"}>Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onSelect={handleLogout}
-                  >
+                  <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={handleLogout}>
                     Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -150,9 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   href={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    location === link.href
-                      ? "bg-primary/10 text-primary"
-                      : "hover:bg-muted text-foreground/80"
+                    location === link.href ? "bg-primary/10 text-primary" : "hover:bg-muted text-foreground/80"
                   }`}
                 >
                   {link.label}
@@ -163,9 +152,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             {user ? (
               <div className="flex flex-col gap-2">
                 <Link href={user.role === "CUSTOMER" ? "/dashboard" : "/admin"}>
-                  <Button variant="outline" className="w-full justify-start">
-                    Dashboard
-                  </Button>
+                  <Button variant="outline" className="w-full justify-start">Dashboard</Button>
                 </Link>
                 <Button variant="ghost" className="w-full justify-start text-destructive" onClick={handleLogout}>
                   Log out
@@ -174,9 +161,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             ) : (
               <div className="flex flex-col gap-2">
                 <Link href="/login">
-                  <Button variant="outline" className="w-full justify-start">
-                    Customer Login
-                  </Button>
+                  <Button variant="outline" className="w-full justify-start">Customer Login</Button>
                 </Link>
                 <Link href="/admin/login">
                   <Button className="w-full justify-start bg-gradient-to-r from-primary to-accent border-0">
@@ -193,50 +178,91 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="bg-slate-900 text-slate-200 py-12 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="space-y-4">
-            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-              CIR
-            </span>
-            <p className="text-sm text-slate-400">
-              Your Partner in Financial Health. Premium credit report rectification and CIBIL dispute assistance.
-            </p>
+      {/* ── FOOTER ── */}
+      <footer className="bg-slate-900 text-slate-200 pt-14 pb-8 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+
+            {/* Brand */}
+            <div className="space-y-4 lg:col-span-1">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/cir-logo.jpg"
+                  alt="CIR Consultation Service"
+                  className="h-12 w-auto object-contain rounded-lg bg-white/10 p-1"
+                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+                />
+                <span className="text-lg font-bold text-white leading-tight">CIR Consultation<br/>Service</span>
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Your Partner in Financial Health. Premium credit report rectification and CIBIL dispute assistance across India.
+              </p>
+              <div className="flex flex-col gap-2 text-sm text-slate-400">
+                <a href="tel:01169310902" className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <Phone size={13} /> 01169310902
+                </a>
+                <a href="mailto:support@circonsultationservice.in" className="flex items-center gap-2 hover:text-primary transition-colors">
+                  <Mail size={13} /> support@circonsultationservice.in
+                </a>
+              </div>
+            </div>
+
+            {/* Services */}
+            <div>
+              <h4 className="font-semibold mb-4 text-white">Services</h4>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li><Link href="/services" className="hover:text-primary transition-colors">CIBIL Rectification</Link></li>
+                <li><Link href="/services" className="hover:text-primary transition-colors">Credit Score Improvement</Link></li>
+                <li><Link href="/services" className="hover:text-primary transition-colors">Dispute Assistance</Link></li>
+                <li><Link href="/pricing" className="hover:text-primary transition-colors">Pricing Plans</Link></li>
+                <li><Link href="/referral" className="hover:text-primary transition-colors">Referral Program</Link></li>
+              </ul>
+            </div>
+
+            {/* Company */}
+            <div>
+              <h4 className="font-semibold mb-4 text-white">Company</h4>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
+                <li><Link href="/process" className="hover:text-primary transition-colors">Our Process</Link></li>
+                <li><Link href="/success-stories" className="hover:text-primary transition-colors">Success Stories</Link></li>
+                <li><Link href="/blog" className="hover:text-primary transition-colors">Blog</Link></li>
+                <li><Link href="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
+                <li><Link href="/contact" className="hover:text-primary transition-colors">Contact Us</Link></li>
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h4 className="font-semibold mb-4 text-white">Legal & Policies</h4>
+              <ul className="space-y-2 text-sm text-slate-400">
+                <li><Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-primary transition-colors">Terms & Conditions</Link></li>
+                <li><Link href="/refund-policy" className="hover:text-primary transition-colors">Refund Policy</Link></li>
+                <li><Link href="/disclaimer" className="hover:text-primary transition-colors">Disclaimer</Link></li>
+              </ul>
+              <div className="mt-6">
+                <h4 className="font-semibold mb-3 text-white">Quick Access</h4>
+                <ul className="space-y-2 text-sm text-slate-400">
+                  <li><Link href="/login" className="hover:text-primary transition-colors">Customer Login</Link></li>
+                  <li><Link href="/track" className="hover:text-primary transition-colors">Track Case</Link></li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-white">Services</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><Link href="/services" className="hover:text-primary transition-colors">CIBIL Rectification</Link></li>
-              <li><Link href="/services" className="hover:text-primary transition-colors">Credit Score Improvement</Link></li>
-              <li><Link href="/services" className="hover:text-primary transition-colors">Dispute Assistance</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-white">Company</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li><Link href="/about" className="hover:text-primary transition-colors">About Us</Link></li>
-              <li><Link href="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
-              <li><Link href="/referral" className="hover:text-primary transition-colors">Referral Program</Link></li>
-              <li><Link href="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="font-semibold mb-4 text-white">Contact</h4>
-            <ul className="space-y-2 text-sm text-slate-400">
-              <li>Phone: 01169310902</li>
-              <li>WhatsApp: +91 9864920810</li>
-              <li>Email: support@circonsultationservice.site</li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 pt-8 border-t border-slate-800 text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p>&copy; {new Date().getFullYear()} CIR Consultation Service. All rights reserved.</p>
-          <div className="flex gap-4">
-            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+
+          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-slate-500">
+            <p>&copy; {new Date().getFullYear()} CIR Consultation Service. All rights reserved.</p>
+            <div className="flex flex-wrap gap-x-5 gap-y-2 justify-center">
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms & Conditions</Link>
+              <Link href="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link>
+              <Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
+            </div>
           </div>
         </div>
       </footer>
+
       <AIChatbot />
       <FloatingButtons />
     </div>

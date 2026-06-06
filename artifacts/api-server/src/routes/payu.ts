@@ -65,7 +65,7 @@ router.post("/payu/initiate", async (req, res): Promise<void> => {
   const amount = pendingAmount.toFixed(2);
   const productinfo = `CIR Service: ${caseRow?.serviceType?.replace(/_/g, " ") || "Credit Report Rectification"}`;
   const firstname = user?.name?.split(" ")[0] || "Customer";
-  const email = user?.email || "customer@circonsultationservice.site";
+  const email = user?.email || "customer@circonsultationservice.in";
   const mobile = user?.mobile || "9999999999";
   const baseUrl = getBaseUrl(req);
 

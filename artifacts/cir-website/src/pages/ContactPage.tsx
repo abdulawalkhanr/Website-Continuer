@@ -47,8 +47,8 @@ export default function ContactPage() {
               {[
                 { icon: <Phone size={22} className="text-primary" />, label: "Customer Support", value: "01169310902", href: "tel:01169310902", bg: "bg-primary/10" },
                 { icon: <MessageCircle size={22} className="text-green-600" />, label: "WhatsApp Support", value: "+91 9864920810", href: "https://wa.me/919864920810", bg: "bg-green-50" },
-                { icon: <Mail size={22} className="text-purple-600" />, label: "Email", value: "support@circonsultationservice.site", href: "mailto:support@circonsultationservice.site", bg: "bg-purple-50" },
-                { icon: <Globe size={22} className="text-blue-600" />, label: "Website", value: "circonsultationservice.site", href: "https://circonsultationservice.site", bg: "bg-blue-50" },
+                { icon: <Mail size={22} className="text-purple-600" />, label: "Email", value: "support@circonsultationservice.in", href: "mailto:support@circonsultationservice.in", bg: "bg-purple-50" },
+                { icon: <Globe size={22} className="text-blue-600" />, label: "Website", value: "circonsultationservice.in", href: "https://circonsultationservice.in", bg: "bg-blue-50" },
               ].map(item => (
                 <motion.a key={item.label} href={item.href} target={item.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex items-center gap-4 glass-card rounded-xl p-4 hover:shadow-md transition-shadow group">
                   <div className={`w-12 h-12 rounded-xl ${item.bg} flex items-center justify-center shrink-0`}>{item.icon}</div>

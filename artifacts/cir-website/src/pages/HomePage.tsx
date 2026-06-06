@@ -60,7 +60,7 @@ const FAQS = [
   { q: "How do I submit a support ticket?", a: "Log into your Customer Portal, navigate to Support Tickets, and create a new ticket describing your issue. Our team responds within 24 hours." },
   { q: "What if the bureau rejects my dispute?", a: "We analyse the rejection reason, gather additional evidence, and re-submit the dispute with stronger documentation. Persistence and proper documentation are key." },
   { q: "Can you help with unknown loan entries in my credit report?", a: "Yes. Unknown loan entries are often due to identity theft or data errors. We help you raise disputes with the concerned lender and credit bureau to get them removed." },
-  { q: "How do I contact CIR Consultation Service?", a: "Call us at 01169310902, WhatsApp at +91 9864920810, or email support@circonsultationservice.site. We're available Mon–Sat, 9 AM–7 PM." },
+  { q: "How do I contact CIR Consultation Service?", a: "Call us at 01169310902, WhatsApp at +91 9864920810, or email support@circonsultationservice.in. We're available Mon–Sat, 9 AM–7 PM." },
   { q: "Is there an online customer portal?", a: "Yes. After registration, you get access to our Customer Portal where you can track case progress, upload documents, view payments, and raise support tickets." },
   { q: "What happens if my credit issue is not resolved?", a: "We review your case thoroughly, try alternative dispute approaches, and if the issue is genuinely unresolvable (e.g., correct negative information), we guide you on a credit rebuilding strategy." },
 ];
@@ -409,7 +409,7 @@ export default function HomePage() {
           <div className="mt-6 flex flex-wrap justify-center gap-8 text-white/70 text-sm">
             <span>Phone: 01169310902</span>
             <span>WhatsApp: +91 9864920810</span>
-            <span>support@circonsultationservice.site</span>
+            <span>support@circonsultationservice.in</span>
           </div>
         </div>
       </section>

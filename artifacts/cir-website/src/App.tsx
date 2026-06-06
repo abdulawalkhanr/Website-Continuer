@@ -21,6 +21,12 @@ import FAQPage from "@/pages/FAQPage";
 import ContactPage from "@/pages/ContactPage";
 import TrackCasePage from "@/pages/TrackCasePage";
 
+// Policy pages
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
+import TermsPage from "@/pages/TermsPage";
+import RefundPolicyPage from "@/pages/RefundPolicyPage";
+import DisclaimerPage from "@/pages/DisclaimerPage";
+
 // Auth pages
 import LoginPage from "@/pages/LoginPage";
 import RegisterPage from "@/pages/RegisterPage";
@@ -44,12 +50,7 @@ import AdminReferrals from "@/pages/admin/AdminReferrals";
 import AdminTickets from "@/pages/admin/AdminTickets";
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 30000,
-    },
-  },
+  defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
 });
 
 function ProtectedDashboard({ children }: { children: React.ReactNode }) {
@@ -82,6 +83,12 @@ function Router() {
       <Route path="/faq" component={() => <Layout><FAQPage /></Layout>} />
       <Route path="/contact" component={() => <Layout><ContactPage /></Layout>} />
       <Route path="/track" component={() => <Layout><TrackCasePage /></Layout>} />
+
+      {/* Policy pages */}
+      <Route path="/privacy" component={() => <Layout><PrivacyPolicyPage /></Layout>} />
+      <Route path="/terms" component={() => <Layout><TermsPage /></Layout>} />
+      <Route path="/refund-policy" component={() => <Layout><RefundPolicyPage /></Layout>} />
+      <Route path="/disclaimer" component={() => <Layout><DisclaimerPage /></Layout>} />
 
       {/* Auth */}
       <Route path="/login" component={LoginPage} />

@@ -52,7 +52,7 @@ export default function AdminLoginPage() {
           <div className="space-y-5">
             <div className="space-y-2">
               <Label className="text-slate-300">Email Address</Label>
-              <Input data-testid="admin-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@circonsultationservice.site" className="bg-slate-700 border-slate-600 text-white placeholder-slate-400" onKeyDown={e => e.key === "Enter" && handleLogin()} />
+              <Input data-testid="admin-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@circonsultationservice.in" className="bg-slate-700 border-slate-600 text-white placeholder-slate-400" onKeyDown={e => e.key === "Enter" && handleLogin()} />
             </div>
             <div className="space-y-2">
               <Label className="text-slate-300">Password</Label>
