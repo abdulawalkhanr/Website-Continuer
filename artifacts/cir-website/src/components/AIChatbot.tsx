@@ -112,7 +112,7 @@ export function AIChatbot() {
       <button
         data-testid="chatbot-toggle"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-24 right-5 z-50 w-14 h-14 rounded-full btn-gradient shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
+        className="fixed bottom-40 right-5 z-50 w-14 h-14 rounded-full btn-gradient shadow-lg flex items-center justify-center transition-transform hover:scale-105 active:scale-95"
         aria-label="Open chat"
       >
         {isOpen ? <X size={22} className="text-white" /> : <MessageCircle size={22} className="text-white" />}
@@ -120,7 +120,7 @@ export function AIChatbot() {
 
       {/* Chat window */}
       {isOpen && (
-        <div className="fixed bottom-44 right-5 z-50 w-[340px] rounded-2xl overflow-hidden shadow-xl border border-border bg-white flex flex-col" style={{ height: 420 }}>
+        <div className="fixed bottom-[232px] right-5 z-50 w-[340px] rounded-2xl overflow-hidden shadow-xl border border-border bg-white flex flex-col" style={{ height: 420 }}>
           {/* Header */}
           <div className="btn-gradient px-4 py-3 flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
