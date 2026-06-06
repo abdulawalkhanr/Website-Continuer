@@ -91,7 +91,7 @@ export const UpdateProfileResponse = zod.object({
  */
 export const ListLeadsQueryParams = zod.object({
   "stage": zod.enum(['NEW', 'CONTACTED', 'SCHEDULED', 'CONVERTED', 'COMPLETED']).optional(),
-  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL']).optional()
+  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL', 'GST_PAGE', 'ITR_PAGE', 'MSME_PAGE', 'BIZ_REG_PAGE', 'LEGAL_PAGE']).optional()
 })
 
 export const ListLeadsResponseItem = zod.object({
@@ -102,7 +102,7 @@ export const ListLeadsResponseItem = zod.object({
   "city": zod.string().nullish(),
   "serviceRequired": zod.string().nullish(),
   "stage": zod.enum(['NEW', 'CONTACTED', 'SCHEDULED', 'CONVERTED', 'COMPLETED']),
-  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL']),
+  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL', 'GST_PAGE', 'ITR_PAGE', 'MSME_PAGE', 'BIZ_REG_PAGE', 'LEGAL_PAGE']),
   "createdAt": zod.string()
 })
 export const ListLeadsResponse = zod.array(ListLeadsResponseItem)
@@ -119,7 +119,7 @@ export const CreateLeadBody = zod.object({
   "email": zod.string().optional(),
   "city": zod.string().optional(),
   "serviceRequired": zod.string().optional(),
-  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL']).default(createLeadBodySourceDefault)
+  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL', 'GST_PAGE', 'ITR_PAGE', 'MSME_PAGE', 'BIZ_REG_PAGE', 'LEGAL_PAGE']).default(createLeadBodySourceDefault)
 })
 
 
@@ -138,7 +138,7 @@ export const GetLeadResponse = zod.object({
   "city": zod.string().nullish(),
   "serviceRequired": zod.string().nullish(),
   "stage": zod.enum(['NEW', 'CONTACTED', 'SCHEDULED', 'CONVERTED', 'COMPLETED']),
-  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL']),
+  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL', 'GST_PAGE', 'ITR_PAGE', 'MSME_PAGE', 'BIZ_REG_PAGE', 'LEGAL_PAGE']),
   "createdAt": zod.string()
 })
 
@@ -165,7 +165,7 @@ export const UpdateLeadResponse = zod.object({
   "city": zod.string().nullish(),
   "serviceRequired": zod.string().nullish(),
   "stage": zod.enum(['NEW', 'CONTACTED', 'SCHEDULED', 'CONVERTED', 'COMPLETED']),
-  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL']),
+  "source": zod.enum(['HOMEPAGE', 'CONTACT', 'CHATBOT', 'REFERRAL', 'GST_PAGE', 'ITR_PAGE', 'MSME_PAGE', 'BIZ_REG_PAGE', 'LEGAL_PAGE']),
   "createdAt": zod.string()
 })
 

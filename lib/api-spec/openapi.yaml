@@ -145,7 +145,7 @@ paths:
           name: source
           schema:
             type: string
-            enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL]
+            enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL, GST_PAGE, ITR_PAGE, MSME_PAGE, BIZ_REG_PAGE, LEGAL_PAGE]
       responses:
         "200":
           description: List of leads
@@ -984,7 +984,7 @@ components:
           enum: [NEW, CONTACTED, SCHEDULED, CONVERTED, COMPLETED]
         source:
           type: string
-          enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL]
+          enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL, GST_PAGE, ITR_PAGE, MSME_PAGE, BIZ_REG_PAGE, LEGAL_PAGE]
         createdAt: { type: string }
 
     LeadInput:
@@ -998,7 +998,7 @@ components:
         serviceRequired: { type: string }
         source:
           type: string
-          enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL]
+          enum: [HOMEPAGE, CONTACT, CHATBOT, REFERRAL, GST_PAGE, ITR_PAGE, MSME_PAGE, BIZ_REG_PAGE, LEGAL_PAGE]
           default: HOMEPAGE
 
     LeadUpdate:

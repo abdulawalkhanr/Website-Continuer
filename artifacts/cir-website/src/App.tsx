@@ -21,6 +21,14 @@ import FAQPage from "@/pages/FAQPage";
 import ContactPage from "@/pages/ContactPage";
 import TrackCasePage from "@/pages/TrackCasePage";
 
+// Tax & Legal service pages
+import TaxLegalServicesPage from "@/pages/TaxLegalServicesPage";
+import GSTServicesPage from "@/pages/GSTServicesPage";
+import ITRFilingPage from "@/pages/ITRFilingPage";
+import MSMERegistrationPage from "@/pages/MSMERegistrationPage";
+import BusinessRegistrationPage from "@/pages/BusinessRegistrationPage";
+import LegalDocumentationPage from "@/pages/LegalDocumentationPage";
+
 // Policy pages
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import TermsPage from "@/pages/TermsPage";
@@ -83,6 +91,14 @@ function Router() {
       <Route path="/faq" component={() => <Layout><FAQPage /></Layout>} />
       <Route path="/contact" component={() => <Layout><ContactPage /></Layout>} />
       <Route path="/track" component={() => <Layout><TrackCasePage /></Layout>} />
+
+      {/* Tax & Legal service pages */}
+      <Route path="/tax-legal" component={() => <Layout><TaxLegalServicesPage /></Layout>} />
+      <Route path="/gst-services" component={() => <Layout><GSTServicesPage /></Layout>} />
+      <Route path="/itr-filing" component={() => <Layout><ITRFilingPage /></Layout>} />
+      <Route path="/msme-registration" component={() => <Layout><MSMERegistrationPage /></Layout>} />
+      <Route path="/business-registration" component={() => <Layout><BusinessRegistrationPage /></Layout>} />
+      <Route path="/legal-documentation" component={() => <Layout><LegalDocumentationPage /></Layout>} />
 
       {/* Policy pages */}
       <Route path="/privacy" component={() => <Layout><PrivacyPolicyPage /></Layout>} />

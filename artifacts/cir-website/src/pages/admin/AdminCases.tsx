@@ -19,7 +19,32 @@ import { useToast } from "@/hooks/use-toast";
 
 const STATUSES = ["DOCUMENTS_SUBMITTED", "CASE_REVIEW", "DOCUMENTATION_VERIFIED", "DISPUTE_SUBMITTED", "BUREAU_LENDER_REVIEW", "FOLLOW_UP", "COMPLETED"];
 const STATUS_PCT: Record<string, number> = { DOCUMENTS_SUBMITTED: 10, CASE_REVIEW: 25, DOCUMENTATION_VERIFIED: 40, DISPUTE_SUBMITTED: 60, BUREAU_LENDER_REVIEW: 75, FOLLOW_UP: 88, COMPLETED: 100 };
-const SERVICE_TYPES = ["CIBIL Score Improvement", "Credit Report Dispute", "Loan Settlement Dispute", "Credit Card Dispute", "EMI Default Rectification", "Written-off Account Recovery", "Bank NOC & Closure Letter", "Multiple Account Issues"];
+const SERVICE_CATEGORIES = [
+  { group: "── Credit Services ──", types: [
+    "CIBIL Score Improvement", "Credit Report Dispute", "Loan Settlement Dispute",
+    "Credit Card Dispute", "EMI Default Rectification", "Written-off Account Recovery",
+    "Bank NOC & Closure Letter", "Multiple Account Issues", "Credit Profile Review",
+    "NBFC Dispute Assistance", "Financial Consultation",
+  ]},
+  { group: "── Tax & GST Services ──", types: [
+    "GST Registration", "GST Return Filing", "GST Compliance & Notice Reply",
+    "GST Amendment", "GST Cancellation", "GST Annual Return",
+    "Individual ITR Filing", "Business ITR Filing", "Tax Planning Consultation",
+    "Tax Notice Assistance", "PAN Card Services", "TAN Registration",
+  ]},
+  { group: "── Business Registration ──", types: [
+    "MSME / Udyam Registration", "Proprietorship Registration", "Partnership Firm Registration",
+    "LLP Registration", "Private Limited Company Registration", "Shop & Establishment Registration",
+    "Trade License", "Startup / DPIIT Registration", "Professional Tax Registration",
+    "Import Export Code (IEC)", "Digital Signature Certificate (DSC)",
+  ]},
+  { group: "── Legal & Compliance ──", types: [
+    "Agreement Drafting", "Affidavit Drafting", "Notary Documentation",
+    "Business Documentation", "Accounting & Bookkeeping", "Business Compliance",
+    "Legal Documentation Support",
+  ]},
+];
+const SERVICE_TYPES = SERVICE_CATEGORIES.flatMap(c => c.types);
 
 const STATUS_COLORS: Record<string, string> = {
   DOCUMENTS_SUBMITTED: "bg-yellow-50 text-yellow-700 border-yellow-200",
@@ -242,8 +267,13 @@ export default function AdminCases() {
               <Label>Service Type *</Label>
               <Select value={newService} onValueChange={setNewService}>
                 <SelectTrigger><SelectValue placeholder="Select service..." /></SelectTrigger>
-                <SelectContent>
-                  {SERVICE_TYPES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                <SelectContent className="max-h-72">
+                  {SERVICE_CATEGORIES.map(cat => (
+                    <div key={cat.group}>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground bg-muted/50">{cat.group}</div>
+                      {cat.types.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </div>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

@@ -14,4 +14,9 @@ export const LeadInputSource = {
   CONTACT: 'CONTACT',
   CHATBOT: 'CHATBOT',
   REFERRAL: 'REFERRAL',
+  GST_PAGE: 'GST_PAGE',
+  ITR_PAGE: 'ITR_PAGE',
+  MSME_PAGE: 'MSME_PAGE',
+  BIZ_REG_PAGE: 'BIZ_REG_PAGE',
+  LEGAL_PAGE: 'LEGAL_PAGE',
 } as const;
