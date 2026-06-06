@@ -14,6 +14,7 @@ export const paymentsTable = pgTable("payments", {
   paymentStatus: paymentStatusEnum("payment_status").notNull().default("PENDING"),
   receiptUrl: text("receipt_url"),
   agreementUrl: text("agreement_url"),
+  payuTxnId: text("payu_txn_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
