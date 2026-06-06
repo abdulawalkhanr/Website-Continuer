@@ -39,25 +39,26 @@ type CaseItem = {
 };
 
 export default function AdminCases() {
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ALL");
   const [showCreate, setShowCreate] = useState(false);
   const [editCase, setEditCase] = useState<CaseItem | null>(null);
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editExpected, setEditExpected] = useState("");
-  const [editAssigned, setEditAssigned] = useState("");
+  const [editAssigned, setEditAssigned] = useState("NONE");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // Create form state
   const [newCustomerId, setNewCustomerId] = useState("");
   const [newService, setNewService] = useState("");
-  const [newAssigned, setNewAssigned] = useState("");
+  const [newAssigned, setNewAssigned] = useState("NONE");
   const [newNotes, setNewNotes] = useState("");
   const [newExpected, setNewExpected] = useState("");
 
+  const activeStatus = statusFilter !== "ALL" ? statusFilter as "DOCUMENTS_SUBMITTED" | "CASE_REVIEW" | "DOCUMENTATION_VERIFIED" | "DISPUTE_SUBMITTED" | "BUREAU_LENDER_REVIEW" | "FOLLOW_UP" | "COMPLETED" : undefined;
   const { data: cases, isLoading } = useListCases(
-    statusFilter ? { status: statusFilter as "DOCUMENTS_SUBMITTED" | "CASE_REVIEW" | "DOCUMENTATION_VERIFIED" | "DISPUTE_SUBMITTED" | "BUREAU_LENDER_REVIEW" | "FOLLOW_UP" | "COMPLETED" } : {},
-    { query: { queryKey: getListCasesQueryKey(statusFilter ? { status: statusFilter as "DOCUMENTS_SUBMITTED" } : {}) } }
+    activeStatus ? { status: activeStatus } : {},
+    { query: { queryKey: getListCasesQueryKey(activeStatus ? { status: activeStatus } : {}) } }
   );
   const { data: stats } = useGetCaseStats({ query: { queryKey: getGetCaseStatsQueryKey() } });
   const { data: customers } = useListCustomers({});
@@ -79,7 +80,7 @@ export default function AdminCases() {
     setEditStatus(c.status);
     setEditNotes(c.notes || "");
     setEditExpected(c.expectedCompletionDate || "");
-    setEditAssigned(c.assignedToId ? String(c.assignedToId) : "");
+    setEditAssigned(c.assignedToId ? String(c.assignedToId) : "NONE");
   };
 
   const handleCreate = () => {
@@ -88,7 +89,7 @@ export default function AdminCases() {
       data: {
         customerId: parseInt(newCustomerId),
         serviceType: newService,
-        assignedToId: newAssigned ? parseInt(newAssigned) : undefined,
+        assignedToId: (newAssigned && newAssigned !== "NONE") ? parseInt(newAssigned) : undefined,
         notes: newNotes || undefined,
         expectedCompletionDate: newExpected || undefined,
       }
@@ -113,7 +114,7 @@ export default function AdminCases() {
         notes: editNotes,
         progressPercentage: pct,
         expectedCompletionDate: editExpected,
-        assignedToId: editAssigned ? parseInt(editAssigned) : undefined,
+        assignedToId: (editAssigned && editAssigned !== "NONE") ? parseInt(editAssigned) : undefined,
       }
     }, {
       onSuccess: () => { invalidate(); setEditCase(null); toast({ title: "Case updated" }); },
@@ -154,7 +155,7 @@ export default function AdminCases() {
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-52"><SelectValue placeholder="All Statuses" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="ALL">All Statuses</SelectItem>
             {STATUSES.map(s => <SelectItem key={s} value={s}>{s.replace(/_/g, " ")}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -251,7 +252,7 @@ export default function AdminCases() {
               <Select value={newAssigned} onValueChange={setNewAssigned}>
                 <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="NONE">Unassigned</SelectItem>
                   {executives?.map(e => (
                     <SelectItem key={e.id} value={String(e.id)}>{e.name} ({e.role})</SelectItem>
                   ))}
@@ -293,7 +294,7 @@ export default function AdminCases() {
               <Select value={editAssigned} onValueChange={setEditAssigned}>
                 <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
+                  <SelectItem value="NONE">Unassigned</SelectItem>
                   {executives?.map(e => (
                     <SelectItem key={e.id} value={String(e.id)}>{e.name} ({e.role})</SelectItem>
                   ))}

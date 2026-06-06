@@ -19,9 +19,10 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 export default function AdminLeads() {
-  const [stageFilter, setStageFilter] = useState("");
+  const [stageFilter, setStageFilter] = useState("ALL");
   const [search, setSearch] = useState("");
-  const { data: leads, isLoading } = useListLeads(stageFilter ? { stage: stageFilter as ListLeadsStage } : {}, { query: { queryKey: getListLeadsQueryKey(stageFilter ? { stage: stageFilter as ListLeadsStage } : {}) } });
+  const activeStage = stageFilter !== "ALL" ? stageFilter as ListLeadsStage : undefined;
+  const { data: leads, isLoading } = useListLeads(activeStage ? { stage: activeStage } : {}, { query: { queryKey: getListLeadsQueryKey(activeStage ? { stage: activeStage } : {}) } });
   const { data: stats } = useGetLeadStats({ query: { queryKey: getGetLeadStatsQueryKey() } });
   const updateLead = useUpdateLead();
   const queryClient = useQueryClient();
@@ -71,7 +72,7 @@ export default function AdminLeads() {
         <Select value={stageFilter} onValueChange={setStageFilter}>
           <SelectTrigger className="w-40" data-testid="leads-stage-filter"><SelectValue placeholder="All Stages" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Stages</SelectItem>
+            <SelectItem value="ALL">All Stages</SelectItem>
             {STAGES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
           </SelectContent>
         </Select>
