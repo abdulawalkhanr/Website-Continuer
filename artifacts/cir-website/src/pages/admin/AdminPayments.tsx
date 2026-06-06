@@ -7,11 +7,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Edit } from "lucide-react";
+import { Edit, FileText, FileSignature } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { generateReceipt, generateAgreement } from "@/lib/pdf-generator";
 
-type Payment = { id: number; caseId: number; caseNumber?: string | null; serviceFee: number; advancePaid: number; pendingAmount: number; paymentStatus: string; createdAt: string | Date };
+type EnrichedPayment = {
+  id: number;
+  caseId: number;
+  caseNumber?: string | null;
+  serviceType?: string | null;
+  customerName?: string | null;
+  customerEmail?: string | null;
+  customerMobile?: string | null;
+  customerCity?: string | null;
+  serviceFee: number;
+  advancePaid: number;
+  pendingAmount: number;
+  paymentStatus: string;
+  createdAt: string | Date;
+};
 
 const STATUS_COLORS: Record<string, string> = {
   PAID: "bg-green-100 text-green-700 border-green-200",
@@ -25,14 +39,12 @@ export default function AdminPayments() {
   const updatePayment = useUpdatePayment();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  const [editPayment, setEditPayment] = useState<Payment | null>(null);
+  const [editPayment, setEditPayment] = useState<EnrichedPayment | null>(null);
   const [editAdvance, setEditAdvance] = useState("");
-  const [editStatus, setEditStatus] = useState("");
 
-  const openEdit = (p: Payment) => {
+  const openEdit = (p: EnrichedPayment) => {
     setEditPayment(p);
     setEditAdvance(String(p.advancePaid));
-    setEditStatus(p.paymentStatus);
   };
 
   const handleSave = () => {
@@ -47,11 +59,43 @@ export default function AdminPayments() {
     });
   };
 
+  const handleReceipt = (p: EnrichedPayment) => {
+    generateReceipt({
+      paymentId: p.id,
+      date: p.createdAt,
+      customerName: p.customerName || "Client",
+      customerEmail: p.customerEmail || undefined,
+      customerMobile: p.customerMobile || undefined,
+      customerCity: p.customerCity || undefined,
+      caseNumber: p.caseNumber || `#${p.caseId}`,
+      serviceType: p.serviceType || "Credit Report Rectification",
+      serviceFee: p.serviceFee,
+      advancePaid: p.advancePaid,
+      pendingAmount: p.pendingAmount,
+      paymentStatus: p.paymentStatus,
+    });
+  };
+
+  const handleAgreement = (p: EnrichedPayment) => {
+    generateAgreement({
+      paymentId: p.id,
+      date: p.createdAt,
+      customerName: p.customerName || "Client",
+      customerEmail: p.customerEmail || undefined,
+      customerMobile: p.customerMobile || undefined,
+      customerCity: p.customerCity || undefined,
+      caseNumber: p.caseNumber || `#${p.caseId}`,
+      serviceType: p.serviceType || "Credit Report Rectification",
+      serviceFee: p.serviceFee,
+      advancePaid: p.advancePaid,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Payment Management</h1>
-        <p className="text-muted-foreground text-sm mt-1">Track and manage all service fee payments</p>
+        <p className="text-muted-foreground text-sm mt-1">Track payments and generate receipts &amp; agreements</p>
       </div>
 
       {stats && (
@@ -68,31 +112,44 @@ export default function AdminPayments() {
           <TableHeader>
             <TableRow>
               <TableHead>Case #</TableHead>
+              <TableHead>Customer</TableHead>
               <TableHead>Service Fee</TableHead>
               <TableHead>Paid</TableHead>
               <TableHead>Pending</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Edit</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : !payments?.length ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">No payments found</TableCell></TableRow>
-            ) : payments.map(p => (
+              <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No payments found</TableCell></TableRow>
+            ) : (payments as unknown as EnrichedPayment[]).map(p => (
               <TableRow key={p.id} className="hover:bg-muted/30">
-                <TableCell className="font-mono text-xs">{(p as unknown as Record<string, unknown>).caseNumber as string || `#${p.caseId}`}</TableCell>
-                <TableCell className="font-medium">₹{(typeof p.serviceFee === "number" ? p.serviceFee : parseFloat(String(p.serviceFee))).toLocaleString()}</TableCell>
-                <TableCell className="text-green-600 font-medium">₹{(typeof p.advancePaid === "number" ? p.advancePaid : parseFloat(String(p.advancePaid))).toLocaleString()}</TableCell>
-                <TableCell className="text-orange-600">₹{(typeof p.pendingAmount === "number" ? p.pendingAmount : parseFloat(String(p.pendingAmount))).toLocaleString()}</TableCell>
-                <TableCell><Badge className={`text-xs ${STATUS_COLORS[p.paymentStatus]}`}>{p.paymentStatus}</Badge></TableCell>
+                <TableCell className="font-mono text-xs">{p.caseNumber || `#${p.caseId}`}</TableCell>
+                <TableCell>
+                  <div className="font-medium text-sm">{p.customerName || "—"}</div>
+                  <div className="text-xs text-muted-foreground">{p.customerMobile || p.customerEmail || ""}</div>
+                </TableCell>
+                <TableCell className="font-medium">₹{p.serviceFee.toLocaleString()}</TableCell>
+                <TableCell className="text-green-600 font-medium">₹{p.advancePaid.toLocaleString()}</TableCell>
+                <TableCell className="text-orange-600">₹{p.pendingAmount.toLocaleString()}</TableCell>
+                <TableCell><Badge className={`text-xs ${STATUS_COLORS[p.paymentStatus] || ""}`}>{p.paymentStatus}</Badge></TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(p.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => openEdit(p as Payment)}>
-                    <Edit size={14} />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button size="sm" variant="ghost" className="h-7 px-2" title="Edit payment" onClick={() => openEdit(p)}>
+                      <Edit size={13} />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-blue-600" title="Download Receipt" onClick={() => handleReceipt(p)}>
+                      <FileText size={13} />
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-purple-600" title="Download Agreement" onClick={() => handleAgreement(p)}>
+                      <FileSignature size={13} />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -100,10 +157,25 @@ export default function AdminPayments() {
         </Table>
       </div>
 
+      <div className="glass-card rounded-xl p-4 flex items-start gap-3 text-sm">
+        <FileText size={16} className="text-blue-500 mt-0.5 shrink-0" />
+        <div>
+          <span className="font-medium">Generating documents:</span>{" "}
+          Click <FileText size={12} className="inline text-blue-500" /> for receipt or <FileSignature size={12} className="inline text-purple-500" /> for agreement.
+          A new tab opens — use <strong>Print → Save as PDF</strong> to download.
+        </div>
+      </div>
+
       <Dialog open={!!editPayment} onOpenChange={(o) => !o && setEditPayment(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader><DialogTitle>Update Payment</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            {editPayment && (
+              <div className="p-3 bg-muted/50 rounded-lg text-sm space-y-1">
+                <div className="font-medium">{editPayment.customerName || "Client"}</div>
+                <div className="text-muted-foreground text-xs">{editPayment.caseNumber}</div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label>Amount Paid (₹)</Label>
               <Input type="number" value={editAdvance} onChange={e => setEditAdvance(e.target.value)} placeholder="Amount paid" />

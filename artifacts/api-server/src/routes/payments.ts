@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { paymentsTable, casesTable } from "@workspace/db";
+import { paymentsTable, casesTable, usersTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { CreatePaymentBody, UpdatePaymentBody, ListPaymentsQueryParams } from "@workspace/api-zod";
 
@@ -26,7 +26,19 @@ router.get("/payments", async (req, res): Promise<void> => {
   }
   const enriched = await Promise.all(payments.map(async (p) => {
     const [c] = await db.select().from(casesTable).where(eq(casesTable.id, p.caseId)).limit(1);
-    return { ...p, caseNumber: c?.caseNumber || null, serviceFee: parseFloat(p.serviceFee as string), advancePaid: parseFloat(p.advancePaid as string), pendingAmount: parseFloat(p.pendingAmount as string) };
+    const [u] = c?.customerId ? await db.select().from(usersTable).where(eq(usersTable.id, c.customerId)).limit(1) : [undefined];
+    return {
+      ...p,
+      caseNumber: c?.caseNumber || null,
+      serviceType: c?.serviceType || null,
+      customerName: u?.name || null,
+      customerEmail: u?.email || null,
+      customerMobile: u?.mobile || null,
+      customerCity: u?.city || null,
+      serviceFee: parseFloat(p.serviceFee as string),
+      advancePaid: parseFloat(p.advancePaid as string),
+      pendingAmount: parseFloat(p.pendingAmount as string),
+    };
   }));
   res.json(enriched);
 });

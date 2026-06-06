@@ -1,8 +1,9 @@
 import { useGetMe, useListCases, useListPayments, getGetMeQueryKey, getListCasesQueryKey, getListPaymentsQueryKey } from "@workspace/api-client-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Download, CheckCircle } from "lucide-react";
+import { CreditCard, Download, CheckCircle, FileText, FileSignature } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { generateReceipt, generateAgreement } from "@/lib/pdf-generator";
 
 function statusBadge(status: string) {
   if (status === "PAID") return <Badge className="bg-green-100 text-green-700 border-green-200">Paid</Badge>;
@@ -22,6 +23,40 @@ export default function DashboardPayments() {
   const pendingAmount = typeof payment?.pendingAmount === "number" ? payment.pendingAmount : parseFloat(String(payment?.pendingAmount || 0));
   const paidPct = serviceFee > 0 ? Math.round((advancePaid / serviceFee) * 100) : 0;
 
+  const handleGenerateReceipt = () => {
+    if (!payment || !user || !activeCase) return;
+    generateReceipt({
+      paymentId: payment.id,
+      date: payment.createdAt,
+      customerName: user.name,
+      customerEmail: user.email,
+      customerMobile: (user as unknown as Record<string, unknown>).mobile as string | undefined,
+      customerCity: (user as unknown as Record<string, unknown>).city as string | undefined,
+      caseNumber: activeCase.caseNumber,
+      serviceType: activeCase.serviceType,
+      serviceFee,
+      advancePaid,
+      pendingAmount,
+      paymentStatus: payment.paymentStatus,
+    });
+  };
+
+  const handleGenerateAgreement = () => {
+    if (!user || !activeCase) return;
+    generateAgreement({
+      paymentId: payment?.id,
+      date: payment?.createdAt ?? new Date(),
+      customerName: user.name,
+      customerEmail: user.email,
+      customerMobile: (user as unknown as Record<string, unknown>).mobile as string | undefined,
+      customerCity: (user as unknown as Record<string, unknown>).city as string | undefined,
+      caseNumber: activeCase.caseNumber,
+      serviceType: activeCase.serviceType,
+      serviceFee: serviceFee || 0,
+      advancePaid,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Payments</h2>
@@ -31,6 +66,11 @@ export default function DashboardPayments() {
         <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground">
           <CreditCard size={40} className="mx-auto mb-3 text-primary/30" />
           <p>No payment details available yet. Our team will update this once your case is registered.</p>
+          {activeCase && (
+            <Button variant="outline" className="mt-4 gap-2" onClick={handleGenerateAgreement}>
+              <FileSignature size={15} /> Download Agreement
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -71,23 +111,37 @@ export default function DashboardPayments() {
           </div>
 
           <div className="glass-card rounded-2xl p-6">
-            <h3 className="font-semibold mb-4">Documents</h3>
+            <h3 className="font-semibold mb-1">Documents</h3>
+            <p className="text-xs text-muted-foreground mb-4">Download your payment receipt and service agreement as PDF from your browser.</p>
             <div className="flex flex-wrap gap-3">
-              <Button variant="outline" className="flex items-center gap-2" disabled={!payment.receiptUrl}>
-                <Download size={16} /> Download Receipt
+              <Button
+                className="btn-gradient border-0 text-white gap-2"
+                onClick={handleGenerateReceipt}
+                disabled={!payment || !user || !activeCase}
+              >
+                <FileText size={15} /> Download Receipt
               </Button>
-              <Button variant="outline" className="flex items-center gap-2" disabled={!payment.agreementUrl}>
-                <Download size={16} /> Download Agreement
+              <Button
+                variant="outline"
+                className="gap-2"
+                onClick={handleGenerateAgreement}
+                disabled={!user || !activeCase}
+              >
+                <FileSignature size={15} /> Download Agreement
               </Button>
             </div>
-            {!payment.receiptUrl && <p className="text-xs text-muted-foreground mt-2">Documents will be available once payment is confirmed by our team.</p>}
+            <p className="text-xs text-muted-foreground mt-3">
+              A new tab will open — use your browser's <strong>Print → Save as PDF</strong> option to save the document.
+            </p>
           </div>
 
           <div className="glass-card rounded-2xl p-6">
             <h3 className="font-semibold mb-3">Payment Details</h3>
             <div className="grid sm:grid-cols-2 gap-4 text-sm">
-              <div><div className="text-muted-foreground text-xs">Case Number</div><div className="font-medium">{(payment as unknown as Record<string, unknown>).caseNumber as string || activeCase?.caseNumber}</div></div>
+              <div><div className="text-muted-foreground text-xs">Case Number</div><div className="font-medium">{activeCase?.caseNumber}</div></div>
+              <div><div className="text-muted-foreground text-xs">Service Type</div><div className="font-medium">{activeCase?.serviceType?.replace(/_/g, " ")}</div></div>
               <div><div className="text-muted-foreground text-xs">Payment Status</div><div className="font-medium">{payment.paymentStatus}</div></div>
+              <div><div className="text-muted-foreground text-xs">Payment ID</div><div className="font-medium font-mono">#{payment.id}</div></div>
             </div>
           </div>
         </>
