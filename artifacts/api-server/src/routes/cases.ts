@@ -11,8 +11,9 @@ const router = Router();
 
 async function generateCaseNumber(): Promise<string> {
   const year = new Date().getFullYear();
-  const [result] = await db.select({ count: sql<number>`count(*)` }).from(casesTable);
-  const seq = Number(result?.count || 0) + 1;
+  // Use MAX(id) instead of COUNT(*) so deletions never produce collisions
+  const [result] = await db.select({ maxId: sql<number>`COALESCE(MAX(id), 0)` }).from(casesTable);
+  const seq = Number(result?.maxId || 0) + 1;
   return `CIR-${year}-${String(seq).padStart(4, "0")}`;
 }
 
@@ -85,16 +86,30 @@ router.get("/cases", async (req, res): Promise<void> => {
 router.post("/cases", async (req, res): Promise<void> => {
   const parsed = CreateCaseBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "customerId and serviceType are required" }); return; }
-  const caseNumber = await generateCaseNumber();
-  const [caseRow] = await db.insert(casesTable).values({ ...parsed.data, caseNumber }).returning();
-  const enriched = await enrichCase(caseRow);
-  await db.insert(notificationsTable).values({
-    userId: caseRow.customerId,
-    title: "Case Registered Successfully",
-    message: `Your case ${caseNumber} has been registered for ${caseRow.serviceType}. Our team will contact you within 24 hours.`,
-    type: "CASE_UPDATE",
-  }).catch(() => {});
-  res.status(201).json(enriched);
+  try {
+    const caseNumber = await generateCaseNumber();
+    // Build insert data explicitly to avoid passing undefined fields to Drizzle
+    const insertData: typeof casesTable.$inferInsert = {
+      caseNumber,
+      customerId: parsed.data.customerId,
+      serviceType: parsed.data.serviceType,
+    };
+    if (parsed.data.assignedToId !== undefined) insertData.assignedToId = parsed.data.assignedToId;
+    if (parsed.data.notes !== undefined) insertData.notes = parsed.data.notes;
+    if (parsed.data.expectedCompletionDate !== undefined) insertData.expectedCompletionDate = parsed.data.expectedCompletionDate;
+    const [caseRow] = await db.insert(casesTable).values(insertData).returning();
+    const enriched = await enrichCase(caseRow);
+    await db.insert(notificationsTable).values({
+      userId: caseRow.customerId,
+      title: "Case Registered Successfully",
+      message: `Your case ${caseNumber} has been registered for ${caseRow.serviceType}. Our team will contact you within 24 hours.`,
+      type: "CASE_UPDATE",
+    }).catch(() => {});
+    res.status(201).json(enriched);
+  } catch (err) {
+    req.log.error({ err }, "Failed to create case");
+    res.status(500).json({ error: "Failed to create case. Please try again." });
+  }
 });
 
 // GET /cases/:id
@@ -112,19 +127,24 @@ router.patch("/cases/:id", async (req, res): Promise<void> => {
   if (!pParsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }
   const bParsed = UpdateCaseBody.safeParse(req.body);
   if (!bParsed.success) { res.status(400).json({ error: bParsed.error.message }); return; }
-  const [caseRow] = await db.update(casesTable).set(bParsed.data).where(eq(casesTable.id, pParsed.data.id)).returning();
-  if (!caseRow) { res.status(404).json({ error: "Case not found" }); return; }
-  const enriched = await enrichCase(caseRow);
-  if (bParsed.data.status && enriched.customerName) {
-    const statusLabel = bParsed.data.status.replace(/_/g, " ");
-    await db.insert(notificationsTable).values({
-      userId: caseRow.customerId,
-      title: "Case Status Updated",
-      message: `Your case ${caseRow.caseNumber} status: ${statusLabel}. ${caseRow.notes ? `Note: ${caseRow.notes}` : ""}`,
-      type: "CASE_UPDATE",
-    }).catch(() => {});
+  try {
+    const [caseRow] = await db.update(casesTable).set(bParsed.data).where(eq(casesTable.id, pParsed.data.id)).returning();
+    if (!caseRow) { res.status(404).json({ error: "Case not found" }); return; }
+    const enriched = await enrichCase(caseRow);
+    if (bParsed.data.status && enriched.customerName) {
+      const statusLabel = bParsed.data.status.replace(/_/g, " ");
+      await db.insert(notificationsTable).values({
+        userId: caseRow.customerId,
+        title: "Case Status Updated",
+        message: `Your case ${caseRow.caseNumber} status: ${statusLabel}. ${caseRow.notes ? `Note: ${caseRow.notes}` : ""}`,
+        type: "CASE_UPDATE",
+      }).catch(() => {});
+    }
+    res.json(enriched);
+  } catch (err) {
+    req.log.error({ err }, "Failed to update case");
+    res.status(500).json({ error: "Failed to update case. Please try again." });
   }
-  res.json(enriched);
 });
 
 // DELETE /cases/:id

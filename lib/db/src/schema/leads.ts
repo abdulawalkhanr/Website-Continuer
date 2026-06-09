@@ -3,7 +3,7 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const leadStageEnum = pgEnum("lead_stage", ["NEW", "CONTACTED", "SCHEDULED", "CONVERTED", "COMPLETED"]);
-export const leadSourceEnum = pgEnum("lead_source", ["HOMEPAGE", "CONTACT", "CHATBOT", "REFERRAL"]);
+export const leadSourceEnum = pgEnum("lead_source", ["HOMEPAGE", "CONTACT", "CHATBOT", "REFERRAL", "GST_PAGE", "ITR_PAGE", "MSME_PAGE", "BIZ_REG_PAGE", "LEGAL_PAGE"]);
 
 export const leadsTable = pgTable("leads", {
   id: serial("id").primaryKey(),
