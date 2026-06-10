@@ -18,6 +18,7 @@ export * from './caseUpdateStatus';
 export * from './customer';
 export * from './customerInput';
 export * from './customerUpdate';
+export * from './deletePayment200';
 export * from './deleteResponse';
 export * from './document';
 export * from './documentInput';

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { usersTable, casesTable, paymentsTable, ticketsTable, documentsTable } from "@workspace/db";
+import { usersTable, casesTable, paymentsTable, ticketsTable, documentsTable, notificationsTable } from "@workspace/db";
 import { eq, desc, like, or, and } from "drizzle-orm";
 import { createHash } from "crypto";
 import {
@@ -85,6 +85,7 @@ router.delete("/customers/:id", async (req, res): Promise<void> => {
     }
     await db.delete(casesTable).where(eq(casesTable.customerId, id));
     await db.delete(ticketsTable).where(eq(ticketsTable.customerId, id));
+    await db.delete(notificationsTable).where(eq(notificationsTable.userId, id));
     await db.delete(usersTable).where(eq(usersTable.id, id));
     res.json({ success: true, message: "Customer and all related data deleted" });
   } catch {

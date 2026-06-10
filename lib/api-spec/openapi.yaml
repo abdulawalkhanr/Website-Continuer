@@ -624,6 +624,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Payment"
+    delete:
+      operationId: deletePayment
+      tags: [payments]
+      summary: Delete a payment record
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payment deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, message]
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
 
   /payments/stats:
     get:

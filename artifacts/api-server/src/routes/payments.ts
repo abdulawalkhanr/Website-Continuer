@@ -71,6 +71,20 @@ router.get("/payments/:id", async (req, res): Promise<void> => {
   res.json({ ...payment, caseNumber: c?.caseNumber || null, serviceFee: parseFloat(payment.serviceFee as string), advancePaid: parseFloat(payment.advancePaid as string), pendingAmount: parseFloat(payment.pendingAmount as string) });
 });
 
+router.delete("/payments/:id", async (req, res): Promise<void> => {
+  const id = parseInt(req.params.id);
+  if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
+  try {
+    const [existing] = await db.select().from(paymentsTable).where(eq(paymentsTable.id, id)).limit(1);
+    if (!existing) { res.status(404).json({ error: "Payment not found" }); return; }
+    await db.delete(paymentsTable).where(eq(paymentsTable.id, id));
+    res.json({ success: true, message: "Payment record deleted" });
+  } catch (err) {
+    req.log.error({ err }, "Failed to delete payment");
+    res.status(500).json({ error: "Failed to delete payment" });
+  }
+});
+
 router.patch("/payments/:id", async (req, res): Promise<void> => {
   const id = parseInt(req.params.id);
   const parsed = UpdatePaymentBody.safeParse(req.body);

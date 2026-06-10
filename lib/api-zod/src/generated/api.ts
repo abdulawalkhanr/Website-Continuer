@@ -564,6 +564,19 @@ export const UpdatePaymentResponse = zod.object({
 
 
 /**
+ * @summary Delete a payment record
+ */
+export const DeletePaymentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeletePaymentResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string()
+})
+
+
+/**
  * @summary Get payment/revenue statistics
  */
 export const GetPaymentStatsResponse = zod.object({

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  useListPayments, useCreatePayment, useUpdatePayment,
+  useListPayments, useCreatePayment, useUpdatePayment, useDeletePayment,
   useGetPaymentStats, useListCases,
   getListPaymentsQueryKey, getGetPaymentStatsQueryKey,
 } from "@workspace/api-client-react";
@@ -12,7 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Edit, FileText, FileSignature, Plus, IndianRupee } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Edit, FileText, FileSignature, Plus, IndianRupee, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateReceipt, generateAgreement } from "@/lib/pdf-generator";
 
@@ -46,8 +47,12 @@ export default function AdminPayments() {
   const { data: cases } = useListCases({});
   const createPayment = useCreatePayment();
   const updatePayment = useUpdatePayment();
+  const deletePayment = useDeletePayment();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Delete state
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   // Add payment state
   const [showAdd, setShowAdd] = useState(false);
@@ -64,6 +69,14 @@ export default function AdminPayments() {
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey({}) });
     queryClient.invalidateQueries({ queryKey: getGetPaymentStatsQueryKey() });
+  };
+
+  const handleDelete = () => {
+    if (deleteId === null) return;
+    deletePayment.mutate({ id: deleteId }, {
+      onSuccess: () => { invalidate(); setDeleteId(null); toast({ title: "Payment record deleted" }); },
+      onError: () => toast({ title: "Failed to delete payment", variant: "destructive" }),
+    });
   };
 
   const openEdit = (p: EnrichedPayment) => {
@@ -252,6 +265,9 @@ export default function AdminPayments() {
                     <Button size="sm" variant="ghost" className="h-7 px-2 text-purple-600" title="Download Agreement" onClick={() => handleAgreement(p)}>
                       <FileSignature size={13} />
                     </Button>
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" title="Delete payment" onClick={() => setDeleteId(p.id)}>
+                      <Trash2 size={13} />
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
@@ -269,6 +285,24 @@ export default function AdminPayments() {
           A new tab opens — use <strong>Print → Save as PDF</strong> to download.
         </div>
       </div>
+
+      {/* ── Delete Confirmation ── */}
+      <AlertDialog open={deleteId !== null} onOpenChange={o => !o && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Payment Record?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this payment record. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
+              {deletePayment.isPending ? "Deleting..." : "Delete Payment"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ── Add Payment Dialog ── */}
       <Dialog open={showAdd} onOpenChange={(o) => !o && setShowAdd(false)}>

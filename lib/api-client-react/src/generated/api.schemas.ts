@@ -620,6 +620,11 @@ export type ListPaymentsParams = {
 caseId?: number;
 };
 
+export type DeletePayment200 = {
+  success: boolean;
+  message: string;
+};
+
 export type ListTicketsParams = {
 customerId?: number;
 };
