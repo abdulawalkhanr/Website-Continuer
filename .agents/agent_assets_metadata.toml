@@ -1,0 +1,50 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "qwEWKTPmROWbOUlrYKweP"
+uri = "file://exports/instagram-ads/ad1-loan-rejected.jpg"
+type = "image"
+title = "Ad 1 – Loan Rejected? (Pain Point)"
+
+[[outputs]]
+id = "lRTeIHRb7M8uwIhV0q4Na"
+uri = "file://exports/instagram-ads/ad2-boost-cibil-score.jpg"
+type = "image"
+title = "Ad 2 – Boost CIBIL Score in 90 Days (Outcome)"
+
+[[outputs]]
+id = "z4009FXq7fVNKQZH0wCHt"
+uri = "file://exports/instagram-ads/ad3-500-families-helped.jpg"
+type = "image"
+title = "Ad 3 – 500+ Families Helped (Social Proof)"
+
+[[outputs]]
+id = "ZhARDMa2oPUIALP9kgueL"
+uri = "file://exports/instagram-ads/slide1-hook.jpg"
+type = "image"
+title = "Slide 1 – Hook (Low CIBIL Score Ruining Dreams?)"
+
+[[outputs]]
+id = "3hSx9-S0e54jqn_5QxHMN"
+uri = "file://exports/instagram-ads/slide2-problem.jpg"
+type = "image"
+title = "Slide 2 – The Problem (Loans Rejected)"
+
+[[outputs]]
+id = "q19mhtCK7-ZPCCvaPAuqA"
+uri = "file://exports/instagram-ads/slide3-solution.jpg"
+type = "image"
+title = "Slide 3 – Our Solution (We Repair Your Credit Report)"
+
+[[outputs]]
+id = "sz-DGxV4o-WPsqE52KVKC"
+uri = "file://exports/instagram-ads/slide4-services.jpg"
+type = "image"
+title = "Slide 4 – Services List"
+
+[[outputs]]
+id = "HPZuiLthC855JIw3XkJkw"
+uri = "file://exports/instagram-ads/slide5-cta.jpg"
+type = "image"
+title = "Slide 5 – CTA (WhatsApp + Call)"
