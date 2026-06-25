@@ -9,6 +9,7 @@ import {
   CreditCard, 
   Share2, 
   MessageSquare,
+  FileText,
   LogOut,
   Menu,
   X
@@ -36,6 +37,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: "/admin/customers", label: "Customers", icon: Users },
     { href: "/admin/cases", label: "Cases", icon: Briefcase },
     { href: "/admin/payments", label: "Payments", icon: CreditCard },
+    { href: "/admin/documents", label: "Documents", icon: FileText },
     { href: "/admin/referrals", label: "Referrals", icon: Share2 },
     { href: "/admin/tickets", label: "Tickets", icon: MessageSquare },
   ];

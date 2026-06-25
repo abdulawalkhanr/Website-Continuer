@@ -225,6 +225,23 @@ router.post("/auth/register", async (req, res): Promise<void> => {
   res.status(201).json({ user: safeUser, token: `session_${user.id}` });
 });
 
+// POST /auth/login-mobile — login with mobile number + password
+router.post("/auth/login-mobile", async (req, res): Promise<void> => {
+  const { mobile, password } = req.body as { mobile?: string; password?: string };
+  if (!mobile || !password) { res.status(400).json({ error: "Mobile number and password are required" }); return; }
+  const phone = normalisePhone(mobile);
+  if (phone.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit mobile number" }); return; }
+  const hash = hashPassword(password);
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.mobile, phone)).limit(1);
+  if (!user || user.passwordHash !== hash) {
+    res.status(401).json({ error: "Invalid mobile number or password" });
+    return;
+  }
+  const { passwordHash: _, ...safeUser } = user;
+  getSession(req).userId = user.id;
+  res.json({ user: safeUser });
+});
+
 // POST /auth/logout
 router.post("/auth/logout", async (req, res): Promise<void> => {
   getSession(req).userId = undefined;

@@ -54,6 +54,7 @@ import AdminLeads from "@/pages/admin/AdminLeads";
 import AdminCustomers from "@/pages/admin/AdminCustomers";
 import AdminCases from "@/pages/admin/AdminCases";
 import AdminPayments from "@/pages/admin/AdminPayments";
+import AdminDocuments from "@/pages/admin/AdminDocuments";
 import AdminReferrals from "@/pages/admin/AdminReferrals";
 import AdminTickets from "@/pages/admin/AdminTickets";
 
@@ -125,6 +126,7 @@ function Router() {
       <Route path="/admin/customers" component={() => <ProtectedAdmin><AdminCustomers /></ProtectedAdmin>} />
       <Route path="/admin/cases" component={() => <ProtectedAdmin><AdminCases /></ProtectedAdmin>} />
       <Route path="/admin/payments" component={() => <ProtectedAdmin><AdminPayments /></ProtectedAdmin>} />
+      <Route path="/admin/documents" component={() => <ProtectedAdmin><AdminDocuments /></ProtectedAdmin>} />
       <Route path="/admin/referrals" component={() => <ProtectedAdmin><AdminReferrals /></ProtectedAdmin>} />
       <Route path="/admin/tickets" component={() => <ProtectedAdmin><AdminTickets /></ProtectedAdmin>} />
 
