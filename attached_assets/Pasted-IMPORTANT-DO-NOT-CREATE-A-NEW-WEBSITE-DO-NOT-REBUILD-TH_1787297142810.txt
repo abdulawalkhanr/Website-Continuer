@@ -1,0 +1,443 @@
+IMPORTANT: DO NOT CREATE A NEW WEBSITE, DO NOT REBUILD THE PROJECT FROM SCRATCH, AND DO NOT REMOVE OR CHANGE ANY EXISTING WORKING FEATURES.
+
+Continue working directly on my existing CIR Consultation Service project in Replit. First carefully analyze the complete existing project, including the current website, Admin Panel, Customer Portal, authentication system, database structure, customer records, case management system, payment system, services, documents, and all existing features.
+
+This is an expansion of the existing project.
+
+The current project already has:
+- Main business website
+- Customer login and Customer Portal
+- Admin login and Admin Panel
+- Customer management
+- Case management
+- Service tracking
+- Customer status tracking
+- Existing database and authentication
+- Existing company branding and design
+
+Your job is to ADD a complete STAFF MANAGEMENT SYSTEM and STAFF PORTAL into the existing application without breaking, deleting, replacing, or rebuilding the existing features.
+
+Use the existing database and authentication architecture wherever possible. Extend the current system properly.
+
+COMPANY:
+CIR Consultation Service
+Tagline: Your Partner in Financial Health
+Website: circonsultationservice.in
+Official Business Number: 01169310902
+WhatsApp Number: +91 98649 20810
+
+ADD A NEW USER TYPE: STAFF
+
+There should now be three separate login areas:
+1. Customer Login
+2. Staff Login
+3. Admin Login
+
+Add a professional Staff Login option to the existing website/login area.
+
+STAFF ACCOUNT CREATION:
+
+Staff members must NOT be able to create their own accounts publicly.
+
+Only the Admin should be able to create and manage staff accounts from the existing Admin Panel.
+
+Inside the Admin Panel, add a new section called:
+
+STAFF MANAGEMENT
+
+The Admin should be able to:
+- Add new staff
+- Edit staff details
+- Create staff login credentials
+- Generate unique Employee ID
+- Set username and password
+- Reset staff password
+- Activate/deactivate staff account
+- Suspend staff account
+- Delete or archive staff
+- Assign staff role
+- Assign permissions
+- View assigned clients
+- View assigned cases
+- View staff activity
+- View staff workload
+- View staff performance
+- Generate staff identity card
+
+When adding a staff member, include:
+- Full Name
+- Profile Photograph
+- Employee ID
+- Mobile Number
+- Email ID optional
+- Address optional
+- Date of Joining
+- Designation
+- Department optional
+- Staff Role
+- Account Status
+- Login ID
+- Password
+
+Automatically generate a unique Employee ID in a professional format such as:
+
+CIR-EMP-2026-0001
+CIR-EMP-2026-0002
+
+Do not duplicate Employee IDs.
+
+STAFF LOGIN:
+
+Staff should be able to log in using credentials created by the Admin.
+
+Support:
+- Employee ID + Password
+- Mobile Number + Password
+- Email + Password if available
+
+After login, staff must enter their own separate Staff Dashboard.
+
+STAFF DASHBOARD:
+
+Create a professional Staff Portal integrated with the existing system.
+
+The Staff Dashboard should show:
+
+- Total Assigned Clients
+- New Assignments
+- Pending Cases
+- Cases In Progress
+- Completed Cases
+- Overdue Cases
+- High Priority Cases
+- Pending Tasks
+- Recent Activity
+- Upcoming Deadlines
+
+STAFF NAVIGATION:
+
+Add a professional sidebar/menu containing:
+
+- Dashboard
+- Assigned Clients
+- Assigned Cases
+- Tasks
+- Documents
+- Notifications
+- Activity History
+- Profile
+- Logout
+
+CLIENT AND CASE ASSIGNMENT:
+
+This is a very important feature.
+
+Use the EXISTING customer and case management system.
+
+Inside the existing Admin Panel, when viewing a customer or case, add an option:
+
+ASSIGN STAFF
+
+The Admin should be able to:
+- Assign a client to a staff member
+- Assign a case to a staff member
+- Change assigned staff
+- Reassign a client
+- Assign priority
+- Set due date
+- Assign multiple staff members if necessary
+
+When the Admin assigns a customer or case to a staff member, it should automatically appear in that staff member's Staff Portal.
+
+Staff members should only see clients and cases assigned to them unless the Admin specifically gives additional permission.
+
+For each assigned client, staff should see:
+
+- Customer Name
+- Customer ID
+- Mobile Number
+- Service Type
+- Case ID
+- Current Status
+- Priority
+- Assigned Date
+- Due Date
+- Completion Percentage
+- Last Updated Date
+
+Add search and filters for:
+- Customer Name
+- Case ID
+- Service
+- Status
+- Priority
+
+CASE WORKSPACE FOR STAFF:
+
+When staff opens an assigned case, provide a professional workspace connected to the existing case system.
+
+Include:
+
+- Customer Details
+- Service Details
+- Case Timeline
+- Assigned Tasks
+- Documents
+- Work Progress
+- Case Status
+- Internal Notes
+- Due Date
+- Activity History
+
+Staff should be able to update their assigned case status.
+
+Use professional statuses such as:
+
+- New
+- Assigned
+- Documents Pending
+- Documents Received
+- Under Review
+- Work Started
+- Verification in Progress
+- Action Required
+- Awaiting Customer Response
+- Awaiting Third Party Response
+- In Progress
+- Near Completion
+- Completed
+- On Hold
+
+WORK PROGRESS:
+
+Allow staff to update completion percentage:
+
+0%
+25%
+50%
+75%
+90%
+100%
+
+Every important update should be saved in the existing database.
+
+Record:
+- Staff member name
+- Employee ID
+- Previous status
+- New status
+- Date
+- Time
+
+The Admin should be able to see all updates.
+
+INTERNAL NOTES:
+
+Staff should be able to add internal notes to assigned cases.
+
+These notes should be visible only to:
+- Admin
+- Authorized staff
+
+Do not automatically show internal staff notes to customers.
+
+COMMUNICATION LOG:
+
+Allow staff to record customer communication such as:
+
+- Customer Called
+- WhatsApp Message Sent
+- Email Sent
+- Documents Requested
+- Customer Responded
+- Follow-up Required
+
+Include:
+- Follow-up note
+- Next follow-up date
+
+The Admin should be able to monitor this history.
+
+TASK MANAGEMENT:
+
+Inside the existing Admin Panel, allow Admin to create tasks for staff.
+
+Each task should contain:
+
+- Task Title
+- Description
+- Related Customer
+- Related Case
+- Assigned Staff
+- Priority
+- Due Date
+- Task Status
+
+Staff can update task status:
+
+- Not Started
+- In Progress
+- Completed
+- On Hold
+
+STAFF DOCUMENT ACCESS:
+
+Connect document access to the existing customer/case document system.
+
+Authorized staff should be able to access documents required for their assigned work.
+
+Examples:
+- PAN Card
+- Aadhaar Card
+- Credit Report
+- Loan Documents
+- Bank Documents
+- GST Documents
+- ITR Documents
+- Supporting Documents
+
+Staff should not be able to access documents of unassigned customers.
+
+STAFF PROFILE:
+
+Each staff member should have a profile page containing:
+
+- Profile Photo
+- Full Name
+- Employee ID
+- Designation
+- Joining Date
+- Contact Details
+- Account Status
+- Assigned Clients
+- Pending Cases
+- Completed Cases
+- Performance Summary
+
+STAFF PERFORMANCE:
+
+Add a Staff Performance section inside the existing Admin Panel.
+
+The Admin should see:
+
+- Total Assigned Cases
+- Completed Cases
+- Pending Cases
+- In Progress Cases
+- Overdue Cases
+- Cases Completed This Month
+- Staff Workload
+- Recent Activity
+
+STAFF ID CARD GENERATOR:
+
+Inside the existing Admin Panel, add:
+
+STAFF ID CARD GENERATOR
+
+The Admin should be able to select any staff member and automatically generate a professional staff identity card using their saved details.
+
+The ID card should include:
+
+- CIR Consultation Service Logo
+- Staff Photograph
+- Staff Full Name
+- Employee ID
+- Designation
+- Mobile Number if approved
+- Date of Joining
+- Valid From
+- Valid Till
+- QR Code or verification code
+- Company Website
+- Official Company Contact Number
+
+The Admin should be able to:
+
+- Preview ID Card
+- Generate ID Card
+- Regenerate ID Card
+- Download as PDF
+- Download as Image
+- Print ID Card
+
+Every staff member must have a unique Employee ID.
+
+ROLE AND PERMISSION CONTROL:
+
+Add role-based access.
+
+Possible roles:
+
+- Staff
+- Case Executive
+- CIBIL Executive
+- Customer Support Executive
+- GST Executive
+- ITR Executive
+- Senior Executive
+- Team Leader
+- Manager
+- Referral Partner
+
+The Admin should control what each staff member can access.
+
+SECURITY:
+
+Properly integrate this with the existing authentication and database.
+
+Ensure:
+
+- Admin has full access
+- Staff only access authorized areas
+- Customers cannot access staff information
+- Staff cannot access unassigned clients
+- Sensitive documents are protected
+- Passwords are securely handled
+- Unauthorized access is blocked
+- Important activity is logged
+
+DESIGN:
+
+Do not change the existing website branding unnecessarily.
+
+Match the current CIR Consultation Service design and existing UI.
+
+Maintain the Premium Cotton Candy FinTech style:
+
+Primary: #A7D8FF
+Secondary: #FFD6E8
+Accent: #DCC6FF
+Highlight: #D8F5E5
+Background: #FDFDFD
+Text: #2C3E50
+
+Use:
+- Glassmorphism
+- Soft Shadows
+- Rounded Cards
+- Professional Dashboard
+- Premium FinTech Style
+- Responsive Mobile Design
+- Clean Sidebar
+- Progress Bars
+- Status Badges
+- Professional Icons
+
+IMPORTANT FINAL INSTRUCTION:
+
+Continue from the EXISTING Replit project and existing codebase.
+
+DO NOT start from scratch.
+DO NOT create a separate demo.
+DO NOT create a frontend-only mockup.
+DO NOT remove existing Admin Panel or Customer Portal.
+DO NOT break existing customer records, cases, payments, authentication, or services.
+
+Properly connect the new Staff Management System with the existing database, existing customers, existing cases, and existing Admin Panel.
+
+Before considering the task complete, test this complete workflow:
+
+Admin creates staff account → unique Employee ID generated → login credentials created → Admin assigns an existing customer/case to staff → staff logs in → assigned customer appears in Staff Portal → staff updates case progress/status → Admin sees the update → Admin monitors staff performance → Admin generates staff ID card.
+
+Work continuously and complete the full implementation. Do not repeatedly stop and ask me unnecessary questions. First inspect what already exists in the project, then intelligently continue development from the existing structure.

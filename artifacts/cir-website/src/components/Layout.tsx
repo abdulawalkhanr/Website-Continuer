@@ -141,7 +141,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   </div>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href={user.role === "CUSTOMER" ? "/dashboard" : "/admin"}>Dashboard</Link>
+                    <Link href={user.role === "CUSTOMER" ? "/dashboard" : user.role === "STAFF" ? "/staff" : "/admin"}>Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem className="text-destructive focus:text-destructive" onSelect={handleLogout}>
@@ -153,6 +153,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <>
                 <Link href="/login" className="text-sm font-medium hover:text-primary transition-colors">
                   Customer Login
+                </Link>
+                <Link href="/staff/login" className="text-sm font-medium hover:text-primary transition-colors">
+                  Staff Login
                 </Link>
                 <Link href="/admin/login">
                   <Button size="sm" className="bg-gradient-to-r from-primary to-accent text-primary-foreground hover:opacity-90 shadow-sm border-0">
@@ -209,7 +212,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="h-px bg-border" />
             {user ? (
               <div className="flex flex-col gap-2">
-                <Link href={user.role === "CUSTOMER" ? "/dashboard" : "/admin"}>
+                <Link href={user.role === "CUSTOMER" ? "/dashboard" : user.role === "STAFF" ? "/staff" : "/admin"}>
                   <Button variant="outline" className="w-full justify-start" onClick={() => setIsMobileMenuOpen(false)}>Dashboard</Button>
                 </Link>
                 <Button variant="ghost" className="w-full justify-start text-destructive" onClick={handleLogout}>Log out</Button>
@@ -218,6 +221,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
               <div className="flex flex-col gap-2">
                 <Link href="/login" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full justify-start">Customer Login</Button>
+                </Link>
+                <Link href="/staff/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start">Staff Login</Button>
                 </Link>
                 <Link href="/admin/login" onClick={() => setIsMobileMenuOpen(false)}>
                   <Button className="w-full justify-start bg-gradient-to-r from-primary to-accent border-0">Admin Login</Button>

@@ -35,6 +35,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/leads", label: "Leads", icon: Users },
     { href: "/admin/customers", label: "Customers", icon: Users },
+    { href: "/admin/staff", label: "Staff", icon: Briefcase },
     { href: "/admin/cases", label: "Cases", icon: Briefcase },
     { href: "/admin/payments", label: "Payments", icon: CreditCard },
     { href: "/admin/documents", label: "Documents", icon: FileText },

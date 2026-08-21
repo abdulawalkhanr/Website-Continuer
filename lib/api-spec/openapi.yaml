@@ -29,6 +29,8 @@ tags:
     description: Admin operations
   - name: auth
     description: Authentication
+  - name: staff
+    description: Staff management
 paths:
   /healthz:
     get:
@@ -128,6 +130,27 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+
+  /auth/staff/login:
+    post:
+      operationId: staffLogin
+      tags: [auth, staff]
+      summary: Staff login with employee ID, mobile, or email plus password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffLoginInput"
+      responses:
+        "200":
+          description: Staff login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffAuthResponse"
+        "401":
+          description: Invalid credentials or account not active
 
   # LEADS
   /leads:
@@ -923,6 +946,506 @@ paths:
                 items:
                   $ref: "#/components/schemas/User"
 
+  # STAFF MANAGEMENT (Admin)
+  /staff:
+    get:
+      operationId: listStaff
+      tags: [staff]
+      summary: List all staff with optional filters
+      parameters:
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ACTIVE, INACTIVE, SUSPENDED, ARCHIVED]
+      responses:
+        "200":
+          description: List of staff summaries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffSummary"
+    post:
+      operationId: createStaff
+      tags: [staff]
+      summary: Create a new staff account and profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffInput"
+      responses:
+        "201":
+          description: Staff created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDetail"
+
+  /staff/performance:
+    get:
+      operationId: getStaffPerformance
+      tags: [staff]
+      summary: Get per-staff performance summary
+      responses:
+        "200":
+          description: Performance summary list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffPerformanceSummary"
+
+  /staff/assignments:
+    post:
+      operationId: createStaffAssignment
+      tags: [staff]
+      summary: Assign a case to a staff member
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffAssignmentInput"
+      responses:
+        "201":
+          description: Assignment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffAssignment"
+        "409":
+          description: Duplicate active assignment
+
+  /staff/assignments/{id}:
+    delete:
+      operationId: deleteStaffAssignment
+      tags: [staff]
+      summary: Remove a staff-case assignment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Assignment removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+
+  /staff/tasks:
+    get:
+      operationId: listStaffTasks
+      tags: [staff]
+      summary: Admin list all staff tasks
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffTask"
+    post:
+      operationId: createStaffTask
+      tags: [staff]
+      summary: Admin creates a staff task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffTaskInput"
+      responses:
+        "201":
+          description: Task created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffTask"
+
+  /staff/tasks/{id}:
+    patch:
+      operationId: updateStaffTask
+      tags: [staff]
+      summary: Admin edit task; staff can only update status for own tasks
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffTaskUpdate"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffTask"
+
+  /staff/activities:
+    get:
+      operationId: listCaseActivities
+      tags: [staff]
+      summary: Admin activity log with optional staffId/caseId filters
+      parameters:
+        - in: query
+          name: staffId
+          schema:
+            type: integer
+        - in: query
+          name: caseId
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Activity log
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CaseActivity"
+
+  /staff/id-card/{id}:
+    get:
+      operationId: getStaffIdCard
+      tags: [staff]
+      summary: Get staff data shaped for secure ID card rendering
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Staff ID card data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffIdCard"
+
+  /staff/{id}:
+    get:
+      operationId: getStaff
+      tags: [staff]
+      summary: Get staff profile with workload summary
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Staff detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDetail"
+    patch:
+      operationId: updateStaff
+      tags: [staff]
+      summary: Edit staff profile, role, permissions, account status, or reset password
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffUpdate"
+      responses:
+        "200":
+          description: Staff updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDetail"
+    delete:
+      operationId: archiveStaff
+      tags: [staff]
+      summary: Archive staff (soft delete, preserves history)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Staff archived
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+
+  /staff/{id}/assignments:
+    get:
+      operationId: getStaffAssignments
+      tags: [staff]
+      summary: Admin view of assignments for a staff member
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Staff assignments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffAssignment"
+
+  # STAFF PORTAL
+  /staff/portal/dashboard:
+    get:
+      operationId: getStaffPortalDashboard
+      tags: [staff]
+      summary: Staff portal dashboard with counts and recent activity
+      responses:
+        "200":
+          description: Staff dashboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDashboard"
+
+  /staff/portal/cases:
+    get:
+      operationId: listStaffPortalCases
+      tags: [staff]
+      summary: Staff portal - caller's assigned cases
+      parameters:
+        - in: query
+          name: q
+          schema:
+            type: string
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: priority
+          schema:
+            type: string
+            enum: [LOW, MEDIUM, HIGH, URGENT]
+      responses:
+        "200":
+          description: Assigned cases list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffPortalCase"
+
+  /staff/portal/cases/{caseId}:
+    get:
+      operationId: getStaffPortalCase
+      tags: [staff]
+      summary: Staff portal - case detail (assignment check enforced)
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Case detail with all related data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffPortalCaseDetail"
+        "403":
+          description: Not assigned to this case
+    patch:
+      operationId: updateStaffPortalCase
+      tags: [staff]
+      summary: Staff portal - update case status/progress (assignment check enforced)
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffCaseUpdate"
+      responses:
+        "200":
+          description: Case updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Case"
+
+  /staff/portal/cases/{caseId}/notes:
+    post:
+      operationId: createCaseNote
+      tags: [staff]
+      summary: Staff portal - create internal case note
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseNoteInput"
+      responses:
+        "201":
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseNote"
+
+  /staff/portal/cases/{caseId}/communications:
+    post:
+      operationId: createCaseComm
+      tags: [staff]
+      summary: Staff portal - log customer communication
+      parameters:
+        - in: path
+          name: caseId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseCommInput"
+      responses:
+        "201":
+          description: Communication logged
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseComm"
+
+  /staff/portal/documents:
+    get:
+      operationId: listStaffPortalDocuments
+      tags: [staff]
+      summary: Staff portal - documents for assigned cases only
+      responses:
+        "200":
+          description: Documents list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+
+  /staff/portal/tasks:
+    get:
+      operationId: listStaffPortalTasks
+      tags: [staff]
+      summary: Staff portal - current user's tasks
+      responses:
+        "200":
+          description: Tasks list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffTask"
+
+  /staff/portal/tasks/{id}:
+    patch:
+      operationId: updateStaffPortalTask
+      tags: [staff]
+      summary: Staff portal - update own task status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffPortalTaskUpdate"
+      responses:
+        "200":
+          description: Task updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffTask"
+
+  /staff/portal/profile:
+    get:
+      operationId: getStaffPortalProfile
+      tags: [staff]
+      summary: Staff portal - current staff profile and summary
+      responses:
+        "200":
+          description: Staff profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDetail"
+    patch:
+      operationId: updateStaffPortalProfile
+      tags: [staff]
+      summary: Staff portal - update limited personal fields
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StaffPortalProfileUpdate"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StaffDetail"
+
 components:
   schemas:
     HealthStatus:
@@ -975,6 +1498,23 @@ components:
           $ref: "#/components/schemas/User"
         token: { type: string }
 
+    StaffLoginInput:
+      type: object
+      required: [identifier, password]
+      properties:
+        identifier: { type: string }
+        password: { type: string }
+
+    StaffAuthResponse:
+      type: object
+      required: [user, staffProfile, token]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        staffProfile:
+          $ref: "#/components/schemas/StaffProfileData"
+        token: { type: string }
+
     User:
       type: object
       required: [id, email, name, role, createdAt]
@@ -986,7 +1526,7 @@ components:
         city: { type: ["string", "null"] }
         role:
           type: string
-          enum: [OWNER, MANAGER, EXECUTIVE, SUPPORT, CUSTOMER]
+          enum: [OWNER, MANAGER, EXECUTIVE, SUPPORT, CUSTOMER, STAFF]
         createdAt: { type: string }
 
     # LEADS
@@ -1359,3 +1899,395 @@ components:
         leads: { type: integer }
         cases: { type: integer }
         revenue: { type: number }
+
+    # STAFF SCHEMAS
+    StaffProfileData:
+      type: object
+      required: [id, userId, employeeId, accountStatus, employmentStatus, permissions, allowMobileDisplay, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        employeeId: { type: string }
+        profilePhotoUrl: { type: ["string", "null"] }
+        address: { type: ["string", "null"] }
+        joiningDate: { type: ["string", "null"] }
+        designation: { type: ["string", "null"] }
+        department: { type: ["string", "null"] }
+        staffRole: { type: ["string", "null"] }
+        employmentStatus:
+          type: string
+          enum: [FULL_TIME, PART_TIME, CONTRACT, PROBATION]
+        accountStatus:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED, ARCHIVED]
+        permissions:
+          type: array
+          items: { type: string }
+        emergencyContactName: { type: ["string", "null"] }
+        emergencyContactMobile: { type: ["string", "null"] }
+        allowMobileDisplay: { type: boolean }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    StaffSummary:
+      type: object
+      required: [id, userId, employeeId, name, email, accountStatus, employmentStatus, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        employeeId: { type: string }
+        name: { type: string }
+        email: { type: string }
+        mobile: { type: ["string", "null"] }
+        designation: { type: ["string", "null"] }
+        department: { type: ["string", "null"] }
+        profilePhotoUrl: { type: ["string", "null"] }
+        accountStatus:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED, ARCHIVED]
+        employmentStatus:
+          type: string
+          enum: [FULL_TIME, PART_TIME, CONTRACT, PROBATION]
+        activeAssignments: { type: integer }
+        completedCases: { type: integer }
+        pendingTasks: { type: integer }
+        createdAt: { type: string }
+
+    StaffDetail:
+      type: object
+      required: [user, profile]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        profile:
+          $ref: "#/components/schemas/StaffProfileData"
+        activeAssignments: { type: integer }
+        completedCases: { type: integer }
+        pendingTasks: { type: integer }
+        totalCases: { type: integer }
+
+    StaffInput:
+      type: object
+      required: [name, email, password, mobile]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        password: { type: string }
+        mobile: { type: string }
+        designation: { type: string }
+        department: { type: string }
+        staffRole: { type: string }
+        address: { type: string }
+        joiningDate: { type: string }
+        employmentStatus:
+          type: string
+          enum: [FULL_TIME, PART_TIME, CONTRACT, PROBATION]
+        permissions:
+          type: array
+          items: { type: string }
+        profilePhotoUrl: { type: string }
+        emergencyContactName: { type: string }
+        emergencyContactMobile: { type: string }
+        allowMobileDisplay: { type: boolean }
+
+    StaffUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        mobile: { type: string }
+        designation: { type: string }
+        department: { type: string }
+        staffRole: { type: string }
+        address: { type: string }
+        joiningDate: { type: string }
+        employmentStatus:
+          type: string
+          enum: [FULL_TIME, PART_TIME, CONTRACT, PROBATION]
+        accountStatus:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED, ARCHIVED]
+        permissions:
+          type: array
+          items: { type: string }
+        profilePhotoUrl: { type: string }
+        emergencyContactName: { type: string }
+        emergencyContactMobile: { type: string }
+        allowMobileDisplay: { type: boolean }
+        password: { type: string }
+
+    StaffPerformanceSummary:
+      type: object
+      required: [staffId, userId, employeeId, name, totalAssigned, activeCases, completedCases, pendingTasks, completedTasks]
+      properties:
+        staffId: { type: integer }
+        userId: { type: integer }
+        employeeId: { type: string }
+        name: { type: string }
+        designation: { type: ["string", "null"] }
+        totalAssigned: { type: integer }
+        activeCases: { type: integer }
+        completedCases: { type: integer }
+        pendingTasks: { type: integer }
+        completedTasks: { type: integer }
+
+    StaffAssignment:
+      type: object
+      required: [id, caseId, staffId, priority, isActive, createdAt]
+      properties:
+        id: { type: integer }
+        caseId: { type: integer }
+        staffId: { type: integer }
+        staffName: { type: ["string", "null"] }
+        caseNumber: { type: ["string", "null"] }
+        customerName: { type: ["string", "null"] }
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        dueDate: { type: ["string", "null"] }
+        isActive: { type: boolean }
+        createdById: { type: ["integer", "null"] }
+        createdAt: { type: string }
+
+    StaffAssignmentInput:
+      type: object
+      required: [caseId, staffId]
+      properties:
+        caseId: { type: integer }
+        staffId: { type: integer }
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        dueDate: { type: string }
+
+    StaffTask:
+      type: object
+      required: [id, title, assigneeId, priority, status, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: ["string", "null"] }
+        relatedCustomerId: { type: ["integer", "null"] }
+        relatedCaseId: { type: ["integer", "null"] }
+        assigneeId: { type: integer }
+        assigneeName: { type: ["string", "null"] }
+        createdById: { type: ["integer", "null"] }
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        dueDate: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [NOT_STARTED, IN_PROGRESS, COMPLETED, ON_HOLD]
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    StaffTaskInput:
+      type: object
+      required: [title, assigneeId]
+      properties:
+        title: { type: string }
+        description: { type: string }
+        relatedCustomerId: { type: integer }
+        relatedCaseId: { type: integer }
+        assigneeId: { type: integer }
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        dueDate: { type: string }
+
+    StaffTaskUpdate:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        dueDate: { type: string }
+        status:
+          type: string
+          enum: [NOT_STARTED, IN_PROGRESS, COMPLETED, ON_HOLD]
+        relatedCustomerId: { type: integer }
+        relatedCaseId: { type: integer }
+        assigneeId: { type: integer }
+
+    StaffPortalTaskUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [NOT_STARTED, IN_PROGRESS, COMPLETED, ON_HOLD]
+
+    CaseActivity:
+      type: object
+      required: [id, caseId, action, createdAt]
+      properties:
+        id: { type: integer }
+        caseId: { type: integer }
+        actorId: { type: ["integer", "null"] }
+        actorName: { type: ["string", "null"] }
+        action: { type: string }
+        previousStatus: { type: ["string", "null"] }
+        newStatus: { type: ["string", "null"] }
+        previousProgress: { type: ["integer", "null"] }
+        newProgress: { type: ["integer", "null"] }
+        summary: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    CaseNote:
+      type: object
+      required: [id, caseId, authorId, note, createdAt]
+      properties:
+        id: { type: integer }
+        caseId: { type: integer }
+        authorId: { type: integer }
+        authorName: { type: ["string", "null"] }
+        note: { type: string }
+        createdAt: { type: string }
+
+    CaseNoteInput:
+      type: object
+      required: [note]
+      properties:
+        note: { type: string }
+
+    CaseComm:
+      type: object
+      required: [id, caseId, staffId, type, createdAt]
+      properties:
+        id: { type: integer }
+        caseId: { type: integer }
+        staffId: { type: integer }
+        staffName: { type: ["string", "null"] }
+        type:
+          type: string
+          enum: [CALLED_CUSTOMER, WHATSAPP_SENT, EMAIL_SENT, DOCUMENTS_REQUESTED, CUSTOMER_RESPONDED, FOLLOW_UP_REQUIRED]
+        note: { type: ["string", "null"] }
+        nextFollowUpDate: { type: ["string", "null"] }
+        createdAt: { type: string }
+
+    CaseCommInput:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [CALLED_CUSTOMER, WHATSAPP_SENT, EMAIL_SENT, DOCUMENTS_REQUESTED, CUSTOMER_RESPONDED, FOLLOW_UP_REQUIRED]
+        note: { type: string }
+        nextFollowUpDate: { type: string }
+
+    StaffIdCard:
+      type: object
+      required: [employeeId, name, designation, department, joiningDate, verificationCode]
+      properties:
+        employeeId: { type: string }
+        name: { type: string }
+        email: { type: string }
+        mobile: { type: ["string", "null"] }
+        designation: { type: ["string", "null"] }
+        department: { type: ["string", "null"] }
+        joiningDate: { type: ["string", "null"] }
+        profilePhotoUrl: { type: ["string", "null"] }
+        accountStatus:
+          type: string
+          enum: [ACTIVE, INACTIVE, SUSPENDED, ARCHIVED]
+        allowMobileDisplay: { type: boolean }
+        verificationCode: { type: string }
+
+    StaffDashboard:
+      type: object
+      required: [activeCases, completedCases, pendingTasks, totalClients, newAssignments]
+      properties:
+        activeCases: { type: integer }
+        completedCases: { type: integer }
+        pendingTasks: { type: integer }
+        totalClients: { type: integer }
+        newAssignments: { type: integer }
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseActivity"
+        upcomingDeadlines:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaffAssignment"
+
+    StaffPortalCase:
+      type: object
+      required: [id, caseNumber, customerId, serviceType, status, progressPercentage, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        caseNumber: { type: string }
+        customerId: { type: integer }
+        customerName: { type: ["string", "null"] }
+        customerMobile: { type: ["string", "null"] }
+        serviceType: { type: string }
+        status:
+          type: string
+          enum: [DOCUMENTS_SUBMITTED, CASE_REVIEW, DOCUMENTATION_VERIFIED, DISPUTE_SUBMITTED, BUREAU_LENDER_REVIEW, FOLLOW_UP, COMPLETED]
+        progressPercentage: { type: integer }
+        notes: { type: ["string", "null"] }
+        expectedCompletionDate: { type: ["string", "null"] }
+        assignmentPriority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH, URGENT]
+        assignmentDueDate: { type: ["string", "null"] }
+        assignmentId: { type: integer }
+        createdAt: { type: string }
+        updatedAt: { type: string }
+
+    StaffPortalCaseDetail:
+      type: object
+      required: [case, assignment]
+      properties:
+        case:
+          $ref: "#/components/schemas/Case"
+        customer:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            mobile: { type: ["string", "null"] }
+            email: { type: string }
+        assignment:
+          $ref: "#/components/schemas/StaffAssignment"
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Document"
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/StaffTask"
+        notes:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseNote"
+        activities:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseActivity"
+        communications:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseComm"
+
+    StaffCaseUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [DOCUMENTS_SUBMITTED, CASE_REVIEW, DOCUMENTATION_VERIFIED, DISPUTE_SUBMITTED, BUREAU_LENDER_REVIEW, FOLLOW_UP, COMPLETED]
+        progressPercentage: { type: integer }
+        summary: { type: string }
+
+    StaffPortalProfileUpdate:
+      type: object
+      properties:
+        mobile: { type: string }
+        address: { type: string }
+        profilePhotoUrl: { type: string }
+        emergencyContactName: { type: string }
+        emergencyContactMobile: { type: string }

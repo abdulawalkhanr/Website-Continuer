@@ -44,6 +44,7 @@ export const UserRole = {
   EXECUTIVE: 'EXECUTIVE',
   SUPPORT: 'SUPPORT',
   CUSTOMER: 'CUSTOMER',
+  STAFF: 'STAFF',
 } as const;
 
 export interface User {
@@ -60,6 +61,65 @@ export interface User {
 
 export interface AuthResponse {
   user: User;
+  token: string;
+}
+
+export interface StaffLoginInput {
+  identifier: string;
+  password: string;
+}
+
+export type StaffProfileDataEmploymentStatus = typeof StaffProfileDataEmploymentStatus[keyof typeof StaffProfileDataEmploymentStatus];
+
+
+export const StaffProfileDataEmploymentStatus = {
+  FULL_TIME: 'FULL_TIME',
+  PART_TIME: 'PART_TIME',
+  CONTRACT: 'CONTRACT',
+  PROBATION: 'PROBATION',
+} as const;
+
+export type StaffProfileDataAccountStatus = typeof StaffProfileDataAccountStatus[keyof typeof StaffProfileDataAccountStatus];
+
+
+export const StaffProfileDataAccountStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export interface StaffProfileData {
+  id: number;
+  userId: number;
+  employeeId: string;
+  /** @nullable */
+  profilePhotoUrl?: string | null;
+  /** @nullable */
+  address?: string | null;
+  /** @nullable */
+  joiningDate?: string | null;
+  /** @nullable */
+  designation?: string | null;
+  /** @nullable */
+  department?: string | null;
+  /** @nullable */
+  staffRole?: string | null;
+  employmentStatus: StaffProfileDataEmploymentStatus;
+  accountStatus: StaffProfileDataAccountStatus;
+  permissions: string[];
+  /** @nullable */
+  emergencyContactName?: string | null;
+  /** @nullable */
+  emergencyContactMobile?: string | null;
+  allowMobileDisplay: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface StaffAuthResponse {
+  user: User;
+  staffProfile: StaffProfileData;
   token: string;
 }
 
@@ -554,6 +614,501 @@ export interface MonthlyStat {
   revenue: number;
 }
 
+export type StaffSummaryAccountStatus = typeof StaffSummaryAccountStatus[keyof typeof StaffSummaryAccountStatus];
+
+
+export const StaffSummaryAccountStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export type StaffSummaryEmploymentStatus = typeof StaffSummaryEmploymentStatus[keyof typeof StaffSummaryEmploymentStatus];
+
+
+export const StaffSummaryEmploymentStatus = {
+  FULL_TIME: 'FULL_TIME',
+  PART_TIME: 'PART_TIME',
+  CONTRACT: 'CONTRACT',
+  PROBATION: 'PROBATION',
+} as const;
+
+export interface StaffSummary {
+  id: number;
+  userId: number;
+  employeeId: string;
+  name: string;
+  email: string;
+  /** @nullable */
+  mobile?: string | null;
+  /** @nullable */
+  designation?: string | null;
+  /** @nullable */
+  department?: string | null;
+  /** @nullable */
+  profilePhotoUrl?: string | null;
+  accountStatus: StaffSummaryAccountStatus;
+  employmentStatus: StaffSummaryEmploymentStatus;
+  activeAssignments?: number;
+  completedCases?: number;
+  pendingTasks?: number;
+  createdAt: string;
+}
+
+export interface StaffDetail {
+  user: User;
+  profile: StaffProfileData;
+  activeAssignments?: number;
+  completedCases?: number;
+  pendingTasks?: number;
+  totalCases?: number;
+}
+
+export type StaffInputEmploymentStatus = typeof StaffInputEmploymentStatus[keyof typeof StaffInputEmploymentStatus];
+
+
+export const StaffInputEmploymentStatus = {
+  FULL_TIME: 'FULL_TIME',
+  PART_TIME: 'PART_TIME',
+  CONTRACT: 'CONTRACT',
+  PROBATION: 'PROBATION',
+} as const;
+
+export interface StaffInput {
+  name: string;
+  email: string;
+  password: string;
+  mobile: string;
+  designation?: string;
+  department?: string;
+  staffRole?: string;
+  address?: string;
+  joiningDate?: string;
+  employmentStatus?: StaffInputEmploymentStatus;
+  permissions?: string[];
+  profilePhotoUrl?: string;
+  emergencyContactName?: string;
+  emergencyContactMobile?: string;
+  allowMobileDisplay?: boolean;
+}
+
+export type StaffUpdateEmploymentStatus = typeof StaffUpdateEmploymentStatus[keyof typeof StaffUpdateEmploymentStatus];
+
+
+export const StaffUpdateEmploymentStatus = {
+  FULL_TIME: 'FULL_TIME',
+  PART_TIME: 'PART_TIME',
+  CONTRACT: 'CONTRACT',
+  PROBATION: 'PROBATION',
+} as const;
+
+export type StaffUpdateAccountStatus = typeof StaffUpdateAccountStatus[keyof typeof StaffUpdateAccountStatus];
+
+
+export const StaffUpdateAccountStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export interface StaffUpdate {
+  name?: string;
+  email?: string;
+  mobile?: string;
+  designation?: string;
+  department?: string;
+  staffRole?: string;
+  address?: string;
+  joiningDate?: string;
+  employmentStatus?: StaffUpdateEmploymentStatus;
+  accountStatus?: StaffUpdateAccountStatus;
+  permissions?: string[];
+  profilePhotoUrl?: string;
+  emergencyContactName?: string;
+  emergencyContactMobile?: string;
+  allowMobileDisplay?: boolean;
+  password?: string;
+}
+
+export interface StaffPerformanceSummary {
+  staffId: number;
+  userId: number;
+  employeeId: string;
+  name: string;
+  /** @nullable */
+  designation?: string | null;
+  totalAssigned: number;
+  activeCases: number;
+  completedCases: number;
+  pendingTasks: number;
+  completedTasks: number;
+}
+
+export type StaffAssignmentPriority = typeof StaffAssignmentPriority[keyof typeof StaffAssignmentPriority];
+
+
+export const StaffAssignmentPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+
+export interface StaffAssignment {
+  id: number;
+  caseId: number;
+  staffId: number;
+  /** @nullable */
+  staffName?: string | null;
+  /** @nullable */
+  caseNumber?: string | null;
+  /** @nullable */
+  customerName?: string | null;
+  priority: StaffAssignmentPriority;
+  /** @nullable */
+  dueDate?: string | null;
+  isActive: boolean;
+  /** @nullable */
+  createdById?: number | null;
+  createdAt: string;
+}
+
+export type StaffAssignmentInputPriority = typeof StaffAssignmentInputPriority[keyof typeof StaffAssignmentInputPriority];
+
+
+export const StaffAssignmentInputPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+
+export interface StaffAssignmentInput {
+  caseId: number;
+  staffId: number;
+  priority?: StaffAssignmentInputPriority;
+  dueDate?: string;
+}
+
+export type StaffTaskPriority = typeof StaffTaskPriority[keyof typeof StaffTaskPriority];
+
+
+export const StaffTaskPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+
+export type StaffTaskStatus = typeof StaffTaskStatus[keyof typeof StaffTaskStatus];
+
+
+export const StaffTaskStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  ON_HOLD: 'ON_HOLD',
+} as const;
+
+export interface StaffTask {
+  id: number;
+  title: string;
+  /** @nullable */
+  description?: string | null;
+  /** @nullable */
+  relatedCustomerId?: number | null;
+  /** @nullable */
+  relatedCaseId?: number | null;
+  assigneeId: number;
+  /** @nullable */
+  assigneeName?: string | null;
+  /** @nullable */
+  createdById?: number | null;
+  priority: StaffTaskPriority;
+  /** @nullable */
+  dueDate?: string | null;
+  status: StaffTaskStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type StaffTaskInputPriority = typeof StaffTaskInputPriority[keyof typeof StaffTaskInputPriority];
+
+
+export const StaffTaskInputPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+
+export interface StaffTaskInput {
+  title: string;
+  description?: string;
+  relatedCustomerId?: number;
+  relatedCaseId?: number;
+  assigneeId: number;
+  priority?: StaffTaskInputPriority;
+  dueDate?: string;
+}
+
+export type StaffTaskUpdatePriority = typeof StaffTaskUpdatePriority[keyof typeof StaffTaskUpdatePriority];
+
+
+export const StaffTaskUpdatePriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+
+export type StaffTaskUpdateStatus = typeof StaffTaskUpdateStatus[keyof typeof StaffTaskUpdateStatus];
+
+
+export const StaffTaskUpdateStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  ON_HOLD: 'ON_HOLD',
+} as const;
+
+export interface StaffTaskUpdate {
+  title?: string;
+  description?: string;
+  priority?: StaffTaskUpdatePriority;
+  dueDate?: string;
+  status?: StaffTaskUpdateStatus;
+  relatedCustomerId?: number;
+  relatedCaseId?: number;
+  assigneeId?: number;
+}
+
+export type StaffPortalTaskUpdateStatus = typeof StaffPortalTaskUpdateStatus[keyof typeof StaffPortalTaskUpdateStatus];
+
+
+export const StaffPortalTaskUpdateStatus = {
+  NOT_STARTED: 'NOT_STARTED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  COMPLETED: 'COMPLETED',
+  ON_HOLD: 'ON_HOLD',
+} as const;
+
+export interface StaffPortalTaskUpdate {
+  status: StaffPortalTaskUpdateStatus;
+}
+
+export interface CaseActivity {
+  id: number;
+  caseId: number;
+  /** @nullable */
+  actorId?: number | null;
+  /** @nullable */
+  actorName?: string | null;
+  action: string;
+  /** @nullable */
+  previousStatus?: string | null;
+  /** @nullable */
+  newStatus?: string | null;
+  /** @nullable */
+  previousProgress?: number | null;
+  /** @nullable */
+  newProgress?: number | null;
+  /** @nullable */
+  summary?: string | null;
+  createdAt: string;
+}
+
+export interface CaseNote {
+  id: number;
+  caseId: number;
+  authorId: number;
+  /** @nullable */
+  authorName?: string | null;
+  note: string;
+  createdAt: string;
+}
+
+export interface CaseNoteInput {
+  note: string;
+}
+
+export type CaseCommType = typeof CaseCommType[keyof typeof CaseCommType];
+
+
+export const CaseCommType = {
+  CALLED_CUSTOMER: 'CALLED_CUSTOMER',
+  WHATSAPP_SENT: 'WHATSAPP_SENT',
+  EMAIL_SENT: 'EMAIL_SENT',
+  DOCUMENTS_REQUESTED: 'DOCUMENTS_REQUESTED',
+  CUSTOMER_RESPONDED: 'CUSTOMER_RESPONDED',
+  FOLLOW_UP_REQUIRED: 'FOLLOW_UP_REQUIRED',
+} as const;
+
+export interface CaseComm {
+  id: number;
+  caseId: number;
+  staffId: number;
+  /** @nullable */
+  staffName?: string | null;
+  type: CaseCommType;
+  /** @nullable */
+  note?: string | null;
+  /** @nullable */
+  nextFollowUpDate?: string | null;
+  createdAt: string;
+}
+
+export type CaseCommInputType = typeof CaseCommInputType[keyof typeof CaseCommInputType];
+
+
+export const CaseCommInputType = {
+  CALLED_CUSTOMER: 'CALLED_CUSTOMER',
+  WHATSAPP_SENT: 'WHATSAPP_SENT',
+  EMAIL_SENT: 'EMAIL_SENT',
+  DOCUMENTS_REQUESTED: 'DOCUMENTS_REQUESTED',
+  CUSTOMER_RESPONDED: 'CUSTOMER_RESPONDED',
+  FOLLOW_UP_REQUIRED: 'FOLLOW_UP_REQUIRED',
+} as const;
+
+export interface CaseCommInput {
+  type: CaseCommInputType;
+  note?: string;
+  nextFollowUpDate?: string;
+}
+
+export type StaffIdCardAccountStatus = typeof StaffIdCardAccountStatus[keyof typeof StaffIdCardAccountStatus];
+
+
+export const StaffIdCardAccountStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export interface StaffIdCard {
+  employeeId: string;
+  name: string;
+  email?: string;
+  /** @nullable */
+  mobile?: string | null;
+  /** @nullable */
+  designation: string | null;
+  /** @nullable */
+  department: string | null;
+  /** @nullable */
+  joiningDate: string | null;
+  /** @nullable */
+  profilePhotoUrl?: string | null;
+  accountStatus?: StaffIdCardAccountStatus;
+  allowMobileDisplay?: boolean;
+  verificationCode: string;
+}
+
+export interface StaffDashboard {
+  activeCases: number;
+  completedCases: number;
+  pendingTasks: number;
+  totalClients: number;
+  newAssignments: number;
+  recentActivity?: CaseActivity[];
+  upcomingDeadlines?: StaffAssignment[];
+}
+
+export type StaffPortalCaseStatus = typeof StaffPortalCaseStatus[keyof typeof StaffPortalCaseStatus];
+
+
+export const StaffPortalCaseStatus = {
+  DOCUMENTS_SUBMITTED: 'DOCUMENTS_SUBMITTED',
+  CASE_REVIEW: 'CASE_REVIEW',
+  DOCUMENTATION_VERIFIED: 'DOCUMENTATION_VERIFIED',
+  DISPUTE_SUBMITTED: 'DISPUTE_SUBMITTED',
+  BUREAU_LENDER_REVIEW: 'BUREAU_LENDER_REVIEW',
+  FOLLOW_UP: 'FOLLOW_UP',
+  COMPLETED: 'COMPLETED',
+} as const;
+
+export type StaffPortalCaseAssignmentPriority = typeof StaffPortalCaseAssignmentPriority[keyof typeof StaffPortalCaseAssignmentPriority];
+
+
+export const StaffPortalCaseAssignmentPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
+
+export interface StaffPortalCase {
+  id: number;
+  caseNumber: string;
+  customerId: number;
+  /** @nullable */
+  customerName?: string | null;
+  /** @nullable */
+  customerMobile?: string | null;
+  serviceType: string;
+  status: StaffPortalCaseStatus;
+  progressPercentage: number;
+  /** @nullable */
+  notes?: string | null;
+  /** @nullable */
+  expectedCompletionDate?: string | null;
+  assignmentPriority?: StaffPortalCaseAssignmentPriority;
+  /** @nullable */
+  assignmentDueDate?: string | null;
+  assignmentId?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type StaffPortalCaseDetailCustomer = {
+  id?: number;
+  name?: string;
+  /** @nullable */
+  mobile?: string | null;
+  email?: string;
+};
+
+export interface StaffPortalCaseDetail {
+  case: Case;
+  customer?: StaffPortalCaseDetailCustomer;
+  assignment: StaffAssignment;
+  documents?: Document[];
+  tasks?: StaffTask[];
+  notes?: CaseNote[];
+  activities?: CaseActivity[];
+  communications?: CaseComm[];
+}
+
+export type StaffCaseUpdateStatus = typeof StaffCaseUpdateStatus[keyof typeof StaffCaseUpdateStatus];
+
+
+export const StaffCaseUpdateStatus = {
+  DOCUMENTS_SUBMITTED: 'DOCUMENTS_SUBMITTED',
+  CASE_REVIEW: 'CASE_REVIEW',
+  DOCUMENTATION_VERIFIED: 'DOCUMENTATION_VERIFIED',
+  DISPUTE_SUBMITTED: 'DISPUTE_SUBMITTED',
+  BUREAU_LENDER_REVIEW: 'BUREAU_LENDER_REVIEW',
+  FOLLOW_UP: 'FOLLOW_UP',
+  COMPLETED: 'COMPLETED',
+} as const;
+
+export interface StaffCaseUpdate {
+  status?: StaffCaseUpdateStatus;
+  progressPercentage?: number;
+  summary?: string;
+}
+
+export interface StaffPortalProfileUpdate {
+  mobile?: string;
+  address?: string;
+  profilePhotoUrl?: string;
+  emergencyContactName?: string;
+  emergencyContactMobile?: string;
+}
+
 export type ListLeadsParams = {
 stage?: ListLeadsStage;
 source?: ListLeadsSource;
@@ -632,4 +1187,40 @@ customerId?: number;
 export type ListNotificationsParams = {
 userId?: number;
 };
+
+export type ListStaffParams = {
+search?: string;
+status?: ListStaffStatus;
+};
+
+export type ListStaffStatus = typeof ListStaffStatus[keyof typeof ListStaffStatus];
+
+
+export const ListStaffStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE',
+  SUSPENDED: 'SUSPENDED',
+  ARCHIVED: 'ARCHIVED',
+} as const;
+
+export type ListCaseActivitiesParams = {
+staffId?: number;
+caseId?: number;
+};
+
+export type ListStaffPortalCasesParams = {
+q?: string;
+status?: string;
+priority?: ListStaffPortalCasesPriority;
+};
+
+export type ListStaffPortalCasesPriority = typeof ListStaffPortalCasesPriority[keyof typeof ListStaffPortalCasesPriority];
+
+
+export const ListStaffPortalCasesPriority = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  URGENT: 'URGENT',
+} as const;
 

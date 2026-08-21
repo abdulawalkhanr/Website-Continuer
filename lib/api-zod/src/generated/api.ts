@@ -31,7 +31,7 @@ export const LoginResponse = zod.object({
   "name": zod.string(),
   "mobile": zod.string().nullish(),
   "city": zod.string().nullish(),
-  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
   "createdAt": zod.string()
 }),
   "token": zod.string()
@@ -59,7 +59,7 @@ export const GetMeResponse = zod.object({
   "name": zod.string(),
   "mobile": zod.string().nullish(),
   "city": zod.string().nullish(),
-  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
   "createdAt": zod.string()
 })
 
@@ -81,8 +81,49 @@ export const UpdateProfileResponse = zod.object({
   "name": zod.string(),
   "mobile": zod.string().nullish(),
   "city": zod.string().nullish(),
-  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Staff login with employee ID, mobile, or email plus password
+ */
+export const StaffLoginBody = zod.object({
+  "identifier": zod.string(),
+  "password": zod.string()
+})
+
+export const StaffLoginResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
+  "createdAt": zod.string()
+}),
+  "staffProfile": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "employeeId": zod.string(),
+  "profilePhotoUrl": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "joiningDate": zod.string().nullish(),
+  "designation": zod.string().nullish(),
+  "department": zod.string().nullish(),
+  "staffRole": zod.string().nullish(),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']),
+  "permissions": zod.array(zod.string()),
+  "emergencyContactName": zod.string().nullish(),
+  "emergencyContactMobile": zod.string().nullish(),
+  "allowMobileDisplay": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+}),
+  "token": zod.string()
 })
 
 
@@ -826,9 +867,735 @@ export const ListExecutivesResponseItem = zod.object({
   "name": zod.string(),
   "mobile": zod.string().nullish(),
   "city": zod.string().nullish(),
-  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER']),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
   "createdAt": zod.string()
 })
 export const ListExecutivesResponse = zod.array(ListExecutivesResponseItem)
+
+
+/**
+ * @summary List all staff with optional filters
+ */
+export const ListStaffQueryParams = zod.object({
+  "search": zod.coerce.string().optional(),
+  "status": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']).optional()
+})
+
+export const ListStaffResponseItem = zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "email": zod.string(),
+  "mobile": zod.string().nullish(),
+  "designation": zod.string().nullish(),
+  "department": zod.string().nullish(),
+  "profilePhotoUrl": zod.string().nullish(),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']),
+  "activeAssignments": zod.number().optional(),
+  "completedCases": zod.number().optional(),
+  "pendingTasks": zod.number().optional(),
+  "createdAt": zod.string()
+})
+export const ListStaffResponse = zod.array(ListStaffResponseItem)
+
+
+/**
+ * @summary Create a new staff account and profile
+ */
+export const CreateStaffBody = zod.object({
+  "name": zod.string(),
+  "email": zod.string(),
+  "password": zod.string(),
+  "mobile": zod.string(),
+  "designation": zod.string().optional(),
+  "department": zod.string().optional(),
+  "staffRole": zod.string().optional(),
+  "address": zod.string().optional(),
+  "joiningDate": zod.string().optional(),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']).optional(),
+  "permissions": zod.array(zod.string()).optional(),
+  "profilePhotoUrl": zod.string().optional(),
+  "emergencyContactName": zod.string().optional(),
+  "emergencyContactMobile": zod.string().optional(),
+  "allowMobileDisplay": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Get per-staff performance summary
+ */
+export const GetStaffPerformanceResponseItem = zod.object({
+  "staffId": zod.number(),
+  "userId": zod.number(),
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "designation": zod.string().nullish(),
+  "totalAssigned": zod.number(),
+  "activeCases": zod.number(),
+  "completedCases": zod.number(),
+  "pendingTasks": zod.number(),
+  "completedTasks": zod.number()
+})
+export const GetStaffPerformanceResponse = zod.array(GetStaffPerformanceResponseItem)
+
+
+/**
+ * @summary Assign a case to a staff member
+ */
+export const CreateStaffAssignmentBody = zod.object({
+  "caseId": zod.number(),
+  "staffId": zod.number(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+  "dueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Remove a staff-case assignment
+ */
+export const DeleteStaffAssignmentParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteStaffAssignmentResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary Admin list all staff tasks
+ */
+export const ListStaffTasksResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "relatedCustomerId": zod.number().nullish(),
+  "relatedCaseId": zod.number().nullish(),
+  "assigneeId": zod.number(),
+  "assigneeName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "status": zod.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListStaffTasksResponse = zod.array(ListStaffTasksResponseItem)
+
+
+/**
+ * @summary Admin creates a staff task
+ */
+export const CreateStaffTaskBody = zod.object({
+  "title": zod.string(),
+  "description": zod.string().optional(),
+  "relatedCustomerId": zod.number().optional(),
+  "relatedCaseId": zod.number().optional(),
+  "assigneeId": zod.number(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+  "dueDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Admin edit task; staff can only update status for own tasks
+ */
+export const UpdateStaffTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateStaffTaskBody = zod.object({
+  "title": zod.string().optional(),
+  "description": zod.string().optional(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+  "dueDate": zod.string().optional(),
+  "status": zod.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD']).optional(),
+  "relatedCustomerId": zod.number().optional(),
+  "relatedCaseId": zod.number().optional(),
+  "assigneeId": zod.number().optional()
+})
+
+export const UpdateStaffTaskResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "relatedCustomerId": zod.number().nullish(),
+  "relatedCaseId": zod.number().nullish(),
+  "assigneeId": zod.number(),
+  "assigneeName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "status": zod.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Admin activity log with optional staffId/caseId filters
+ */
+export const ListCaseActivitiesQueryParams = zod.object({
+  "staffId": zod.coerce.number().optional(),
+  "caseId": zod.coerce.number().optional()
+})
+
+export const ListCaseActivitiesResponseItem = zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "actorId": zod.number().nullish(),
+  "actorName": zod.string().nullish(),
+  "action": zod.string(),
+  "previousStatus": zod.string().nullish(),
+  "newStatus": zod.string().nullish(),
+  "previousProgress": zod.number().nullish(),
+  "newProgress": zod.number().nullish(),
+  "summary": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListCaseActivitiesResponse = zod.array(ListCaseActivitiesResponseItem)
+
+
+/**
+ * @summary Get staff data shaped for secure ID card rendering
+ */
+export const GetStaffIdCardParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetStaffIdCardResponse = zod.object({
+  "employeeId": zod.string(),
+  "name": zod.string(),
+  "email": zod.string().optional(),
+  "mobile": zod.string().nullish(),
+  "designation": zod.string().nullable(),
+  "department": zod.string().nullable(),
+  "joiningDate": zod.string().nullable(),
+  "profilePhotoUrl": zod.string().nullish(),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']).optional(),
+  "allowMobileDisplay": zod.boolean().optional(),
+  "verificationCode": zod.string()
+})
+
+
+/**
+ * @summary Get staff profile with workload summary
+ */
+export const GetStaffParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetStaffResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
+  "createdAt": zod.string()
+}),
+  "profile": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "employeeId": zod.string(),
+  "profilePhotoUrl": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "joiningDate": zod.string().nullish(),
+  "designation": zod.string().nullish(),
+  "department": zod.string().nullish(),
+  "staffRole": zod.string().nullish(),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']),
+  "permissions": zod.array(zod.string()),
+  "emergencyContactName": zod.string().nullish(),
+  "emergencyContactMobile": zod.string().nullish(),
+  "allowMobileDisplay": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+}),
+  "activeAssignments": zod.number().optional(),
+  "completedCases": zod.number().optional(),
+  "pendingTasks": zod.number().optional(),
+  "totalCases": zod.number().optional()
+})
+
+
+/**
+ * @summary Edit staff profile, role, permissions, account status, or reset password
+ */
+export const UpdateStaffParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateStaffBody = zod.object({
+  "name": zod.string().optional(),
+  "email": zod.string().optional(),
+  "mobile": zod.string().optional(),
+  "designation": zod.string().optional(),
+  "department": zod.string().optional(),
+  "staffRole": zod.string().optional(),
+  "address": zod.string().optional(),
+  "joiningDate": zod.string().optional(),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']).optional(),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']).optional(),
+  "permissions": zod.array(zod.string()).optional(),
+  "profilePhotoUrl": zod.string().optional(),
+  "emergencyContactName": zod.string().optional(),
+  "emergencyContactMobile": zod.string().optional(),
+  "allowMobileDisplay": zod.boolean().optional(),
+  "password": zod.string().optional()
+})
+
+export const UpdateStaffResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
+  "createdAt": zod.string()
+}),
+  "profile": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "employeeId": zod.string(),
+  "profilePhotoUrl": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "joiningDate": zod.string().nullish(),
+  "designation": zod.string().nullish(),
+  "department": zod.string().nullish(),
+  "staffRole": zod.string().nullish(),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']),
+  "permissions": zod.array(zod.string()),
+  "emergencyContactName": zod.string().nullish(),
+  "emergencyContactMobile": zod.string().nullish(),
+  "allowMobileDisplay": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+}),
+  "activeAssignments": zod.number().optional(),
+  "completedCases": zod.number().optional(),
+  "pendingTasks": zod.number().optional(),
+  "totalCases": zod.number().optional()
+})
+
+
+/**
+ * @summary Archive staff (soft delete, preserves history)
+ */
+export const ArchiveStaffParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const ArchiveStaffResponse = zod.object({
+  "success": zod.boolean(),
+  "message": zod.string().optional()
+})
+
+
+/**
+ * @summary Admin view of assignments for a staff member
+ */
+export const GetStaffAssignmentsParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetStaffAssignmentsResponseItem = zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "staffId": zod.number(),
+  "staffName": zod.string().nullish(),
+  "caseNumber": zod.string().nullish(),
+  "customerName": zod.string().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdById": zod.number().nullish(),
+  "createdAt": zod.string()
+})
+export const GetStaffAssignmentsResponse = zod.array(GetStaffAssignmentsResponseItem)
+
+
+/**
+ * @summary Staff portal dashboard with counts and recent activity
+ */
+export const GetStaffPortalDashboardResponse = zod.object({
+  "activeCases": zod.number(),
+  "completedCases": zod.number(),
+  "pendingTasks": zod.number(),
+  "totalClients": zod.number(),
+  "newAssignments": zod.number(),
+  "recentActivity": zod.array(zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "actorId": zod.number().nullish(),
+  "actorName": zod.string().nullish(),
+  "action": zod.string(),
+  "previousStatus": zod.string().nullish(),
+  "newStatus": zod.string().nullish(),
+  "previousProgress": zod.number().nullish(),
+  "newProgress": zod.number().nullish(),
+  "summary": zod.string().nullish(),
+  "createdAt": zod.string()
+})).optional(),
+  "upcomingDeadlines": zod.array(zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "staffId": zod.number(),
+  "staffName": zod.string().nullish(),
+  "caseNumber": zod.string().nullish(),
+  "customerName": zod.string().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdById": zod.number().nullish(),
+  "createdAt": zod.string()
+})).optional()
+})
+
+
+/**
+ * @summary Staff portal - caller's assigned cases
+ */
+export const ListStaffPortalCasesQueryParams = zod.object({
+  "q": zod.coerce.string().optional(),
+  "status": zod.coerce.string().optional(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional()
+})
+
+export const ListStaffPortalCasesResponseItem = zod.object({
+  "id": zod.number(),
+  "caseNumber": zod.string(),
+  "customerId": zod.number(),
+  "customerName": zod.string().nullish(),
+  "customerMobile": zod.string().nullish(),
+  "serviceType": zod.string(),
+  "status": zod.enum(['DOCUMENTS_SUBMITTED', 'CASE_REVIEW', 'DOCUMENTATION_VERIFIED', 'DISPUTE_SUBMITTED', 'BUREAU_LENDER_REVIEW', 'FOLLOW_UP', 'COMPLETED']),
+  "progressPercentage": zod.number(),
+  "notes": zod.string().nullish(),
+  "expectedCompletionDate": zod.string().nullish(),
+  "assignmentPriority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
+  "assignmentDueDate": zod.string().nullish(),
+  "assignmentId": zod.number().optional(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListStaffPortalCasesResponse = zod.array(ListStaffPortalCasesResponseItem)
+
+
+/**
+ * @summary Staff portal - case detail (assignment check enforced)
+ */
+export const GetStaffPortalCaseParams = zod.object({
+  "caseId": zod.coerce.number()
+})
+
+export const GetStaffPortalCaseResponse = zod.object({
+  "case": zod.object({
+  "id": zod.number(),
+  "caseNumber": zod.string(),
+  "customerId": zod.number(),
+  "customerName": zod.string().nullish(),
+  "customerMobile": zod.string().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assignedToName": zod.string().nullish(),
+  "serviceType": zod.string(),
+  "status": zod.enum(['DOCUMENTS_SUBMITTED', 'CASE_REVIEW', 'DOCUMENTATION_VERIFIED', 'DISPUTE_SUBMITTED', 'BUREAU_LENDER_REVIEW', 'FOLLOW_UP', 'COMPLETED']),
+  "progressPercentage": zod.number(),
+  "notes": zod.string().nullish(),
+  "expectedCompletionDate": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+}),
+  "customer": zod.object({
+  "id": zod.number().optional(),
+  "name": zod.string().optional(),
+  "mobile": zod.string().nullish(),
+  "email": zod.string().optional()
+}).optional(),
+  "assignment": zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "staffId": zod.number(),
+  "staffName": zod.string().nullish(),
+  "caseNumber": zod.string().nullish(),
+  "customerName": zod.string().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "isActive": zod.boolean(),
+  "createdById": zod.number().nullish(),
+  "createdAt": zod.string()
+}),
+  "documents": zod.array(zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "name": zod.string(),
+  "type": zod.enum(['PAN', 'AADHAAR', 'CREDIT_REPORT', 'NOC', 'CLOSURE_LETTER', 'OTHER']),
+  "fileUrl": zod.string().nullish(),
+  "status": zod.enum(['PENDING', 'UPLOADED', 'VERIFIED', 'REJECTED']),
+  "verifiedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})).optional(),
+  "tasks": zod.array(zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "relatedCustomerId": zod.number().nullish(),
+  "relatedCaseId": zod.number().nullish(),
+  "assigneeId": zod.number(),
+  "assigneeName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "status": zod.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})).optional(),
+  "notes": zod.array(zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "authorId": zod.number(),
+  "authorName": zod.string().nullish(),
+  "note": zod.string(),
+  "createdAt": zod.string()
+})).optional(),
+  "activities": zod.array(zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "actorId": zod.number().nullish(),
+  "actorName": zod.string().nullish(),
+  "action": zod.string(),
+  "previousStatus": zod.string().nullish(),
+  "newStatus": zod.string().nullish(),
+  "previousProgress": zod.number().nullish(),
+  "newProgress": zod.number().nullish(),
+  "summary": zod.string().nullish(),
+  "createdAt": zod.string()
+})).optional(),
+  "communications": zod.array(zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "staffId": zod.number(),
+  "staffName": zod.string().nullish(),
+  "type": zod.enum(['CALLED_CUSTOMER', 'WHATSAPP_SENT', 'EMAIL_SENT', 'DOCUMENTS_REQUESTED', 'CUSTOMER_RESPONDED', 'FOLLOW_UP_REQUIRED']),
+  "note": zod.string().nullish(),
+  "nextFollowUpDate": zod.string().nullish(),
+  "createdAt": zod.string()
+})).optional()
+})
+
+
+/**
+ * @summary Staff portal - update case status/progress (assignment check enforced)
+ */
+export const UpdateStaffPortalCaseParams = zod.object({
+  "caseId": zod.coerce.number()
+})
+
+export const UpdateStaffPortalCaseBody = zod.object({
+  "status": zod.enum(['DOCUMENTS_SUBMITTED', 'CASE_REVIEW', 'DOCUMENTATION_VERIFIED', 'DISPUTE_SUBMITTED', 'BUREAU_LENDER_REVIEW', 'FOLLOW_UP', 'COMPLETED']).optional(),
+  "progressPercentage": zod.number().optional(),
+  "summary": zod.string().optional()
+})
+
+export const UpdateStaffPortalCaseResponse = zod.object({
+  "id": zod.number(),
+  "caseNumber": zod.string(),
+  "customerId": zod.number(),
+  "customerName": zod.string().nullish(),
+  "customerMobile": zod.string().nullish(),
+  "assignedToId": zod.number().nullish(),
+  "assignedToName": zod.string().nullish(),
+  "serviceType": zod.string(),
+  "status": zod.enum(['DOCUMENTS_SUBMITTED', 'CASE_REVIEW', 'DOCUMENTATION_VERIFIED', 'DISPUTE_SUBMITTED', 'BUREAU_LENDER_REVIEW', 'FOLLOW_UP', 'COMPLETED']),
+  "progressPercentage": zod.number(),
+  "notes": zod.string().nullish(),
+  "expectedCompletionDate": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Staff portal - create internal case note
+ */
+export const CreateCaseNoteParams = zod.object({
+  "caseId": zod.coerce.number()
+})
+
+export const CreateCaseNoteBody = zod.object({
+  "note": zod.string()
+})
+
+
+/**
+ * @summary Staff portal - log customer communication
+ */
+export const CreateCaseCommParams = zod.object({
+  "caseId": zod.coerce.number()
+})
+
+export const CreateCaseCommBody = zod.object({
+  "type": zod.enum(['CALLED_CUSTOMER', 'WHATSAPP_SENT', 'EMAIL_SENT', 'DOCUMENTS_REQUESTED', 'CUSTOMER_RESPONDED', 'FOLLOW_UP_REQUIRED']),
+  "note": zod.string().optional(),
+  "nextFollowUpDate": zod.string().optional()
+})
+
+
+/**
+ * @summary Staff portal - documents for assigned cases only
+ */
+export const ListStaffPortalDocumentsResponseItem = zod.object({
+  "id": zod.number(),
+  "caseId": zod.number(),
+  "name": zod.string(),
+  "type": zod.enum(['PAN', 'AADHAAR', 'CREDIT_REPORT', 'NOC', 'CLOSURE_LETTER', 'OTHER']),
+  "fileUrl": zod.string().nullish(),
+  "status": zod.enum(['PENDING', 'UPLOADED', 'VERIFIED', 'REJECTED']),
+  "verifiedAt": zod.string().nullish(),
+  "createdAt": zod.string()
+})
+export const ListStaffPortalDocumentsResponse = zod.array(ListStaffPortalDocumentsResponseItem)
+
+
+/**
+ * @summary Staff portal - current user's tasks
+ */
+export const ListStaffPortalTasksResponseItem = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "relatedCustomerId": zod.number().nullish(),
+  "relatedCaseId": zod.number().nullish(),
+  "assigneeId": zod.number(),
+  "assigneeName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "status": zod.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListStaffPortalTasksResponse = zod.array(ListStaffPortalTasksResponseItem)
+
+
+/**
+ * @summary Staff portal - update own task status
+ */
+export const UpdateStaffPortalTaskParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const UpdateStaffPortalTaskBody = zod.object({
+  "status": zod.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD'])
+})
+
+export const UpdateStaffPortalTaskResponse = zod.object({
+  "id": zod.number(),
+  "title": zod.string(),
+  "description": zod.string().nullish(),
+  "relatedCustomerId": zod.number().nullish(),
+  "relatedCaseId": zod.number().nullish(),
+  "assigneeId": zod.number(),
+  "assigneeName": zod.string().nullish(),
+  "createdById": zod.number().nullish(),
+  "priority": zod.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']),
+  "dueDate": zod.string().nullish(),
+  "status": zod.enum(['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'ON_HOLD']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Staff portal - current staff profile and summary
+ */
+export const GetStaffPortalProfileResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
+  "createdAt": zod.string()
+}),
+  "profile": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "employeeId": zod.string(),
+  "profilePhotoUrl": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "joiningDate": zod.string().nullish(),
+  "designation": zod.string().nullish(),
+  "department": zod.string().nullish(),
+  "staffRole": zod.string().nullish(),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']),
+  "permissions": zod.array(zod.string()),
+  "emergencyContactName": zod.string().nullish(),
+  "emergencyContactMobile": zod.string().nullish(),
+  "allowMobileDisplay": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+}),
+  "activeAssignments": zod.number().optional(),
+  "completedCases": zod.number().optional(),
+  "pendingTasks": zod.number().optional(),
+  "totalCases": zod.number().optional()
+})
+
+
+/**
+ * @summary Staff portal - update limited personal fields
+ */
+export const UpdateStaffPortalProfileBody = zod.object({
+  "mobile": zod.string().optional(),
+  "address": zod.string().optional(),
+  "profilePhotoUrl": zod.string().optional(),
+  "emergencyContactName": zod.string().optional(),
+  "emergencyContactMobile": zod.string().optional()
+})
+
+export const UpdateStaffPortalProfileResponse = zod.object({
+  "user": zod.object({
+  "id": zod.number(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "mobile": zod.string().nullish(),
+  "city": zod.string().nullish(),
+  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
+  "createdAt": zod.string()
+}),
+  "profile": zod.object({
+  "id": zod.number(),
+  "userId": zod.number(),
+  "employeeId": zod.string(),
+  "profilePhotoUrl": zod.string().nullish(),
+  "address": zod.string().nullish(),
+  "joiningDate": zod.string().nullish(),
+  "designation": zod.string().nullish(),
+  "department": zod.string().nullish(),
+  "staffRole": zod.string().nullish(),
+  "employmentStatus": zod.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'PROBATION']),
+  "accountStatus": zod.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'ARCHIVED']),
+  "permissions": zod.array(zod.string()),
+  "emergencyContactName": zod.string().nullish(),
+  "emergencyContactMobile": zod.string().nullish(),
+  "allowMobileDisplay": zod.boolean(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().optional()
+}),
+  "activeAssignments": zod.number().optional(),
+  "completedCases": zod.number().optional(),
+  "pendingTasks": zod.number().optional(),
+  "totalCases": zod.number().optional()
+})
 
 

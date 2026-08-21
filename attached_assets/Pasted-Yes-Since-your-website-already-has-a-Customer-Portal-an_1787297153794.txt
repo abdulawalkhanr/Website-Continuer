@@ -1,0 +1,540 @@
+Yes. Since your website already has a Customer Portal and Admin Panel, the best next step is to add a complete Staff Management System / Staff Portal controlled entirely by you as the owner.
+
+Copy and paste this prompt into your AI website builder:
+
+I have already built my CIR Consultation Service website with an Admin Panel and Customer Portal. Now I want to expand the existing website by adding a complete, professional Staff Management System and separate Staff Panel. Do not rebuild or remove the existing website, customer portal, admin panel, customers, services, or existing functionality. Integrate this new Staff Management System properly with the current website and database.
+
+IMPORTANT INSTRUCTION: Complete the implementation continuously from start to finish. Do not repeatedly stop and ask me unnecessary questions. Analyze the existing project structure, database, authentication system, Admin Panel, Customer Portal, and case management system first, then implement the Staff Panel and all required backend functionality properly. Fix any integration issues automatically and make sure all features actually work, not just the user interface.
+
+COMPANY DETAILS:
+Company Name: CIR Consultation Service
+Tagline: Your Partner in Financial Health
+Website: circonsultationservice.in
+Official Business Number: 01169310902
+WhatsApp Number: +91 98649 20810
+
+BUSINESS SERVICES:
+Credit Report Consultation
+CIBIL Assistance
+Credit Score Improvement
+CIBIL Rectification
+Credit Report Dispute Assistance
+Written-Off Account Rectification Assistance
+Loan and Credit Report Issue Consultation
+GST Registration
+GST Filing
+ITR Filing
+MSME Registration
+Business Registration
+Financial and Documentation Consultation
+Other Legal and Documentation Assistance
+
+I WANT A COMPLETE STAFF MANAGEMENT SYSTEM WITH THE FOLLOWING FEATURES:
+
+1. ADD A STAFF LOGIN BUTTON TO THE WEBSITE
+   Add a visible and professional “Staff Login” button in the website navigation or login area, along with the existing Customer Login and Admin Login options.
+
+The login structure should clearly support:
+Customer Login
+Staff Login
+Admin Login
+
+Each user type must only access their own authorized dashboard.
+
+2. CREATE A SEPARATE STAFF PORTAL
+   Create a dedicated Staff Dashboard that is completely separate from the Admin Dashboard and Customer Dashboard.
+
+Staff members should be able to log in using credentials created by the Admin.
+
+Staff login options should support:
+Employee ID + Password
+Mobile Number + Password
+Email + Password, if the Admin has added an email address
+
+Do not allow staff members to create their own accounts publicly. Only the Admin should be able to create, activate, deactivate, or delete staff accounts.
+
+3. ADMIN STAFF MANAGEMENT SECTION
+   Inside the existing Admin Panel, add a complete “Staff Management” section.
+
+The Admin should be able to:
+
+Add New Staff
+Edit Staff Details
+View All Staff
+Search Staff
+Filter Staff by Status
+Activate Staff Account
+Deactivate Staff Account
+Suspend Staff Account
+Reset Staff Password
+Change Staff Password
+Delete or Archive Staff
+View Staff Profile
+View Assigned Clients
+View Staff Workload
+View Staff Activity
+View Staff Performance
+View Pending Cases
+View Completed Cases
+
+When creating a new staff member, the Admin should be able to enter:
+
+Staff Full Name
+Employee ID automatically generated
+Mobile Number
+Email Address optional
+Residential Address optional
+Date of Joining
+Designation
+Department
+Profile Photograph
+Emergency Contact optional
+Staff Status
+Employment Status
+Username or Login ID
+Temporary Password
+
+Employee IDs must be unique and automatically generated in a professional format such as:
+CIR-EMP-2026-0001
+CIR-EMP-2026-0002
+
+The Admin should also be able to manually edit the employee details later.
+
+4. STAFF ROLES AND PERMISSIONS
+   Create role-based access control.
+
+The Admin should be able to assign roles such as:
+
+Staff
+Case Executive
+CIBIL Executive
+Customer Support Executive
+GST Executive
+ITR Executive
+Senior Executive
+Team Leader
+Manager
+Referral Partner
+
+The Admin should be able to control permissions for each staff member.
+
+For example, the Admin should be able to decide whether a staff member can:
+
+View assigned customers
+View customer contact details
+Upload documents
+Download customer documents
+Update case status
+Add case notes
+Contact customers
+View payment status
+View only limited payment information
+Generate documents
+Create service requests
+Mark work as completed
+
+Staff members must never have unrestricted access to all customers unless the Admin specifically gives that permission.
+
+5. CLIENT ASSIGNMENT SYSTEM
+   This is one of the most important features.
+
+The Admin must be able to assign one or multiple customers/cases to a specific staff member.
+
+Inside every customer or case in the Admin Panel, add an option such as:
+
+Assign Staff
+Change Assigned Staff
+Assign Multiple Staff if necessary
+Assign Team Leader
+Assign Priority
+Set Due Date
+
+When a client is assigned, that client should automatically appear in the assigned staff member’s Staff Dashboard.
+
+The staff member should only see customers assigned to them.
+
+The Admin should be able to see:
+
+Which staff member is handling which client
+Number of clients assigned to each staff
+Pending clients
+In-progress clients
+Completed clients
+Overdue clients
+Unassigned clients
+
+6. STAFF DASHBOARD
+   The Staff Dashboard should look professional, modern, clean, and easy to use.
+
+Dashboard summary cards should show:
+
+Total Assigned Clients
+New Assignments
+Work In Progress
+Pending Work
+Completed Cases
+Overdue Cases
+High Priority Cases
+
+The dashboard should also show recent activity and upcoming deadlines.
+
+7. ASSIGNED CLIENTS SECTION
+   Create an “Assigned Clients” page inside the Staff Panel.
+
+For every assigned customer, display:
+
+Customer Name
+Customer ID
+Mobile Number
+Service Type
+Case ID
+Case Status
+Priority
+Assigned Date
+Due Date
+Last Updated Date
+Work Completion Percentage
+
+Staff should be able to search and filter their assigned clients by:
+
+Customer Name
+Case ID
+Service
+Status
+Priority
+Date
+
+8. CASE MANAGEMENT FOR STAFF
+   When a staff member opens an assigned customer case, they should be able to see only the information necessary to perform their work.
+
+Create a professional case workspace containing:
+
+Customer Profile
+Service Details
+Case Timeline
+Assigned Tasks
+Uploaded Documents
+Case Notes
+Internal Notes
+Current Status
+Completion Percentage
+Due Date
+Activity History
+
+Staff should be able to update the work progress using predefined professional statuses such as:
+
+New
+Assigned
+Documents Pending
+Documents Received
+Under Review
+Work Started
+Verification in Progress
+Action Required
+Awaiting Customer Response
+Awaiting Third Party Response
+Dispute Submitted
+In Progress
+Near Completion
+Completed
+On Hold
+Cancelled
+
+The Admin should be able to customize or add additional statuses later.
+
+9. WORK COMPLETION TRACKING
+   Add a visual progress tracking system.
+
+Staff should be able to update the completion percentage such as:
+
+0%
+25%
+50%
+75%
+90%
+100%
+
+The Admin should be able to view the progress of every assigned case in real time.
+
+When the staff updates a case, the system should record:
+
+Who updated it
+What was updated
+Previous status
+New status
+Date and time
+
+Create a complete activity history so that all important changes are traceable.
+
+10. STAFF TASK MANAGEMENT
+    Add a task system.
+
+The Admin should be able to create tasks for a staff member.
+
+Each task should contain:
+
+Task Title
+Description
+Related Customer
+Related Case
+Priority
+Assigned Staff
+Due Date
+Task Status
+
+Staff should be able to mark tasks as:
+
+Not Started
+In Progress
+Completed
+On Hold
+
+The Admin should be able to monitor all tasks.
+
+11. INTERNAL CASE NOTES
+    Staff members should be able to add internal notes to their assigned cases.
+
+These notes must be visible to:
+
+Admin
+Authorized Staff Members
+
+Internal notes should not automatically be visible to customers.
+
+Every note should show:
+
+Staff Name
+Employee ID
+Date
+Time
+
+12. CUSTOMER COMMUNICATION LOG
+    Add a communication activity section where staff can record:
+
+Called Customer
+WhatsApp Message Sent
+Email Sent
+Documents Requested
+Customer Responded
+Follow-up Required
+
+Staff should also be able to add a short follow-up note and next follow-up date.
+
+The Admin should be able to monitor communication history.
+
+13. DOCUMENT MANAGEMENT
+    For assigned cases, authorized staff members should be able to securely upload and manage documents.
+
+Supported document categories should include:
+
+PAN Card
+Aadhaar Card
+Credit Report
+Bank Documents
+Loan Documents
+GST Documents
+ITR Documents
+Address Proof
+Income Proof
+Other Supporting Documents
+
+The system should clearly show who uploaded each document and when.
+
+Sensitive customer documents must only be accessible to authorized Admins and assigned staff members.
+
+14. STAFF IDENTITY CARD GENERATOR
+    Inside the Admin Panel, create a complete “Staff ID Card Generator”.
+
+The Admin should be able to select a staff member and automatically generate a professional employee ID card using their saved details.
+
+The ID card should include:
+
+CIR Consultation Service Logo
+Staff Photograph
+Staff Full Name
+Employee ID
+Designation
+Department if applicable
+Mobile Number if approved by Admin
+Date of Joining
+Valid From Date
+Valid Till Date
+QR Code or verification code
+Authorized Signatory
+Company Website
+Official Business Contact Number
+
+The design should match the CIR Consultation Service brand.
+
+Use a professional Premium Cotton Candy FinTech Theme with:
+
+Primary Color: #A7D8FF
+Secondary Color: #FFD6E8
+Accent Color: #DCC6FF
+Highlight Color: #D8F5E5
+Background Color: #FDFDFD
+Text Color: #2C3E50
+
+Use:
+Glassmorphism
+Soft Shadows
+Rounded Cards
+Premium FinTech Style
+Clean Professional Typography
+Secure Corporate Appearance
+
+The Admin should be able to:
+
+Preview ID Card
+Edit ID Card Details
+Regenerate ID Card
+Download as PDF
+Download as Image
+Print ID Card
+Deactivate Old ID Card
+Generate New ID Card
+
+Every staff member must have a unique Employee ID and unique ID card.
+
+15. STAFF PROFILE
+    Each staff member should have a professional profile page containing:
+
+Profile Photo
+Full Name
+Employee ID
+Designation
+Joining Date
+Contact Details
+Account Status
+Assigned Clients
+Completed Cases
+Pending Cases
+Performance Summary
+
+Staff should be able to update limited personal details, but important details such as Employee ID, role, permissions, account status, and designation should remain controlled by the Admin.
+
+16. STAFF PERFORMANCE MONITORING
+    Inside the Admin Panel, add a Staff Performance section.
+
+The Admin should be able to see:
+
+Total Assigned Cases
+Completed Cases
+Pending Cases
+In Progress Cases
+Overdue Cases
+Average Completion Time
+Cases Completed This Month
+Recent Activity
+Staff Workload
+
+Create professional charts and summary cards for easy monitoring.
+
+17. NOTIFICATIONS
+    Create a notification system.
+
+Staff should receive notifications when:
+
+A new client is assigned
+A task is assigned
+A case priority changes
+A due date is approaching
+The Admin adds an important note
+
+The Admin should receive notifications when:
+
+Staff completes a case
+Staff updates a case
+A case becomes overdue
+A staff member uploads an important document
+A staff member requests assistance
+
+18. SECURITY
+    Implement proper authentication and authorization.
+
+Important requirements:
+
+Separate Admin, Staff, and Customer access
+Role-based permissions
+Secure password handling
+Password reset controlled by Admin
+Session protection
+Unauthorized users must not access other dashboards
+Staff must not access unassigned customers
+Customers must not access internal staff notes
+Sensitive customer documents must be protected
+All important changes should be logged
+
+19. ADMIN CONTROL
+    The Admin must have complete control over the entire Staff Management System.
+
+Only the Admin should be able to:
+
+Create staff accounts
+Generate Employee IDs
+Assign roles
+Set permissions
+Assign clients
+Reassign clients
+Deactivate staff
+Reset passwords
+View all staff activity
+Generate ID cards
+Delete or archive staff accounts
+
+20. DESIGN AND USER EXPERIENCE
+    The Staff Portal should match the existing CIR Consultation Service website design and should look premium, modern, trustworthy, and professional.
+
+The design inspiration should feel similar to a modern FinTech dashboard.
+
+Use:
+
+Responsive mobile-first design
+Professional dashboard layout
+Clean sidebar navigation
+Rounded cards
+Soft shadows
+Glassmorphism where appropriate
+Professional icons
+Progress bars
+Status badges
+Charts and analytics
+Easy search and filters
+
+The Staff Panel navigation should include:
+
+Dashboard
+Assigned Clients
+Cases
+Tasks
+Documents
+Notifications
+Activity
+Profile
+Logout
+
+The Admin Panel should include a new Staff Management area with:
+
+Staff Overview
+All Staff
+Add Staff
+Staff Roles
+Client Assignment
+Tasks
+Performance
+Staff Activity
+ID Card Generator
+
+FINAL IMPORTANT INSTRUCTIONS:
+
+Do not create a fake or frontend-only Staff Panel. All buttons, forms, staff accounts, client assignment, case updates, permissions, ID card generation, and dashboards must be connected to the actual backend and database.
+
+Reuse the existing authentication system and database structure wherever possible. Add new database tables, relationships, and APIs only where necessary.
+
+Make sure existing customers, customer portal, admin panel, services, payments, cases, and website features continue working without breaking.
+
+Test the complete workflow after implementation:
+
+Admin creates staff account → unique Employee ID generated → staff credentials created → Admin assigns customer/case → staff logs in → assigned client appears → staff updates work progress and case status → Admin sees updates in real time → staff completes work → Admin can review performance → Admin generates and downloads staff ID card.
+
+Complete the entire implementation properly and continuously without stopping unnecessarily or repeatedly asking me what to do next.

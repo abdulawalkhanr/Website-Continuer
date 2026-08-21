@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
-  useListCases, useCreateCase, useUpdateCase, useDeleteCase, useGetCaseStats, useListCustomers, useListExecutives,
-  getListCasesQueryKey, getGetCaseStatsQueryKey
+  useListCases, useCreateCase, useUpdateCase, useDeleteCase, useGetCaseStats, useListCustomers, useListStaff, useCreateStaffAssignment,
+  getListCasesQueryKey, getGetCaseStatsQueryKey, getListStaffQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
@@ -87,17 +87,44 @@ export default function AdminCases() {
   );
   const { data: stats } = useGetCaseStats({ query: { queryKey: getGetCaseStatsQueryKey() } });
   const { data: customers } = useListCustomers({});
-  const { data: executives } = useListExecutives({});
+  const { data: staffList } = useListStaff({ status: "ACTIVE" as any }, { query: { queryKey: getListStaffQueryKey({ status: "ACTIVE" as any }) } });
 
   const createCase = useCreateCase();
   const updateCase = useUpdateCase();
   const deleteCase = useDeleteCase();
+  const createAssignment = useCreateStaffAssignment();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: getListCasesQueryKey({}) });
     queryClient.invalidateQueries({ queryKey: getGetCaseStatsQueryKey() });
+  };
+
+  const [assignCase, setAssignCase] = useState<CaseItem | null>(null);
+  const [assignStaffId, setAssignStaffId] = useState("");
+  const [assignPriority, setAssignPriority] = useState("MEDIUM");
+  const [assignDueDate, setAssignDueDate] = useState("");
+
+  const handleCreateAssignment = () => {
+    if (!assignCase || !assignStaffId) return;
+    createAssignment.mutate({
+      data: {
+        caseId: assignCase.id,
+        staffId: parseInt(assignStaffId),
+        priority: assignPriority as any,
+        dueDate: assignDueDate || undefined,
+      }
+    }, {
+      onSuccess: () => {
+        invalidate();
+        setAssignCase(null);
+        setAssignStaffId("");
+        setAssignDueDate("");
+        toast({ title: "Staff assigned successfully" });
+      },
+      onError: () => toast({ title: "Failed to assign staff", variant: "destructive" }),
+    });
   };
 
   const openEdit = (c: CaseItem) => {
@@ -231,6 +258,9 @@ export default function AdminCases() {
                 <TableCell className="text-xs text-muted-foreground">{new Date(c.updatedAt).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 justify-end">
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setAssignCase(c as CaseItem)} title="Assign Staff">
+                      Assign
+                    </Button>
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEdit(c as CaseItem)} title="Edit">
                       <Edit size={14} className="text-primary" />
                     </Button>
@@ -278,13 +308,13 @@ export default function AdminCases() {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Assign To (Executive/Manager)</Label>
+              <Label>Assign To (Staff)</Label>
               <Select value={newAssigned} onValueChange={setNewAssigned}>
                 <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="NONE">Unassigned</SelectItem>
-                  {executives?.map(e => (
-                    <SelectItem key={e.id} value={String(e.id)}>{e.name} ({e.role})</SelectItem>
+                  {staffList?.map(s => (
+                    <SelectItem key={s.userId} value={String(s.userId)}>{s.name} ({s.designation || 'Staff'})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -325,8 +355,8 @@ export default function AdminCases() {
                 <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="NONE">Unassigned</SelectItem>
-                  {executives?.map(e => (
-                    <SelectItem key={e.id} value={String(e.id)}>{e.name} ({e.role})</SelectItem>
+                  {staffList?.map(s => (
+                    <SelectItem key={s.userId} value={String(s.userId)}>{s.name} ({s.designation || 'Staff'})</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -344,6 +374,45 @@ export default function AdminCases() {
                 {updateCase.isPending ? "Saving..." : "Save Changes"}
               </Button>
               <Button variant="outline" onClick={() => setEditCase(null)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Dialog */}
+      <Dialog open={!!assignCase} onOpenChange={(o) => !o && setAssignCase(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>Assign Staff — {assignCase?.caseNumber}</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Staff Member</Label>
+              <Select value={assignStaffId} onValueChange={setAssignStaffId}>
+                <SelectTrigger><SelectValue placeholder="Select staff..." /></SelectTrigger>
+                <SelectContent>
+                  {staffList?.map(s => (
+                    <SelectItem key={s.userId} value={String(s.userId)}>{s.name} ({s.designation || 'Staff'})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Priority</Label>
+              <Select value={assignPriority} onValueChange={setAssignPriority}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {["LOW", "MEDIUM", "HIGH", "URGENT"].map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Due Date (Optional)</Label>
+              <Input type="date" value={assignDueDate} onChange={e => setAssignDueDate(e.target.value)} />
+            </div>
+            <div className="flex gap-3">
+              <Button className="flex-1 btn-gradient border-0 text-white" onClick={handleCreateAssignment} disabled={createAssignment.isPending || !assignStaffId}>
+                {createAssignment.isPending ? "Assigning..." : "Assign Staff"}
+              </Button>
+              <Button variant="outline" onClick={() => setAssignCase(null)}>Cancel</Button>
             </div>
           </div>
         </DialogContent>

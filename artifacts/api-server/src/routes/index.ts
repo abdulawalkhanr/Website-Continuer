@@ -11,11 +11,13 @@ import referralsRouter from "./referrals";
 import ticketsRouter from "./tickets";
 import notificationsRouter from "./notifications";
 import adminRouter from "./admin";
+import staffRouter from "./staff";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
 router.use(authRouter);
+router.use(staffRouter);
 router.use(leadsRouter);
 router.use(customersRouter);
 router.use(casesRouter);

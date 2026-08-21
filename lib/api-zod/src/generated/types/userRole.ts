@@ -15,4 +15,5 @@ export const UserRole = {
   EXECUTIVE: 'EXECUTIVE',
   SUPPORT: 'SUPPORT',
   CUSTOMER: 'CUSTOMER',
+  STAFF: 'STAFF',
 } as const;

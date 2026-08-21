@@ -58,6 +58,18 @@ import AdminDocuments from "@/pages/admin/AdminDocuments";
 import AdminReferrals from "@/pages/admin/AdminReferrals";
 import AdminTickets from "@/pages/admin/AdminTickets";
 
+import StaffLoginPage from "@/pages/staff/StaffLoginPage";
+import StaffDashboard from "@/pages/staff/StaffDashboard";
+import StaffCases from "@/pages/staff/StaffCases";
+import StaffCaseDetail from "@/pages/staff/StaffCaseDetail";
+import StaffTasks from "@/pages/staff/StaffTasks";
+import StaffDocuments from "@/pages/staff/StaffDocuments";
+import StaffNotifications from "@/pages/staff/StaffNotifications";
+import StaffActivity from "@/pages/staff/StaffActivity";
+import StaffProfile from "@/pages/staff/StaffProfile";
+import AdminStaff from "@/pages/admin/AdminStaff";
+import { StaffLayout } from "@/components/StaffLayout";
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
 });
@@ -66,6 +78,8 @@ function ProtectedDashboard({ children }: { children: React.ReactNode }) {
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted-foreground">Loading...</div></div>;
   if (!user) return <Redirect to="/login" />;
+  if (user.role === "STAFF") return <Redirect to="/staff" />;
+  if (user.role !== "CUSTOMER") return <Redirect to="/admin" />;
   return <DashboardLayout>{children}</DashboardLayout>;
 }
 
@@ -74,7 +88,17 @@ function ProtectedAdmin({ children }: { children: React.ReactNode }) {
   if (isLoading) return <div className="min-h-screen bg-slate-900 flex items-center justify-center"><div className="text-slate-400">Loading...</div></div>;
   if (!user) return <Redirect to="/admin/login" />;
   if (user.role === "CUSTOMER") return <Redirect to="/dashboard" />;
+  if (user.role === "STAFF") return <Redirect to="/staff" />;
   return <AdminLayout>{children}</AdminLayout>;
+}
+
+function ProtectedStaff({ children }: { children: React.ReactNode }) {
+  const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted-foreground">Loading...</div></div>;
+  if (!user) return <Redirect to="/staff/login" />;
+  if (user.role === "CUSTOMER") return <Redirect to="/dashboard" />;
+  if (user.role !== "STAFF") return <Redirect to="/admin" />;
+  return <StaffLayout>{children}</StaffLayout>;
 }
 
 function Router() {
@@ -129,6 +153,18 @@ function Router() {
       <Route path="/admin/documents" component={() => <ProtectedAdmin><AdminDocuments /></ProtectedAdmin>} />
       <Route path="/admin/referrals" component={() => <ProtectedAdmin><AdminReferrals /></ProtectedAdmin>} />
       <Route path="/admin/tickets" component={() => <ProtectedAdmin><AdminTickets /></ProtectedAdmin>} />
+      <Route path="/admin/staff" component={() => <ProtectedAdmin><AdminStaff /></ProtectedAdmin>} />
+
+      {/* Staff Workspace */}
+      <Route path="/staff/login" component={StaffLoginPage} />
+      <Route path="/staff" component={() => <ProtectedStaff><StaffDashboard /></ProtectedStaff>} />
+      <Route path="/staff/cases" component={() => <ProtectedStaff><StaffCases /></ProtectedStaff>} />
+      <Route path="/staff/cases/:id" component={() => <ProtectedStaff><StaffCaseDetail /></ProtectedStaff>} />
+      <Route path="/staff/tasks" component={() => <ProtectedStaff><StaffTasks /></ProtectedStaff>} />
+      <Route path="/staff/documents" component={() => <ProtectedStaff><StaffDocuments /></ProtectedStaff>} />
+      <Route path="/staff/notifications" component={() => <ProtectedStaff><StaffNotifications /></ProtectedStaff>} />
+      <Route path="/staff/activity" component={() => <ProtectedStaff><StaffActivity /></ProtectedStaff>} />
+      <Route path="/staff/profile" component={() => <ProtectedStaff><StaffProfile /></ProtectedStaff>} />
 
       <Route component={NotFound} />
     </Switch>
