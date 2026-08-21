@@ -34,7 +34,11 @@ export default function StaffCases() {
         queryKey: getListStaffPortalCasesQueryKey({
           ...(statusFilter !== "ALL" ? { status: statusFilter as any } : {}),
           ...(priorityFilter !== "ALL" ? { priority: priorityFilter as any } : {})
-        })
+        }),
+        staleTime: 0,
+        refetchOnMount: "always",
+        refetchOnWindowFocus: "always",
+        refetchInterval: 30_000,
       } 
     }
   );

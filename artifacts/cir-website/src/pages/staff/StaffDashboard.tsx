@@ -1,11 +1,28 @@
 import { Link } from "wouter";
-import { useGetStaffPortalDashboard, getGetStaffPortalDashboardQueryKey } from "@workspace/api-client-react";
+import {
+  useGetStaffPortalDashboard,
+  useListStaffPortalCases,
+  getGetStaffPortalDashboardQueryKey,
+  getListStaffPortalCasesQueryKey,
+} from "@workspace/api-client-react";
 import { Briefcase, CheckSquare, Clock, Users, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export default function StaffDashboard() {
-  const { data, isLoading } = useGetStaffPortalDashboard({ query: { queryKey: getGetStaffPortalDashboardQueryKey() } });
+  const liveQueryOptions = {
+    staleTime: 0,
+    refetchOnMount: "always" as const,
+    refetchOnWindowFocus: "always" as const,
+    refetchInterval: 30_000,
+  };
+  const { data, isLoading } = useGetStaffPortalDashboard({
+    query: { queryKey: getGetStaffPortalDashboardQueryKey(), ...liveQueryOptions },
+  });
+  const { data: assignedCases, isLoading: isCasesLoading } = useListStaffPortalCases(
+    {},
+    { query: { queryKey: getListStaffPortalCasesQueryKey({}), ...liveQueryOptions } },
+  );
 
   if (isLoading) return <div className="py-10 text-center text-muted-foreground">Loading dashboard...</div>;
   if (!data) return null;
@@ -63,30 +80,34 @@ export default function StaffDashboard() {
         <Card className="shadow-sm border-border">
           <CardHeader className="pb-3 border-b border-border">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">Upcoming Deadlines</CardTitle>
+              <CardTitle className="text-base font-semibold">My Assigned Cases</CardTitle>
               <Link href="/staff/cases" className="text-xs font-medium text-primary flex items-center hover:underline">View all <ArrowRight size={12} className="ml-1" /></Link>
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            {data.upcomingDeadlines && data.upcomingDeadlines.length > 0 ? (
+            {isCasesLoading ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">Loading assigned cases...</div>
+            ) : assignedCases && assignedCases.length > 0 ? (
               <div className="divide-y divide-border">
-                {data.upcomingDeadlines.map((a) => (
-                  <div key={a.id} className="p-4 hover:bg-muted/30 transition-colors flex justify-between items-center">
+                {assignedCases.slice(0, 5).map((assignedCase) => (
+                  <Link key={assignedCase.id} href={`/staff/cases/${assignedCase.id}`} className="block">
+                  <div className="p-4 hover:bg-muted/30 transition-colors flex justify-between items-center">
                     <div>
-                      <div className="font-medium text-sm text-foreground">{a.caseNumber}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5">{a.customerName || "Customer"}</div>
+                      <div className="font-medium text-sm text-foreground">{assignedCase.caseNumber}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5">{assignedCase.customerName || "Customer"} · {assignedCase.serviceType}</div>
                     </div>
                     <div className="text-right">
-                      <Badge variant="outline" className={a.priority === "URGENT" || a.priority === "HIGH" ? "text-destructive border-destructive" : ""}>
-                        {a.priority}
+                      <Badge variant="outline" className={assignedCase.assignmentPriority === "URGENT" || assignedCase.assignmentPriority === "HIGH" ? "text-destructive border-destructive" : ""}>
+                        {assignedCase.assignmentPriority}
                       </Badge>
-                      <div className="text-xs text-muted-foreground mt-1">Due: {a.dueDate ? new Date(a.dueDate).toLocaleDateString() : "—"}</div>
+                      <div className="text-xs text-muted-foreground mt-1">Due: {assignedCase.assignmentDueDate ? new Date(assignedCase.assignmentDueDate).toLocaleDateString() : "Not set"}</div>
                     </div>
                   </div>
+                  </Link>
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center text-sm text-muted-foreground">No upcoming deadlines.</div>
+              <div className="p-8 text-center text-sm text-muted-foreground">No cases have been assigned to you yet.</div>
             )}
           </CardContent>
         </Card>
