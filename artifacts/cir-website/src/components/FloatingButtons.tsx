@@ -4,7 +4,7 @@ export function FloatingButtons() {
   return (
     <div className="fixed bottom-5 right-5 z-40 flex flex-col gap-3">
       <a
-        href="https://wa.me/919864920810"
+        href="https://wa.me/916900637638"
         target="_blank"
         rel="noopener noreferrer"
         data-testid="float-whatsapp"
@@ -15,7 +15,7 @@ export function FloatingButtons() {
         <MessageCircle size={22} className="text-white" />
       </a>
       <a
-        href="tel:01169310902"
+        href="tel:01169296558"
         data-testid="float-call"
         className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform hover:scale-110 active:scale-95 btn-gradient"
         aria-label="Call Now"

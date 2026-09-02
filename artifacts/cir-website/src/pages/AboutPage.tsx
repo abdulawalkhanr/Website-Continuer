@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Target, Eye, Heart, Shield, Star, Users } from "lucide-react";
+import { CheckCircle, Target, Eye, Heart, Shield, Star, Users, ChevronDown, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 
@@ -80,6 +80,50 @@ export default function AboutPage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Founder note — intentionally secondary and collapsed until requested */}
+      <section className="py-16 section-bg-alt">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <details className="group glass-card rounded-2xl overflow-hidden">
+            <summary className="list-none cursor-pointer p-6 sm:p-8 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-11 h-11 rounded-xl bg-accent/20 text-accent-foreground flex items-center justify-center font-semibold">AA</div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Leadership note</p>
+                  <h2 className="text-xl font-semibold mt-1">Meet the founder</h2>
+                </div>
+              </div>
+              <ChevronDown size={20} className="text-muted-foreground transition-transform group-open:rotate-180 shrink-0" />
+            </summary>
+            <div className="border-t border-border/60 px-6 pb-7 pt-6 sm:px-8 sm:pb-8 grid md:grid-cols-[1.4fr_1fr] gap-8">
+              <div>
+                <p className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">Founder &amp; Managing Director</p>
+                <h3 className="text-2xl font-bold mt-2">Abdul Awal Khan</h3>
+                <p className="text-muted-foreground leading-relaxed mt-4">
+                  Abdul Awal Khan leads CIR Consultation Service with a focus on making credit, tax, business registration, and legal documentation support easier to understand and easier to access.
+                </p>
+                <p className="text-muted-foreground leading-relaxed mt-3">
+                  His approach is centred on clear communication, careful attention to each customer’s situation, and practical guidance throughout the service journey.
+                </p>
+              </div>
+              <div className="rounded-xl bg-background/70 border border-border/60 p-5 self-start">
+                <p className="text-sm font-semibold mb-4">Direct founder contact</p>
+                <div className="space-y-3 text-sm">
+                  <a href="tel:6900637638" className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors">
+                    <Phone size={16} className="text-primary shrink-0" /> 6900637638
+                  </a>
+                  <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-muted-foreground hover:text-primary transition-colors">
+                    <span className="w-4 h-4 rounded-full bg-green-500 text-white text-[10px] flex items-center justify-center shrink-0">W</span> WhatsApp
+                  </a>
+                  <a href="mailto:awalkhan3696@gmail.com" className="flex items-start gap-3 text-muted-foreground hover:text-primary transition-colors break-all">
+                    <Mail size={16} className="text-primary shrink-0 mt-0.5" /> awalkhan3696@gmail.com
+                  </a>
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
       </section>
 

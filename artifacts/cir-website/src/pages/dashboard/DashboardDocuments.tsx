@@ -137,7 +137,7 @@ export default function DashboardDocuments() {
               {uploading ? "Uploading..." : selectedFile ? `Upload ${selectedFile.name}` : "Add Document Record"}
             </Button>
             <p className="text-xs text-muted-foreground">
-              Or share documents directly via WhatsApp: <a href="https://wa.me/919864920810" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">+91 9864920810</a>
+              Or share documents directly via WhatsApp: <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">+91 6900637638</a>
             </p>
           </div>
         )}

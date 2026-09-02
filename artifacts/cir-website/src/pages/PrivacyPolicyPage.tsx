@@ -108,8 +108,8 @@ export default function PrivacyPolicyPage() {
               <p className="font-semibold">CIR Consultation Service</p>
               <p>Website: <a href="https://www.circonsultationservice.in" className="text-primary hover:underline">www.circonsultationservice.in</a></p>
               <p>Email: <a href="mailto:support@circonsultationservice.in" className="text-primary hover:underline">support@circonsultationservice.in</a></p>
-              <p>Phone: 01169310902</p>
-              <p>WhatsApp: +91 9864920810</p>
+              <p>Phone: 01169296558</p>
+              <p>WhatsApp: +91 6900637638</p>
             </div>
           </section>
 

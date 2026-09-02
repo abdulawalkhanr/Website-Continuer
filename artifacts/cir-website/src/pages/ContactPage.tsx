@@ -109,8 +109,8 @@ export default function ContactPage() {
             <h2 className="text-2xl font-bold mb-8">Reach Us Directly</h2>
             <div className="space-y-6">
               {[
-                { icon: <Phone size={22} className="text-primary" />, label: "Customer Support", value: "01169310902", href: "tel:01169310902", bg: "bg-primary/10" },
-                { icon: <MessageCircle size={22} className="text-green-600" />, label: "WhatsApp Support", value: "+91 9864920810", href: "https://wa.me/919864920810", bg: "bg-green-50" },
+                { icon: <Phone size={22} className="text-primary" />, label: "Customer Support", value: "01169296558", href: "tel:01169296558", bg: "bg-primary/10" },
+                { icon: <MessageCircle size={22} className="text-green-600" />, label: "WhatsApp Support", value: "+91 6900637638", href: "https://wa.me/916900637638", bg: "bg-green-50" },
                 { icon: <Mail size={22} className="text-purple-600" />, label: "Email", value: "support@circonsultationservice.in", href: "mailto:support@circonsultationservice.in", bg: "bg-purple-50" },
                 { icon: <Globe size={22} className="text-blue-600" />, label: "Website", value: "circonsultationservice.in", href: "https://circonsultationservice.in", bg: "bg-blue-50" },
               ].map(item => (

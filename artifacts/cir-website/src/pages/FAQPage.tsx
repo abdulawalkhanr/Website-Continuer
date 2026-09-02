@@ -22,7 +22,7 @@ const FAQS = [
   { q: "How do I submit a support ticket?", a: "Log into your Customer Portal, navigate to Support Tickets, and create a new ticket describing your issue. Our team responds within 24 hours on business days. You can track ticket status and responses through the portal." },
   { q: "What if the bureau rejects my dispute?", a: "We analyse the rejection reason, gather additional evidence, strengthen the documentation, and re-submit the dispute. Bureau rejections are often due to insufficient evidence — we help build a stronger case. Most disputes are resolved within 1-3 attempts." },
   { q: "Can you help with unknown loan entries in my credit report?", a: "Yes. Unknown loan entries are often due to identity theft, data entry errors, or shared personal information. We help you raise disputes with the concerned lender and credit bureau, and guide you through the process of getting fraudulent accounts blocked." },
-  { q: "How do I contact CIR Consultation Service?", a: "Call us at 01169310902 (Mon–Sat, 9 AM–7 PM), WhatsApp at +91 9864920810 (24/7), or email support@circonsultationservice.in. We also have a contact form on our website and an AI chatbot for immediate assistance." },
+  { q: "How do I contact CIR Consultation Service?", a: "Call us at 01169296558 (Mon–Sat, 9 AM–7 PM), WhatsApp at +91 6900637638 (24/7), or email support@circonsultationservice.in. We also have a contact form on our website and an AI chatbot for immediate assistance." },
   { q: "Is there an online customer portal?", a: "Yes. After registration, you get access to our comprehensive Customer Portal where you can track case progress with a detailed timeline, upload and download documents, view payment details and receipts, raise support tickets, and receive notifications." },
   { q: "What happens if my credit issue is not resolved?", a: "We review your case thoroughly, try alternative dispute approaches, escalate to higher authorities at the bureau/lender, and if the issue is genuinely unresolvable (e.g., correct negative information from legitimate defaults), we guide you on a structured credit rebuilding strategy." },
 ];
@@ -54,10 +54,10 @@ export default function FAQPage() {
               <h2 className="text-2xl font-bold mb-3">Still Have Questions?</h2>
               <p className="text-muted-foreground mb-6">Our credit experts are ready to help you</p>
               <div className="flex flex-wrap justify-center gap-4">
-                <a href="tel:01169310902">
-                  <Button size="lg" className="btn-gradient border-0 text-white"><Phone size={18} className="mr-2" /> Call 01169310902</Button>
+                <a href="tel:01169296558">
+                  <Button size="lg" className="btn-gradient border-0 text-white"><Phone size={18} className="mr-2" /> Call 01169296558</Button>
                 </a>
-                <a href="https://wa.me/919864920810" target="_blank" rel="noopener noreferrer">
+                <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer">
                   <Button size="lg" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50"><MessageCircle size={18} className="mr-2" /> WhatsApp Us</Button>
                 </a>
               </div>

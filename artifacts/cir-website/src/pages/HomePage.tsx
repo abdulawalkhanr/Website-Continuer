@@ -60,7 +60,7 @@ const FAQS = [
   { q: "How do I submit a support ticket?", a: "Log into your Customer Portal, navigate to Support Tickets, and create a new ticket describing your issue. Our team responds within 24 hours." },
   { q: "What if the bureau rejects my dispute?", a: "We analyse the rejection reason, gather additional evidence, and re-submit the dispute with stronger documentation. Persistence and proper documentation are key." },
   { q: "Can you help with unknown loan entries in my credit report?", a: "Yes. Unknown loan entries are often due to identity theft or data errors. We help you raise disputes with the concerned lender and credit bureau to get them removed." },
-  { q: "How do I contact CIR Consultation Service?", a: "Call us at 01169310902, WhatsApp at +91 9864920810, or email support@circonsultationservice.in. We're available Mon–Sat, 9 AM–7 PM." },
+  { q: "How do I contact CIR Consultation Service?", a: "Call us at 01169296558, WhatsApp at +91 6900637638, or email support@circonsultationservice.in. We're available Mon–Sat, 9 AM–7 PM." },
   { q: "Is there an online customer portal?", a: "Yes. After registration, you get access to our Customer Portal where you can track case progress, upload documents, view payments, and raise support tickets." },
   { q: "What happens if my credit issue is not resolved?", a: "We review your case thoroughly, try alternative dispute approaches, and if the issue is genuinely unresolvable (e.g., correct negative information), we guide you on a credit rebuilding strategy." },
 ];
@@ -143,12 +143,12 @@ export default function HomePage() {
               <Button size="lg" className="btn-gradient border-0 text-white px-8 shadow-md" onClick={() => setConsultOpen(true)} data-testid="btn-free-consultation">
                 Get Free Consultation <ArrowRight size={18} className="ml-2" />
               </Button>
-              <a href="https://wa.me/919864920810" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="border-green-500 text-green-600 hover:bg-green-50" data-testid="btn-whatsapp">
                   <MessageCircle size={18} className="mr-2" /> WhatsApp Us
                 </Button>
               </a>
-              <a href="tel:01169310902">
+              <a href="tel:01169296558">
                 <Button size="lg" variant="outline" data-testid="btn-call">
                   <Phone size={18} className="mr-2" /> Call Now
                 </Button>
@@ -400,15 +400,15 @@ export default function HomePage() {
             <Button size="lg" className="bg-white text-primary hover:bg-white/90 border-0 shadow-lg px-8" onClick={() => setConsultOpen(true)}>
               Get Free Consultation
             </Button>
-            <a href="https://wa.me/919864920810" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 <MessageCircle size={18} className="mr-2" /> WhatsApp Now
               </Button>
             </a>
           </div>
           <div className="mt-6 flex flex-wrap justify-center gap-8 text-white/70 text-sm">
-            <span>Phone: 01169310902</span>
-            <span>WhatsApp: +91 9864920810</span>
+            <span>Phone: 01169296558</span>
+            <span>WhatsApp: +91 6900637638</span>
             <span>support@circonsultationservice.in</span>
           </div>
         </div>

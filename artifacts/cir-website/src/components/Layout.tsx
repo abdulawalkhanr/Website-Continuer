@@ -253,7 +253,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 Your Partner in Financial Health. Premium credit report rectification, GST, income tax, business registration and legal documentation services across India.
               </p>
               <div className="flex flex-col gap-2 text-sm text-slate-400">
-                <a href="tel:01169310902" className="flex items-center gap-2 hover:text-primary transition-colors"><Phone size={13} /> 01169310902</a>
+                <a href="tel:01169296558" className="flex items-center gap-2 hover:text-primary transition-colors"><Phone size={13} /> 01169296558</a>
+                <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:text-primary transition-colors"><Phone size={13} /> +91 6900637638 on WhatsApp</a>
                 <a href="mailto:support@circonsultationservice.in" className="flex items-center gap-2 hover:text-primary transition-colors"><Mail size={13} /> support@circonsultationservice.in</a>
               </div>
             </div>

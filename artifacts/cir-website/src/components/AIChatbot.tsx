@@ -94,7 +94,7 @@ export function AIChatbot() {
           },
         }, {
           onSuccess: () => {
-            addMessage(`Thank you, ${updatedData.name}! Your inquiry has been received. Our credit expert will call you at ${updatedData.mobile} within 24 hours. You can also reach us at 01169310902 or WhatsApp +91 9864920810.`, "bot");
+            addMessage(`Thank you, ${updatedData.name}! Your inquiry has been received. Our credit expert will call you at ${updatedData.mobile} within 24 hours. You can also reach us at 01169296558 or WhatsApp +91 6900637638.`, "bot");
             setStep("done");
           },
           onError: () => {

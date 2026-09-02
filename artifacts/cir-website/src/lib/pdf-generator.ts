@@ -1,8 +1,8 @@
 const COMPANY = {
   name: "CIR Consultation Service",
   tagline: "Your Partner in Financial Health",
-  phone: "01169310902",
-  whatsapp: "+91 9864920810",
+  phone: "01169296558",
+  whatsapp: "+91 6900637638",
   email: "support@circonsultationservice.in",
   website: "www.circonsultationservice.in",
   address: "India",

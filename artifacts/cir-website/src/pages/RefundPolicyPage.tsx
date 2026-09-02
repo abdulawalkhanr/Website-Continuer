@@ -99,7 +99,7 @@ export default function RefundPolicyPage() {
             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4">
               <p className="font-semibold">CIR Consultation Service — Refund & Support Team</p>
               <p>Email: <a href="mailto:support@circonsultationservice.in" className="text-primary hover:underline">support@circonsultationservice.in</a></p>
-              <p>Phone: 01169310902 &nbsp;|&nbsp; WhatsApp: +91 9864920810</p>
+              <p>Phone: 01169296558 &nbsp;|&nbsp; WhatsApp: +91 6900637638</p>
               <p>Response time: Within 2 business days (Mon–Sat, 10am–6pm IST)</p>
             </div>
           </section>

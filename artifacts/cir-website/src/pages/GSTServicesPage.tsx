@@ -60,7 +60,7 @@ export default function GSTServicesPage() {
               </div>
               <div className="flex gap-4">
                 <a href="#enquiry"><Button size="lg" className="btn-gradient border-0 text-white">Get Started <ArrowRight size={18} className="ml-1" /></Button></a>
-                <a href="https://wa.me/919864920810" target="_blank" rel="noopener noreferrer"><Button size="lg" variant="outline">WhatsApp Us</Button></a>
+                <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer"><Button size="lg" variant="outline">WhatsApp Us</Button></a>
               </div>
             </div>
             {/* Lead Form */}
@@ -179,7 +179,7 @@ export default function GSTServicesPage() {
           <p className="text-white/80 mb-6">Free consultation • Expert filing • Real-time updates</p>
           <div className="flex flex-wrap gap-4 justify-center">
             <a href="#enquiry"><Button size="lg" className="bg-white text-primary border-0 hover:bg-white/90">Start GST Registration <ArrowRight size={18} className="ml-1" /></Button></a>
-            <a href="tel:01169310902"><Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">Call: 01169310902</Button></a>
+            <a href="tel:01169296558"><Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">Call: 01169296558</Button></a>
           </div>
         </div>
       </section>

@@ -109,7 +109,7 @@ export default function TaxLegalServicesPage() {
                   Get Free Consultation <ArrowRight size={18} />
                 </Button>
               </Link>
-              <a href="https://wa.me/919864920810" target="_blank" rel="noopener noreferrer">
+              <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="gap-2">
                   WhatsApp Us Now
                 </Button>
@@ -249,9 +249,9 @@ export default function TaxLegalServicesPage() {
                 Book Free Consultation <ArrowRight size={18} className="ml-2" />
               </Button>
             </Link>
-            <a href="tel:01169310902">
+            <a href="tel:01169296558">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
-                Call 01169310902
+                Call 01169296558
               </Button>
             </a>
           </div>

@@ -214,7 +214,7 @@ export default function ServicesPage() {
                 Get Free Consultation <ArrowRight size={18} className="ml-2" />
               </Button>
             </Link>
-            <a href="https://wa.me/919864920810" target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/916900637638" target="_blank" rel="noopener noreferrer">
               <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
                 WhatsApp Us
               </Button>

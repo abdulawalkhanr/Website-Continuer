@@ -112,7 +112,7 @@ export default function DashboardHome() {
           <FileText size={40} className="mx-auto mb-3 text-primary/40" />
           <p className="font-medium mb-1">No active case</p>
           <p className="text-sm">Your case will appear here once registered by our team.</p>
-          <a href="tel:01169310902" className="mt-4 inline-block">
+          <a href="tel:01169296558" className="mt-4 inline-block">
             <Button className="btn-gradient border-0 text-white mt-2">Contact Support</Button>
           </a>
         </div>
