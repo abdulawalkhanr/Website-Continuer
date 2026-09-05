@@ -1,21 +1,22 @@
 {
   "name": "CIR Consultation Service",
-  "short_name": "CIR",
-  "description": "Credit, tax, business registration, and compliance support from CIR Consultation Service.",
-  "start_url": "/",
+  "short_name": "CIR Customer",
+  "description": "Secure customer access to CIR Consultation Service cases, documents, payments, and support.",
+  "id": "/dashboard",
+  "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#102a43",
   "icons": [
     {
-      "src": "/favicon-192x192.png",
+      "src": "/app-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/favicon-512x512.png",
+      "src": "/app-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"

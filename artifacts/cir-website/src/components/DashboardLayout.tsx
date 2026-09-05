@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LayoutDashboard, FileText, CreditCard, MessageSquare, Bell, LogOut, Menu, X, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { isStandaloneApp } from "@/lib/pwa";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
@@ -12,6 +13,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const logout = useLogout();
   const queryClient = useQueryClient();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const standalone = isStandaloneApp();
 
   const handleLogout = () => {
     logout.mutate(undefined, {
@@ -75,11 +77,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         <div className="mt-6 pt-4 border-t border-border">
-          <Link href="/">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted cursor-pointer transition-colors mb-2">
-              Back to Website
-            </div>
-          </Link>
+          {!standalone && (
+            <Link href="/">
+              <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted cursor-pointer transition-colors mb-2">
+                Back to Website
+              </div>
+            </Link>
+          )}
           <Button
             variant="outline"
             className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"

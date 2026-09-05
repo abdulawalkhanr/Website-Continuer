@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Download, Smartphone, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isStandaloneApp } from "@/lib/pwa";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -9,20 +10,12 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISSED_KEY = "cir-install-prompt-dismissed";
 
-function isInstalled() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    ("standalone" in window.navigator &&
-      (window.navigator as Navigator & { standalone?: boolean }).standalone === true)
-  );
-}
-
 export function InstallAppPrompt() {
   const [installEvent, setInstallEvent] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    if (isInstalled() || sessionStorage.getItem(DISMISSED_KEY) === "true") {
+    if (isStandaloneApp() || sessionStorage.getItem(DISMISSED_KEY) === "true") {
       return;
     }
 
@@ -82,7 +75,7 @@ export function InstallAppPrompt() {
 
       <div className="mb-3 flex min-w-0 items-center gap-3 pr-7 sm:mb-0 sm:flex-1">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-white">
-          <img src="/favicon-192x192.png" alt="" className="h-full w-full object-cover" />
+          <img src="/app-icon-192.png" alt="" className="h-full w-full object-cover" />
         </div>
         <div className="min-w-0">
           <div className="flex items-center gap-2">

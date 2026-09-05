@@ -70,17 +70,18 @@ import StaffProfile from "@/pages/staff/StaffProfile";
 import AdminStaff from "@/pages/admin/AdminStaff";
 import { StaffLayout } from "@/components/StaffLayout";
 import { InstallAppPrompt } from "@/components/InstallAppPrompt";
+import { isStandaloneApp } from "@/lib/pwa";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
 });
 
-function ProtectedDashboard({ children }: { children: React.ReactNode }) {
+function ProtectedDashboard({ children, customerOnly = false }: { children: React.ReactNode; customerOnly?: boolean }) {
   const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   if (isLoading) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted-foreground">Loading...</div></div>;
   if (!user) return <Redirect to="/login" />;
-  if (user.role === "STAFF") return <Redirect to="/staff" />;
-  if (user.role !== "CUSTOMER") return <Redirect to="/admin" />;
+  if (user.role === "STAFF") return <Redirect to={customerOnly ? "/login" : "/staff"} />;
+  if (user.role !== "CUSTOMER") return <Redirect to={customerOnly ? "/login" : "/admin"} />;
   return <DashboardLayout>{children}</DashboardLayout>;
 }
 
@@ -103,6 +104,22 @@ function ProtectedStaff({ children }: { children: React.ReactNode }) {
 }
 
 function Router() {
+  if (isStandaloneApp()) {
+    return (
+      <Switch>
+        <Route path="/login" component={LoginPage} />
+        <Route path="/register" component={RegisterPage} />
+        <Route path="/dashboard" component={() => <ProtectedDashboard customerOnly><DashboardHome /></ProtectedDashboard>} />
+        <Route path="/dashboard/case" component={() => <ProtectedDashboard customerOnly><DashboardCase /></ProtectedDashboard>} />
+        <Route path="/dashboard/documents" component={() => <ProtectedDashboard customerOnly><DashboardDocuments /></ProtectedDashboard>} />
+        <Route path="/dashboard/payments" component={() => <ProtectedDashboard customerOnly><DashboardPayments /></ProtectedDashboard>} />
+        <Route path="/dashboard/tickets" component={() => <ProtectedDashboard customerOnly><DashboardTickets /></ProtectedDashboard>} />
+        <Route path="/dashboard/notifications" component={() => <ProtectedDashboard customerOnly><DashboardNotifications /></ProtectedDashboard>} />
+        <Route component={() => <Redirect to="/dashboard" />} />
+      </Switch>
+    );
+  }
+
   return (
     <Switch>
       {/* Public */}
