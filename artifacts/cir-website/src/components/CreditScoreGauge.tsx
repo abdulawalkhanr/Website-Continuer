@@ -1,22 +1,5 @@
-import { useEffect, useState } from "react";
-
 export function CreditScoreGauge() {
-  const [score, setScore] = useState(300);
-  const targetScore = 782;
-
-  useEffect(() => {
-    const duration = 2200;
-    const start = Date.now();
-    const startScore = 300;
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setScore(Math.round(startScore + (targetScore - startScore) * eased));
-      if (progress >= 1) clearInterval(timer);
-    }, 16);
-    return () => clearInterval(timer);
-  }, []);
+  const score = 700;
 
   const min = 300, max = 900;
   const pct = (score - min) / (max - min);
@@ -137,7 +120,9 @@ export function CreditScoreGauge() {
         <span className="w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />
         {getLabel(score)}
       </span>
-      <span className="text-xs text-muted-foreground">After CIR Assistance</span>
+      <span className="text-xs text-muted-foreground text-center">
+        Illustrative range example — not a bureau result
+      </span>
     </div>
   );
 }
