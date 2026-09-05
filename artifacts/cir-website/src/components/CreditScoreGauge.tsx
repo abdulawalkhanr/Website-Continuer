@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 const MIN_SCORE = 300;
 const MAX_SCORE = 900;
 const EXAMPLE_SCORE = 700;
@@ -32,7 +34,40 @@ function arcPath(startScore: number, endScore: number) {
 }
 
 export function CreditScoreGauge() {
-  const marker = pointAt(scoreToAngle(EXAMPLE_SCORE));
+  const [score, setScore] = useState(MIN_SCORE);
+  const marker = pointAt(scoreToAngle(score));
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) {
+      setScore(EXAMPLE_SCORE);
+      return;
+    }
+
+    const duration = 2200;
+    const startTime = performance.now();
+    let animationFrame = 0;
+
+    const animate = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setScore(Math.round(MIN_SCORE + (EXAMPLE_SCORE - MIN_SCORE) * eased));
+
+      if (progress < 1) {
+        animationFrame = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrame);
+  }, []);
+
+  const range =
+    score < 550
+      ? { label: "Needs attention", color: "#ef4444", background: "#fef2f2" }
+      : score < 650
+        ? { label: "Fair range", color: "#f97316", background: "#fff7ed" }
+        : { label: "Good range", color: "#ca8a04", background: "#fefce8" };
 
   return (
     <div
@@ -60,7 +95,7 @@ export function CreditScoreGauge() {
         <circle cx={marker.x} cy={marker.y} r="3.5" fill="#1e293b" />
 
         <text x={CENTER_X} y="78" textAnchor="middle" fontSize="32" fontWeight="800" fill="#1e293b">
-          {EXAMPLE_SCORE}
+          {score}
         </text>
         <text x={CENTER_X} y="96" textAnchor="middle" fontSize="9" fontWeight="700" fill="#64748b" letterSpacing="1.2">
           EXAMPLE SCORE
@@ -70,9 +105,13 @@ export function CreditScoreGauge() {
         <text x="215" y="132" textAnchor="middle" fontSize="9" fontWeight="600" fill="#94a3b8">900</text>
       </svg>
 
-      <div className="-mt-2 flex items-center gap-2 rounded-full bg-yellow-50 px-3 py-1 text-sm font-semibold text-yellow-700">
-        <span className="h-2 w-2 rounded-full bg-yellow-500" aria-hidden="true" />
-        Good range
+      <div
+        className="-mt-2 flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold transition-colors duration-300"
+        style={{ color: range.color, backgroundColor: range.background }}
+        aria-live="polite"
+      >
+        <span className="h-2 w-2 rounded-full" style={{ backgroundColor: range.color }} aria-hidden="true" />
+        {range.label}
       </div>
       <p className="mt-2 max-w-[280px] text-center text-xs leading-relaxed text-muted-foreground">
         Illustrative range example only — not an official bureau score or result.
