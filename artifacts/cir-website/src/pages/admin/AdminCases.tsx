@@ -97,7 +97,7 @@ export default function AdminCases() {
   const { toast } = useToast();
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: getListCasesQueryKey({}) });
+    queryClient.invalidateQueries({ queryKey: ["/api/cases"] });
     queryClient.invalidateQueries({ queryKey: getGetCaseStatsQueryKey() });
   };
 
@@ -123,7 +123,11 @@ export default function AdminCases() {
         setAssignDueDate("");
         toast({ title: "Staff assigned successfully" });
       },
-      onError: () => toast({ title: "Failed to assign staff", variant: "destructive" }),
+      onError: (error) => toast({
+        title: "Failed to assign staff",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      }),
     });
   };
 
@@ -178,7 +182,14 @@ export default function AdminCases() {
     if (deleteId === null) return;
     deleteCase.mutate({ id: deleteId }, {
       onSuccess: () => { invalidate(); setDeleteId(null); toast({ title: "Case deleted" }); },
-      onError: () => toast({ title: "Failed to delete case", variant: "destructive" }),
+      onError: (error) => {
+        setDeleteId(null);
+        toast({
+          title: "Failed to delete case",
+          description: error instanceof Error ? error.message : "Please try again.",
+          variant: "destructive",
+        });
+      },
     });
   };
 
@@ -258,8 +269,8 @@ export default function AdminCases() {
                 <TableCell className="text-xs text-muted-foreground">{new Date(c.updatedAt).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 justify-end">
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => setAssignCase(c as CaseItem)} title="Assign Staff">
-                      Assign
+                    <Button size="sm" variant="outline" className="h-8 px-2 text-xs gap-1" onClick={() => setAssignCase(c as CaseItem)} title="Assign this case to staff">
+                      <Briefcase size={13} /> Assign
                     </Button>
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => openEdit(c as CaseItem)} title="Edit">
                       <Edit size={14} className="text-primary" />
@@ -429,7 +440,7 @@ export default function AdminCases() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
+            <AlertDialogAction disabled={deleteCase.isPending} onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
               {deleteCase.isPending ? "Deleting..." : "Delete Case"}
             </AlertDialogAction>
           </AlertDialogFooter>

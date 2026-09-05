@@ -1,6 +1,18 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
-import { casesTable, usersTable, documentsTable, paymentsTable, notificationsTable } from "@workspace/db";
+import {
+  casesTable,
+  usersTable,
+  documentsTable,
+  paymentsTable,
+  notificationsTable,
+  ticketsTable,
+  staffAssignmentsTable,
+  staffTasksTable,
+  caseActivitiesTable,
+  caseNotesTable,
+  caseCommsTable,
+} from "@workspace/db";
 import { eq, desc, and, sql } from "drizzle-orm";
 import {
   ListCasesQueryParams, CreateCaseBody, UpdateCaseParams, UpdateCaseBody, DeleteCaseParams,
@@ -153,11 +165,23 @@ router.delete("/cases/:id", async (req, res): Promise<void> => {
   if (!pParsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }
   const { id } = pParsed.data;
   try {
-    await db.delete(documentsTable).where(eq(documentsTable.caseId, id));
-    await db.delete(paymentsTable).where(eq(paymentsTable.caseId, id));
-    await db.delete(casesTable).where(eq(casesTable.id, id));
+    const [existingCase] = await db.select({ id: casesTable.id }).from(casesTable).where(eq(casesTable.id, id)).limit(1);
+    if (!existingCase) { res.status(404).json({ error: "Case not found" }); return; }
+
+    await db.transaction(async (tx) => {
+      await tx.delete(caseCommsTable).where(eq(caseCommsTable.caseId, id));
+      await tx.delete(caseNotesTable).where(eq(caseNotesTable.caseId, id));
+      await tx.delete(caseActivitiesTable).where(eq(caseActivitiesTable.caseId, id));
+      await tx.delete(staffAssignmentsTable).where(eq(staffAssignmentsTable.caseId, id));
+      await tx.delete(staffTasksTable).where(eq(staffTasksTable.relatedCaseId, id));
+      await tx.delete(documentsTable).where(eq(documentsTable.caseId, id));
+      await tx.delete(paymentsTable).where(eq(paymentsTable.caseId, id));
+      await tx.delete(ticketsTable).where(eq(ticketsTable.caseId, id));
+      await tx.delete(casesTable).where(eq(casesTable.id, id));
+    });
     res.json({ success: true, message: "Case deleted" });
-  } catch {
+  } catch (err) {
+    req.log.error({ err, caseId: id }, "Failed to delete case");
     res.status(500).json({ error: "Failed to delete case" });
   }
 });
