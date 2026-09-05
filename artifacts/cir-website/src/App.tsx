@@ -69,6 +69,7 @@ import StaffActivity from "@/pages/staff/StaffActivity";
 import StaffProfile from "@/pages/staff/StaffProfile";
 import AdminStaff from "@/pages/admin/AdminStaff";
 import { StaffLayout } from "@/components/StaffLayout";
+import { InstallAppPrompt } from "@/components/InstallAppPrompt";
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
@@ -105,7 +106,15 @@ function Router() {
   return (
     <Switch>
       {/* Public */}
-      <Route path="/" component={() => <Layout><HomePage /></Layout>} />
+      <Route
+        path="/"
+        component={() => (
+          <>
+            <Layout><HomePage /></Layout>
+            <InstallAppPrompt />
+          </>
+        )}
+      />
       <Route path="/about" component={() => <Layout><AboutPage /></Layout>} />
       <Route path="/services" component={() => <Layout><ServicesPage /></Layout>} />
       <Route path="/process" component={() => <Layout><ProcessPage /></Layout>} />
