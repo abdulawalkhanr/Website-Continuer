@@ -1,3 +1,8 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+  <rect width="180" height="180" rx="36" fill="#FDFDFD"/>
+  <rect x="4" y="4" width="172" height="172" rx="32" stroke="#A7D8FF" stroke-width="8"/>
+  <path d="M35 42H62L77 57V112H35V42Z" stroke="#102A43" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M61 43V59H76" stroke="#102A43" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M45 95V78M57 95V68M68 95V61" stroke="#102A43" stroke-width="7" stroke-linecap="round"/>
+  <text x="86" y="105" fill="#102A43" font-family="Arial, Helvetica, sans-serif" font-size="48" font-weight="800">CIR</text>
 </svg>
