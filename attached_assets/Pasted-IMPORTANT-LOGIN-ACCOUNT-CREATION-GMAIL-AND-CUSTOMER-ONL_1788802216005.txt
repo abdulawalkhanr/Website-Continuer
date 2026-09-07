@@ -1,0 +1,264 @@
+IMPORTANT LOGIN, ACCOUNT CREATION, GMAIL, AND CUSTOMER-ONLY ACCESS INSTRUCTION
+
+The existing login and account creation system is already good and must remain exactly as it is.
+
+Do not redesign, replace, remove, or disturb the existing login page.
+Do not change the existing account creation flow unnecessarily.
+Do not introduce a new authentication system.
+Do not add OTP functionality.
+Do not change the current email/password login behavior.
+Do not break existing customer accounts, staff accounts, admin accounts, sessions, passwords, or authentication routes.
+
+PRESERVE THE EXISTING LOGIN AND ACCOUNT CREATION
+
+Keep the current:
+
+- Login page design
+- Account creation page design
+- Email and password fields
+- Password validation
+- Forgot-password flow, if already available
+- Existing authentication logic
+- Existing session handling
+- Existing account database
+- Existing error messages
+- Existing success messages
+- Existing branding
+- Existing responsive behavior
+
+The existing login and registration experience should remain unchanged unless a very small technical modification is absolutely required for integration.
+
+Do not add Gmail login or Google OAuth to the public website login page unless specifically required by the existing authentication architecture.
+
+GMAIL FEATURE MUST BE CUSTOMER-DASHBOARD ONLY
+
+Below the existing login and account creation functionality, integrate the Gmail feature that was previously described.
+
+However, this Gmail feature must not be publicly visible on the main website.
+
+It must not appear on:
+
+- Public homepage
+- Public service pages
+- Public contact page
+- Public pricing page
+- Public blog pages
+- Public navigation
+- Public footer
+- Public login page
+- Public account creation page
+- Staff dashboard
+- Admin dashboard
+- Any unauthenticated page
+
+The Gmail feature must be available only after a customer:
+
+1. Downloads or opens the customer application.
+2. Logs into their existing customer account.
+3. Enters the authenticated customer dashboard.
+4. Opens the relevant credit-report or document section.
+
+Only the authenticated customer dashboard may display the Gmail integration.
+
+CUSTOMER DASHBOARD LOCATION
+
+Add the Gmail feature inside the customer dashboard, preferably under one of these existing sections:
+
+- My Credit Report
+- Documents
+- Credit Report Upload
+- Rectification Case
+- Credit Health
+- Account Settings
+
+Use whichever location best matches the existing application structure.
+
+Do not create a separate public Gmail page.
+Do not place a Gmail button on the public website.
+Do not show Gmail integration to visitors who are not logged in.
+
+The Gmail feature should look like a normal native feature of the customer dashboard and must use the exact existing company design system.
+
+GMAIL FEATURE BEHAVIOR
+
+Inside the authenticated customer dashboard, provide a clear option such as:
+
+- Connect Gmail
+- Import Credit Report from Gmail
+- Find Credit-Related Documents
+- Fetch Bureau Report
+- Review Gmail Documents
+
+Use wording that matches the existing application’s tone and design.
+
+The feature may allow the customer to:
+
+- Connect their Gmail account
+- Give explicit permission
+- Search for relevant credit-bureau PDFs
+- Find CIBIL or Experian reports
+- Find relevant bank notices
+- Fetch selected documents
+- Review the selected documents
+- Import approved documents into their customer case
+- Prepare a dispute or rectification message based on the selected documents
+
+The customer must always remain in control.
+
+GMAIL PRIVACY AND PERMISSION RULES
+
+Do not silently connect to Gmail.
+Do not scan the customer’s inbox without clear consent.
+Do not access unrelated emails.
+Do not read personal emails that are not relevant to the credit-report process.
+Do not collect unnecessary Gmail data.
+Do not send emails automatically.
+Do not submit disputes automatically.
+Do not contact banks or bureaus automatically without customer review and approval.
+
+Use the minimum necessary Gmail permissions.
+
+For basic Google account authentication, use only the necessary identity scopes:
+
+- openid
+- email
+- profile
+
+If Gmail access is required separately, request additional Gmail permissions only after the customer explicitly chooses to connect Gmail.
+
+Use only the minimum required Gmail scopes, such as:
+
+- gmail.readonly for finding and reading relevant documents
+- gmail.send only if the customer explicitly approves sending a prepared message
+
+Do not request broad or unnecessary permissions.
+
+The customer must be shown a clear explanation of:
+
+- Why Gmail access is needed
+- What type of emails may be searched
+- What information may be imported
+- What information will not be accessed
+- How the customer can disconnect Gmail
+
+Provide a visible Disconnect Gmail option inside the customer dashboard.
+
+GMAIL DOCUMENT WORKFLOW
+
+The customer workflow should be:
+
+1. Customer logs into the existing account.
+2. Customer opens the customer dashboard.
+3. Customer opens My Credit Report or Documents.
+4. Customer selects Connect Gmail or Import from Gmail.
+5. Customer provides explicit consent.
+6. The system searches only for relevant credit-related documents.
+7. The system displays matching documents for customer review.
+8. The customer selects the document they want to import.
+9. The customer confirms the import.
+10. The selected document is saved to the customer’s existing case and document system.
+11. The document is parsed and analyzed using the existing credit-report workflow.
+12. If a dispute message is prepared, the customer must review and approve it.
+13. Only after explicit customer approval may an email be sent.
+
+Do not skip the review and approval steps.
+
+CUSTOMER-ONLY DATA ACCESS
+
+The Gmail feature must be securely connected to the currently authenticated customer.
+
+A customer must never be able to:
+
+- View another customer’s Gmail documents
+- View another customer’s credit report
+- View another customer’s case
+- View another customer’s imported emails
+- View another customer’s payment details
+- View another customer’s uploaded files
+- View another customer’s dispute messages
+
+Every imported document, Gmail connection, case record, and action must be associated with the correct authenticated customer account.
+
+Use the existing authentication, authorization, database, and row-level access controls.
+
+Do not create a separate parallel customer database.
+
+CUSTOMER DASHBOARD DESIGN
+
+The Gmail integration must follow the existing customer dashboard design.
+
+Reuse the existing:
+
+- Cards
+- Buttons
+- Icons
+- Forms
+- Modals
+- Upload components
+- Document lists
+- Status badges
+- Loading states
+- Error states
+- Success messages
+- Responsive layout
+- Mobile navigation
+- Typography
+- Colors
+- Spacing
+- Border radius
+- Company logo
+- Existing branding
+
+The Gmail feature must look like it belongs to CIR Consultation Service.
+
+Do not use a separate Google-themed dashboard.
+Do not make the Gmail feature visually dominant.
+Do not add a public Gmail advertisement or public Gmail button.
+Do not expose technical OAuth details to ordinary website visitors.
+
+PUBLIC WEBSITE RESTRICTION
+
+The public website should continue showing only the normal company website content and existing login/account creation options.
+
+The Gmail feature must remain hidden from unauthenticated users.
+
+If a visitor opens the website, they should not see:
+
+- Connect Gmail
+- Import from Gmail
+- Gmail integration
+- Gmail permissions
+- Gmail document search
+- Gmail document import
+- Gmail sending options
+
+These features should appear only after successful customer login, inside the customer dashboard.
+
+If a user logs out, the Gmail feature must no longer be accessible until they log in again.
+
+SECURITY REQUIREMENTS
+
+- Keep OAuth credentials and tokens on the secure backend.
+- Never expose client secrets or access tokens in frontend code.
+- Encrypt or securely protect stored tokens.
+- Allow customers to disconnect Gmail.
+- Remove or revoke stored Gmail access when the customer disconnects.
+- Use secure session validation.
+- Validate customer ownership for every document and case action.
+- Do not expose Gmail message IDs, tokens, or private email content unnecessarily.
+- Log important security actions without storing unnecessary private email content.
+- Do not use Gmail access for marketing or unrelated purposes.
+- Do not allow staff or admin users to access Gmail content unless a separate, explicitly authorized workflow already exists.
+
+FINAL REQUIREMENT
+
+Keep the existing login and account creation system exactly as it is because it is already good.
+
+Add the previously described Gmail functionality only inside the authenticated customer dashboard.
+
+The public website must remain clean and unchanged.
+The Gmail feature must not be visible to ordinary website visitors.
+The Gmail feature must appear only after the customer logs in and opens the customer dashboard.
+
+Preserve the existing design, authentication, account creation, branding, and application structure.
+Integrate the Gmail feature securely, privately, and naturally into the existing customer dashboard.
