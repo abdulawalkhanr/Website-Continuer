@@ -11,5 +11,6 @@ export interface CustomerInput {
   mobile: string;
   email: string;
   city?: string;
-  password?: string;
+  /** @minLength 6 */
+  password: string;
 }

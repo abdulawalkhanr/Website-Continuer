@@ -49,7 +49,7 @@ function CustomerForm({ initial, onSave, onCancel, isSaving }: {
         </div>
       </div>
       <div className="flex gap-3 pt-2">
-        <Button className="flex-1 btn-gradient border-0 text-white" onClick={() => onSave(form)} disabled={isSaving || !form.name || !form.email || !form.mobile}>
+        <Button className="flex-1 btn-gradient border-0 text-white" onClick={() => onSave(form)} disabled={isSaving || !form.name || !form.email || !form.mobile || (!isEdit && form.password.length < 6)}>
           {isSaving ? "Saving..." : isEdit ? "Update Customer" : "Create Customer"}
         </Button>
         <Button variant="outline" onClick={onCancel}>Cancel</Button>
@@ -77,7 +77,7 @@ export default function AdminCustomers() {
   };
 
   const handleCreate = (form: Record<string, string>) => {
-    createCustomer.mutate({ data: { name: form.name, email: form.email, mobile: form.mobile, city: form.city || undefined, password: form.password || undefined } }, {
+    createCustomer.mutate({ data: { name: form.name, email: form.email, mobile: form.mobile, city: form.city || undefined, password: form.password } }, {
       onSuccess: () => { refreshList(); setShowCreate(false); toast({ title: "Customer created" }); },
       onError: (e: unknown) => toast({ title: (e as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to create customer", variant: "destructive" }),
     });
@@ -87,9 +87,14 @@ export default function AdminCustomers() {
     if (!editCustomer) return;
     const data: Record<string, string> = { name: form.name, email: form.email, mobile: form.mobile };
     if (form.city) data.city = form.city;
+    if (form.password) data.password = form.password;
     updateCustomer.mutate({ id: editCustomer.id, data }, {
-      onSuccess: () => { refreshList(); setEditCustomer(null); toast({ title: "Customer updated" }); },
-      onError: () => toast({ title: "Failed to update customer", variant: "destructive" }),
+      onSuccess: () => {
+        refreshList();
+        setEditCustomer(null);
+        toast({ title: form.password ? "Customer and password updated" : "Customer updated" });
+      },
+      onError: (e: unknown) => toast({ title: (e as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to update customer", variant: "destructive" }),
     });
   };
 

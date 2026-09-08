@@ -13,6 +13,11 @@ function hashPassword(password: string): string {
   return createHash("sha256").update(password + "cir_salt_2026").digest("hex");
 }
 
+function normalisePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  return digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
+}
+
 // GET /customers
 router.get("/customers", async (req, res): Promise<void> => {
   const qParsed = ListCustomersQueryParams.safeParse(req.query);
@@ -40,10 +45,12 @@ router.post("/customers", async (req, res): Promise<void> => {
   if (!parsed.success) { res.status(400).json({ error: "Invalid data. Name, email, and mobile are required." }); return; }
   const { password, ...data } = parsed.data;
   const email = data.email.toLowerCase().trim();
+  const mobile = normalisePhone(data.mobile);
+  if (mobile.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit Indian mobile number." }); return; }
   const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (existing.length > 0) { res.status(409).json({ error: "A customer with this email already exists." }); return; }
-  const passwordHash = hashPassword(password || "cir_default_2026");
-  const [user] = await db.insert(usersTable).values({ ...data, email, passwordHash, role: "CUSTOMER" }).returning();
+  const passwordHash = hashPassword(password);
+  const [user] = await db.insert(usersTable).values({ ...data, email, mobile, passwordHash, role: "CUSTOMER" }).returning();
   const { passwordHash: _, ...safe } = user;
   res.status(201).json(safe);
 });
@@ -64,8 +71,14 @@ router.patch("/customers/:id", async (req, res): Promise<void> => {
   if (!pParsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }
   const bParsed = UpdateCustomerBody.safeParse(req.body);
   if (!bParsed.success) { res.status(400).json({ error: bParsed.error.message }); return; }
-  const updateData = { ...bParsed.data } as Record<string, string | undefined>;
+  const { password, ...profileData } = bParsed.data;
+  const updateData = { ...profileData } as Record<string, string | undefined>;
   if (updateData.email) updateData.email = updateData.email.toLowerCase().trim();
+  if (updateData.mobile) {
+    updateData.mobile = normalisePhone(updateData.mobile);
+    if (updateData.mobile.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit Indian mobile number." }); return; }
+  }
+  if (password) updateData.passwordHash = hashPassword(password);
   const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, pParsed.data.id)).returning();
   if (!user) { res.status(404).json({ error: "Customer not found" }); return; }
   const { passwordHash: _, ...safe } = user;

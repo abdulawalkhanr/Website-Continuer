@@ -246,12 +246,16 @@ export const ListCustomersResponse = zod.array(ListCustomersResponseItem)
 /**
  * @summary Create a customer
  */
+export const createCustomerBodyPasswordMin = 6;
+
+
+
 export const CreateCustomerBody = zod.object({
   "name": zod.string(),
   "mobile": zod.string(),
   "email": zod.string(),
   "city": zod.string().optional(),
-  "password": zod.string().optional()
+  "password": zod.string().min(createCustomerBodyPasswordMin)
 })
 
 
@@ -279,11 +283,16 @@ export const UpdateCustomerParams = zod.object({
   "id": zod.coerce.number()
 })
 
+export const updateCustomerBodyPasswordMin = 6;
+
+
+
 export const UpdateCustomerBody = zod.object({
   "name": zod.string().optional(),
   "mobile": zod.string().optional(),
   "email": zod.string().optional(),
-  "city": zod.string().optional()
+  "city": zod.string().optional(),
+  "password": zod.string().min(updateCustomerBodyPasswordMin).optional()
 })
 
 export const UpdateCustomerResponse = zod.object({

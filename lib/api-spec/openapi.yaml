@@ -1598,13 +1598,13 @@ components:
 
     CustomerInput:
       type: object
-      required: [name, mobile, email]
+      required: [name, mobile, email, password]
       properties:
         name: { type: string }
         mobile: { type: string }
         email: { type: string }
         city: { type: string }
-        password: { type: string }
+        password: { type: string, minLength: 6 }
 
     CustomerUpdate:
       type: object
@@ -1613,6 +1613,7 @@ components:
         mobile: { type: string }
         email: { type: string }
         city: { type: string }
+        password: { type: string, minLength: 6 }
 
     # CASES
     Case:

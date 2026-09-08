@@ -11,4 +11,6 @@ export interface CustomerUpdate {
   mobile?: string;
   email?: string;
   city?: string;
+  /** @minLength 6 */
+  password?: string;
 }
