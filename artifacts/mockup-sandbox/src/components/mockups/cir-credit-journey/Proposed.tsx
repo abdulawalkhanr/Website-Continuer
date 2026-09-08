@@ -1,0 +1,113 @@
+import { useEffect, useState, type ReactNode } from "react";
+import {
+  AlertTriangle, ArrowRight, BarChart3, Bell, BookOpen, Check, ChevronDown, ChevronLeft,
+  CircleHelp, Clock3, CreditCard, FileCheck2, FileText, Headphones, IndianRupee,
+  Info, LayoutDashboard, Lightbulb, LockKeyhole, Menu, MessageCircle, PanelLeft,
+  RefreshCcw, Search, ShieldCheck, Sparkles, Upload, UserRound, X, Zap
+} from "lucide-react";
+import "./Proposed.css";
+
+type View = "home" | "upload" | "processing" | "summary" | "accounts" | "issues" | "enquiries" | "recommendations";
+type Version = "Original" | "Updated" | "After Rectification";
+
+const nav = [
+  { id: "summary" as View, label: "Overview", icon: LayoutDashboard },
+  { id: "accounts" as View, label: "Accounts", icon: CreditCard },
+  { id: "issues" as View, label: "Issues & opportunities", icon: AlertTriangle },
+  { id: "enquiries" as View, label: "Enquiries", icon: Search },
+  { id: "recommendations" as View, label: "AI recommendations", icon: Sparkles },
+];
+const accounts = [
+  { lender: "DMI Finance", type: "Consumer loan", id: "•••• 3384", amount: "₹1,05,984", balance: "₹83,904", status: "Active", dpd: "0 DPD", utilization: 79 },
+  { lender: "ICICI Bank", type: "Credit card", id: "•••• 5980", amount: "₹1,30,000 limit", balance: "₹65,501", status: "Active", dpd: "0 DPD", utilization: 50 },
+  { lender: "Navi Finserv", type: "Personal loan", id: "•••• 2176", amount: "₹8,00,000", balance: "₹1,08,517", status: "Active", dpd: "0 DPD", utilization: 14 },
+  { lender: "IndusInd Bank", type: "Auto loan", id: "•••• 0163", amount: "₹13,50,000", balance: "₹6,11,854", status: "Active", dpd: "41 DPD history", utilization: 45 },
+  { lender: "State Bank of India", type: "Loan against deposit", id: "•••• 0630", amount: "₹1,00,000", balance: "₹86,052", status: "Active", dpd: "0 DPD", utilization: 86 },
+  { lender: "SBI Cards", type: "Credit card", id: "•••• 6024", amount: "₹1,23,000 limit", balance: "₹1,13,729", status: "Active", dpd: "0 DPD", utilization: 92 },
+];
+const enquiries = [
+  ["IDBI Bank Ltd", "Business loan", "2 enquiries", "22 Aug 2025", "Recent commercial"],
+  ["Mahindra Finance", "Loan against securities", "1 enquiry", "20 Aug 2025", "Aged"],
+  ["IDFC First Bank", "Used car loan", "2 enquiries", "08 Aug 2025", "Aged"],
+];
+
+function Button({ children, variant = "primary", onClick, className = "", disabled = false }: { children: ReactNode; variant?: "primary" | "soft" | "outline" | "danger"; onClick?: () => void; className?: string; disabled?: boolean }) {
+  return <button disabled={disabled} onClick={onClick} className={`cir-btn cir-btn-${variant} ${className}`}>{children}</button>;
+}
+function Chip({ children, tone = "blue" }: { children: React.ReactNode; tone?: "blue" | "green" | "amber" | "red" | "lavender" }) {
+  return <span className={`cir-chip cir-chip-${tone}`}>{children}</span>;
+}
+function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
+  return <section className={`cir-card ${className}`}>{children}</section>;
+}
+function SectionTitle({ eyebrow, title, copy }: { eyebrow?: string; title: string; copy?: string }) {
+  return <div className="cir-section-title">{eyebrow && <div className="cir-eyebrow">{eyebrow}</div>}<h1>{title}</h1>{copy && <p>{copy}</p>}</div>;
+}
+
+export function Proposed() {
+  const [view, setView] = useState<View>("home");
+  const [file, setFile] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [version, setVersion] = useState<Version>("Original");
+  const [callback, setCallback] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [mobileNav, setMobileNav] = useState(false);
+
+  useEffect(() => {
+    if (view !== "processing") return;
+    setProgress(0);
+    const timer = window.setInterval(() => setProgress((p) => p >= 100 ? 100 : p + 20), 650);
+    return () => window.clearInterval(timer);
+  }, [view]);
+  const steps = ["Reading PDF content", "Extracting account information", "Analysing accounts & payment history", "Identifying issues", "Building your credit summary"];
+
+  const go = (next: View) => { setMobileNav(false); setView(next); };
+  return <div className="cir-shell">
+    <aside className={`cir-sidebar ${mobileNav ? "is-open" : ""}`}>
+      <div className="cir-brand"><div className="cir-mark">C</div><div><strong>CIR</strong><span>Credit intelligence</span></div><button className="cir-close" onClick={() => setMobileNav(false)}><X size={18}/></button></div>
+      <div className="cir-profile"><div className="cir-avatar">A</div><div><strong>Abdul</strong><span>Customer portal</span></div><ChevronDown size={15}/></div>
+      <nav>{view === "home" || view === "upload" || view === "processing" ? <button className="cir-nav-active" onClick={() => go("home")}><PanelLeft size={17}/>Credit report</button> : nav.map(item => <button key={item.id} className={view === item.id ? "cir-nav-active" : ""} onClick={() => go(item.id)}><item.icon size={17}/>{item.label}</button>)}</nav>
+      <div className="cir-side-bottom"><button onClick={() => setCallback(true)}><Headphones size={17}/>Request expert help</button><button><CircleHelp size={17}/>Help centre</button><div className="cir-secure"><LockKeyhole size={15}/><span><b>Your data is protected</b><small>Encrypted and never shared</small></span></div></div>
+    </aside>
+    {mobileNav && <div className="cir-scrim" onClick={() => setMobileNav(false)}/>}
+    <main className="cir-main">
+      <header className="cir-topbar"><button className="cir-menu" onClick={() => setMobileNav(true)}><Menu size={20}/></button><div className="cir-crumb"><span>Credit report</span><ChevronRightSmall/><b>{view === "home" ? "Welcome" : view === "summary" ? "Credit summary" : nav.find(n => n.id === view)?.label || "Upload report"}</b></div><div className="cir-top-actions"><button className="cir-icon-btn"><Bell size={18}/><i/></button><div className="cir-avatar cir-avatar-small">A</div></div></header>
+      <div className="cir-content">
+        {view === "home" && <Home onUpload={() => go("upload")} onCallback={() => setCallback(true)} onSummary={() => go("summary")}/>}
+        {view === "upload" && <UploadView selected={file} onSelect={() => setFile(true)} onAnalyze={() => go("processing")} />}
+        {view === "processing" && <Processing progress={progress} onDone={() => progress >= 100 && go("summary")} />}
+        {view === "summary" && <Summary version={version} setVersion={setVersion} onGo={go}/>}
+        {view === "accounts" && <Accounts/>}
+        {view === "issues" && <Issues onCallback={() => setCallback(true)}/>}
+        {view === "enquiries" && <Enquiries/>}
+        {view === "recommendations" && <Recommendations onCallback={() => setCallback(true)}/>}
+      </div>
+      <div className="cir-mobile-nav">{nav.slice(0,4).map(item => <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => go(item.id)}><item.icon size={18}/><span>{item.label.split(" ")[0]}</span></button>)}</div>
+    </main>
+    {callback && <CallbackModal sent={sent} onClose={() => { setCallback(false); setSent(false); }} onSend={() => setSent(true)}/>}
+  </div>;
+}
+function ChevronRightSmall() { return <span className="cir-chevron">/</span>; }
+
+function Home({ onUpload, onCallback, onSummary }: { onUpload: () => void; onCallback: () => void; onSummary: () => void }) {
+  return <><div className="cir-welcome"><div><div className="cir-eyebrow">CUSTOMER PORTAL · 05 SEP 2025</div><h1>Good morning, Abdul<span>.</span></h1><p>Your credit health, made clear. Upload a report to see what lenders see — and what you can do next.</p></div><div className="cir-welcome-ornament"><BarChart3 size={30}/><span>Trust<br/>through<br/>clarity</span></div></div>
+    <div className="cir-primary-actions"><button onClick={onUpload} className="cir-action-card cir-action-upload"><span className="cir-action-icon"><Upload size={22}/></span><span><b>Upload CIBIL PDF</b><small>Get your complete credit health summary</small></span><ArrowRight size={18}/></button><button onClick={onCallback} className="cir-action-card"><span className="cir-action-icon soft"><Headphones size={22}/></span><span><b>Request a callback</b><small>Talk to a credit expert about your report</small></span><ArrowRight size={18}/></button></div>
+    <div className="cir-home-grid"><Card className="cir-recent"><div className="cir-card-head"><div><span className="cir-label">LATEST REPORT</span><h3>Credit health summary</h3></div><Chip tone="green"><Check size={12}/> Analysed</Chip></div><div className="cir-recent-body"><div className="cir-score-mini"><strong>775</strong><span>Prime / Tier-1</span></div><div className="cir-divider"/><div className="cir-meta-grid"><span>Last updated<b>05 Sep 2025</b></span><span>Accounts reviewed<b>34 accounts</b></span><span>Current overdue<b className="good">₹0</b></span></div><Button variant="soft" onClick={onSummary}>View credit summary <ArrowRight size={15}/></Button></div></Card><Card className="cir-why"><div className="cir-label">WHAT YOU'LL GET</div><h3>One report. Fewer surprises.</h3><p>We turn a dense bureau report into a practical view of your accounts, risks and next moves.</p><div className="cir-benefit"><ShieldCheck size={17}/><span><b>Private by design</b><small>Your document is used only for this analysis.</small></span></div><div className="cir-benefit"><Zap size={17}/><span><b>Actionable, not alarming</b><small>Understand impact before you decide.</small></span></div></Card></div></>;
+}
+function UploadView({ selected, onSelect, onAnalyze }: { selected: boolean; onSelect: () => void; onAnalyze: () => void }) {
+  return <><SectionTitle eyebrow="CREDIT REPORT" title="Upload your CIBIL report" copy="We'll read the report and turn it into a clear, useful credit health summary."/><Card className="cir-upload-card"><div className={`cir-dropzone ${selected ? "selected" : ""}`} onClick={onSelect}><div className="cir-upload-symbol">{selected ? <FileCheck2 size={27}/> : <Upload size={27}/>}</div><h3>{selected ? "CIBIL_report_September.pdf" : "Choose a CIBIL PDF to get started"}</h3><p>{selected ? "PDF selected · 2.4 MB · ready to analyse" : "Drag and drop, or click to browse your files"}</p>{!selected && <span className="cir-file-note">PDF only · max 15 MB</span>}</div><div className="cir-upload-foot"><div><div className="cir-privacy"><LockKeyhole size={15}/>Private and secure</div><p>We do not store your report after analysis. Account numbers are masked automatically.</p></div><Button disabled={!selected} onClick={onAnalyze}>Analyse report <ArrowRight size={16}/></Button></div></Card><div className="cir-password"><LockKeyhole size={17}/><span><b>Password-protected PDF?</b><small>You can add the password after selecting your file. It is never stored.</small></span><button>Learn more</button></div></>;
+}
+function Processing({ progress, onDone }: { progress: number; onDone: () => void }) {
+  return <div className="cir-processing"><div className="cir-processing-top"><div className="cir-processing-icon"><RefreshCcw size={25}/></div><SectionTitle eyebrow="ANALYSING YOUR REPORT" title="Making sense of your credit story" copy="This usually takes less than a minute. You can keep this tab open."/><strong>{progress}%</strong></div><div className="cir-progress"><span style={{width: `${progress}%`}}/></div><Card className="cir-checklist">{["Reading PDF content", "Extracting account information", "Analysing accounts & payment history", "Identifying issues", "Building your credit summary"].map((s, i) => { const done = progress >= (i + 1) * 20; return <div className={done ? "done" : ""} key={s}><span>{done ? <Check size={15}/> : <Clock3 size={15}/>}</span><b>{s}</b>{done && <em>Complete</em>}</div>; })}</Card>{progress >= 100 && <Button onClick={onDone}>View credit summary <ArrowRight size={16}/></Button>}<p className="cir-disclaimer"><Info size={14}/> This is an educational analysis, not a guarantee of loan approval or score change.</p></div>;
+}
+function Summary({ version, setVersion, onGo }: { version: Version; setVersion: (v: Version) => void; onGo: (v: View) => void }) {
+  return <><div className="cir-page-row"><SectionTitle eyebrow="CREDIT SUMMARY" title="Your credit health at a glance" copy="A clear view of what is helping, what needs attention and where to start."/><select value={version} onChange={e => setVersion(e.target.value as Version)}><option>Original</option><option>Updated</option><option>After Rectification</option></select></div><div className="cir-summary-hero"><div className="cir-gauge"><div className="cir-gauge-inner"><strong>775</strong><span>Excellent</span></div></div><div className="cir-summary-copy"><Chip tone="green"><Check size={12}/> Strong credit health</Chip><h2>You're in a prime position.</h2><p>Your payment history and active accounts are working well. A few focused actions could make your profile more lender-ready.</p><span className="cir-updated">Last updated 05 September 2025 · {version} report</span></div><div className="cir-spark"><Sparkles size={22}/><span>Prime / Tier-1</span><small>300 — 900 range</small></div></div><div className="cir-stat-row"><div><span>Total accounts</span><b>34</b><small>audited accounts</small></div><div><span>Active accounts</span><b>8</b><small>currently open</small></div><div><span>Closed accounts</span><b>26</b><small>closed cleanly</small></div><div><span>Current overdue</span><b className="good">₹0</b><small>across all accounts</small></div></div><div className="cir-two-col"><Card><div className="cir-card-head"><div><span className="cir-label">WHAT'S HELPING</span><h3>Positive factors</h3></div><Chip tone="green">3 strengths</Chip></div>{["No current overdue across 8 active accounts","Strong mix of seasoned accounts","Credit score sits in Prime / Tier-1 range"].map((x,i)=><div className="cir-factor positive" key={x}><span><Check size={14}/></span><b>{x}</b><small>{["A clean current payment track supports lender confidence.","Older accounts help your credit age and stability.","775 is a strong foundation for future applications."][i]}</small></div>)}</Card><Card><div className="cir-card-head"><div><span className="cir-label">WORTH A LOOK</span><h3>Negative factors</h3></div><Chip tone="amber">3 to review</Chip></div>{["Mahindra guarantor account under dispute","Historical 40–41 DPD on two auto loans","SBI card utilization is at 92%"].map((x,i)=><button className="cir-factor negative" key={x} onClick={() => onGo("issues")}><span><AlertTriangle size={14}/></span><b>{x}</b><small>{["Priority · may affect underwriting decisions","Historical · current payments are on time","High impact · reducing balance may help"][i]} <ArrowRight size={13}/></small></button>)}</Card></div><div className="cir-next-row"><div><Lightbulb size={19}/><span><b>Ready to go deeper?</b><small>Review your accounts or see the actions we recommend.</small></span></div><Button variant="soft" onClick={() => onGo("accounts")}>Explore accounts <ArrowRight size={15}/></Button></div></>;
+}
+function Accounts() { return <><SectionTitle eyebrow="ACCOUNT ANALYSIS" title="Your accounts" copy="Every account, clearly grouped. Masked identifiers keep your information private."/><div className="cir-account-toolbar"><div className="cir-segment"><button className="active">All <span>34</span></button><button>Active <span>8</span></button><button>Closed <span>26</span></button></div><div className="cir-search"><Search size={15}/><input placeholder="Search lender or account"/></div></div><AccountGroup title="Loans" items={accounts.filter(a => a.type !== "Credit card")}/><AccountGroup title="Credit cards" items={accounts.filter(a => a.type === "Credit card")}/></>; }
+function AccountGroup({ title, items }: { title: string; items: typeof accounts }) { return <div className="cir-account-group"><div className="cir-group-title"><h3>{title}</h3><span>{items.length} shown</span></div><Card className="cir-table-card">{items.map(a=><div className="cir-account-row" key={a.id}><div className="cir-lender-icon">{a.type === "Credit card" ? <CreditCard size={17}/> : <IndianRupee size={17}/>}</div><div className="cir-account-name"><b>{a.lender}</b><span>{a.type} · {a.id}</span></div><div className="cir-amount"><span>Sanctioned / limit</span><b>{a.amount}</b></div><div className="cir-amount"><span>Balance</span><b>{a.balance}</b></div><div className="cir-util"><span>Utilization</span><div><i style={{width:`${a.utilization}%`}}/></div><small>{a.utilization}%</small></div><div className="cir-status"><Chip tone={a.dpd.includes("history") ? "amber" : "green"}>{a.status}</Chip><span>{a.dpd}</span></div></div>)}</Card></div>; }
+function Issues({ onCallback }: { onCallback: () => void }) { return <><SectionTitle eyebrow="ISSUES & OPPORTUNITIES" title="A shorter path to a stronger profile" copy="Not everything needs action today. Start with what can have the biggest impact."/><div className="cir-issue-feature"><div className="cir-issue-priority"><AlertTriangle size={20}/><span>PRIORITY REVIEW</span></div><h2>Mahindra guarantor account under dispute</h2><p>This account is marked as a guarantor facility with a disputed status. Even though it is closed historically, lenders may still see it during underwriting.</p><div className="cir-issue-meta"><span><b>Severity</b><Chip tone="red">High impact</Chip></span><span><b>Suggested next action</b><strong>Escalate dispute with supporting documents</strong></span></div><Button onClick={onCallback}>Request expert review <ArrowRight size={16}/></Button></div><div className="cir-issue-grid"><IssueCard tone="amber" title="Historical payment delays" copy="Two auto loans show 40–41 DPD in past payment history. Current payments are on time." action="Review payment history"/><IssueCard tone="red" title="High SBI card utilization" copy="₹1,13,729 used against a ₹1,23,000 limit — 92% utilization can signal pressure." action="See account details"/><IssueCard tone="lavender" title="Recent commercial enquiries" copy="Two IDBI business-loan enquiries were recorded recently and may influence lender checks." action="Understand enquiries"/></div></>; }
+function IssueCard({ tone, title, copy, action }: { tone: string; title: string; copy: string; action: string }) { return <Card className={`cir-issue-card ${tone}`}><div className="cir-issue-dot"><AlertTriangle size={15}/></div><h3>{title}</h3><p>{copy}</p><button>{action} <ArrowRight size={14}/></button></Card>; }
+function Enquiries() { return <><SectionTitle eyebrow="ENQUIRIES" title="Recent credit enquiries" copy="Enquiries are requests to view your report. Several close together can affect how lenders read your profile."/><Card className="cir-enquiry-note"><Info size={18}/><span><b>What this means</b><small>One enquiry is not a problem. Keep applications focused and avoid applying with several lenders at the same time.</small></span></Card><Card className="cir-enquiries"><div className="cir-table-head"><span>Institution & facility</span><span>Activity</span><span>Date</span><span>Impact</span></div>{enquiries.map(e=><div className="cir-enquiry-row" key={e[0]}><div><b>{e[0]}</b><small>{e[1]}</small></div><span>{e[2]}</span><span>{e[3]}</span><Chip tone={e[4] === "Recent commercial" ? "amber" : "blue"}>{e[4]}</Chip></div>)}</Card></>; }
+function Recommendations({ onCallback }: { onCallback: () => void }) { return <><SectionTitle eyebrow="AI RECOMMENDATIONS" title="Your next best moves" copy="Personalised suggestions based on this report. These are educational and are not a guarantee of score improvement."/><div className="cir-reco-list"><Reco n="01" tone="red" title="Resolve the Mahindra guarantor dispute" copy="Gather the closure letter and dispute acknowledgement, then ask an expert to review the bureau wording." impact="Highest priority"/><Reco n="02" tone="amber" title="Bring card utilization below 30%" copy="If possible, reduce the SBI card balance before your next report refresh. Avoid closing older cards without advice." impact="Medium-term"/><Reco n="03" tone="green" title="Keep payments on time" copy="Your active accounts are currently current. Preserve this strong streak with autopay reminders." impact="Protect what works"/><Reco n="04" tone="lavender" title="Pause new applications for now" copy="Let the recent enquiries age before applying again, unless a planned need makes an application necessary." impact="Low effort"/></div><div className="cir-expert-cta"><div className="cir-action-icon soft"><MessageCircle size={22}/></div><div><b>Want a human read of this?</b><span>CIR experts can help you prioritise the right evidence and next step.</span></div><Button onClick={onCallback}>Request expert review <ArrowRight size={16}/></Button></div></>; }
+function Reco({ n, tone, title, copy, impact }: { n: string; tone: string; title: string; copy: string; impact: string }) { return <Card className="cir-reco"><div className={`cir-reco-number ${tone}`}>{n}</div><div className="cir-reco-copy"><Chip tone={tone === "red" ? "red" : tone === "amber" ? "amber" : tone === "green" ? "green" : "lavender"}>{impact}</Chip><h3>{title}</h3><p>{copy}</p></div><ArrowRight className="cir-reco-arrow" size={18}/></Card>; }
+function CallbackModal({ sent, onClose, onSend }: { sent: boolean; onClose: () => void; onSend: () => void }) { return <div className="cir-modal-wrap" onClick={onClose}><div className="cir-modal" onClick={e => e.stopPropagation()}>{sent ? <div className="cir-success"><div><Check size={28}/></div><h2>We'll be in touch soon.</h2><p>Your callback request is saved. A CIR credit expert will reach out during business hours.</p><Button onClick={onClose}>Done</Button></div> : <><button className="cir-modal-close" onClick={onClose}><X size={18}/></button><div className="cir-eyebrow">EXPERT SUPPORT</div><h2>Request a callback</h2><p>Tell us a little about what you'd like help with. No report details needed.</p><label>Your name<input defaultValue="Abdul"/></label><label>Mobile number<input placeholder="+91 98XXX XXXXX"/></label><label>What can we help with?<select><option>Understand my credit report</option><option>Review a disputed account</option><option>Something else</option></select></label><Button onClick={onSend} className="cir-modal-submit">Request callback <ArrowRight size={16}/></Button><small className="cir-form-note"><LockKeyhole size={13}/> Your details are only used to arrange this call.</small></>}</div></div>; }
