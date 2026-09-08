@@ -9,22 +9,9 @@ import type { PaymentPaymentStatus } from './paymentPaymentStatus';
 
 export interface Payment {
   id: number;
-  /** @nullable */
-  caseId?: number | null;
+  caseId: number;
   /** @nullable */
   caseNumber?: string | null;
-  /** @nullable */
-  quoteSnapshotId?: number | null;
-  paymentSource?: string;
-  verificationStatus?: string;
-  /** @nullable */
-  payuTxnId?: string | null;
-  /** @nullable */
-  payuPaymentId?: string | null;
-  /** @nullable */
-  payuAmount?: number | null;
-  /** @nullable */
-  verifiedAt?: string | null;
   serviceFee: number;
   advancePaid: number;
   pendingAmount: number;

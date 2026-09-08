@@ -345,44 +345,7 @@ export interface Quote {
   items: QuoteItemsItem[];
   total: number;
   ruleVersion: number;
-  /** @nullable */
-  acceptedAt?: string | null;
   createdAt: string;
-}
-
-export interface QuoteAcceptance {
-  accept: true;
-}
-
-export type PayUCheckoutParams = {[key: string]: string};
-
-export interface PayUCheckout {
-  paymentId: number;
-  quoteId: number;
-  payuUrl: string;
-  params: PayUCheckoutParams;
-}
-
-export interface PayUPaymentInitiation {
-  paymentId: number;
-}
-
-export interface PayUCallback {
-  status: string;
-  txnid: string;
-  amount: string;
-  productinfo: string;
-  firstname: string;
-  email: string;
-  hash: string;
-  mihpayid?: string;
-  udf1?: string;
-  udf2?: string;
-  udf3?: string;
-  udf4?: string;
-  udf5?: string;
-  additionalCharges?: string;
-  additional_charges?: string;
 }
 
 export interface HealthStatus {
@@ -790,22 +753,9 @@ export const PaymentPaymentStatus = {
 
 export interface Payment {
   id: number;
-  /** @nullable */
-  caseId?: number | null;
+  caseId: number;
   /** @nullable */
   caseNumber?: string | null;
-  /** @nullable */
-  quoteSnapshotId?: number | null;
-  paymentSource?: string;
-  verificationStatus?: string;
-  /** @nullable */
-  payuTxnId?: string | null;
-  /** @nullable */
-  payuPaymentId?: string | null;
-  /** @nullable */
-  payuAmount?: number | null;
-  /** @nullable */
-  verifiedAt?: string | null;
   serviceFee: number;
   advancePaid: number;
   pendingAmount: number;

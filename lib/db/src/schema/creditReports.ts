@@ -1,4 +1,4 @@
-import { boolean, date, integer, jsonb, numeric, pgEnum, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { boolean, date, integer, jsonb, numeric, pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { usersTable } from "./users";
@@ -80,11 +80,8 @@ export const quoteSnapshotsTable = pgTable("quote_snapshots", {
   pricingRuleId: integer("pricing_rule_id").notNull().references(() => pricingRulesTable.id),
   items: jsonb("items").notNull(),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
-  // Acceptance freezes this already deterministic snapshot for checkout.
-  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
-  acceptedById: integer("accepted_by_id").references(() => usersTable.id),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-}, (table) => [uniqueIndex("quote_snapshot_customer_report_rule_idx").on(table.customerId, table.reportId, table.pricingRuleId)]);
+});
 
 export const insertCustomerOnboardingSchema = createInsertSchema(customerOnboardingsTable).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertCallbackRequestSchema = createInsertSchema(callbackRequestsTable).omit({ id: true, createdAt: true, updatedAt: true });

@@ -33,13 +33,7 @@ export async function createReportUpload(customerId: number, contentType: string
   const response = await fetch(`${sidecar}/object-storage/signed-object-url`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      bucket_name: bucket,
-      object_name: file.name,
-      method: "PUT",
-      expires_at: new Date(Date.now() + 15 * 60_000).toISOString(),
-      headers: { "Content-Type": contentType },
-    }),
+    body: JSON.stringify({ bucket_name: bucket, object_name: file.name, method: "PUT", expires_at: new Date(Date.now() + 15 * 60_000).toISOString() }),
     signal: AbortSignal.timeout(30_000),
   });
   if (!response.ok) throw new Error(`Object storage signing failed with status ${response.status}`);

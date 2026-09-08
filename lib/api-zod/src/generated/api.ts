@@ -532,15 +532,8 @@ export const ListPaymentsQueryParams = zod.object({
 
 export const ListPaymentsResponseItem = zod.object({
   "id": zod.number(),
-  "caseId": zod.number().nullish(),
+  "caseId": zod.number(),
   "caseNumber": zod.string().nullish(),
-  "quoteSnapshotId": zod.number().nullish(),
-  "paymentSource": zod.string().optional(),
-  "verificationStatus": zod.string().optional(),
-  "payuTxnId": zod.string().nullish(),
-  "payuPaymentId": zod.string().nullish(),
-  "payuAmount": zod.number().nullish(),
-  "verifiedAt": zod.string().nullish(),
   "serviceFee": zod.number(),
   "advancePaid": zod.number(),
   "pendingAmount": zod.number(),
@@ -571,15 +564,8 @@ export const GetPaymentParams = zod.object({
 
 export const GetPaymentResponse = zod.object({
   "id": zod.number(),
-  "caseId": zod.number().nullish(),
+  "caseId": zod.number(),
   "caseNumber": zod.string().nullish(),
-  "quoteSnapshotId": zod.number().nullish(),
-  "paymentSource": zod.string().optional(),
-  "verificationStatus": zod.string().optional(),
-  "payuTxnId": zod.string().nullish(),
-  "payuPaymentId": zod.string().nullish(),
-  "payuAmount": zod.number().nullish(),
-  "verifiedAt": zod.string().nullish(),
   "serviceFee": zod.number(),
   "advancePaid": zod.number(),
   "pendingAmount": zod.number(),
@@ -606,15 +592,8 @@ export const UpdatePaymentBody = zod.object({
 
 export const UpdatePaymentResponse = zod.object({
   "id": zod.number(),
-  "caseId": zod.number().nullish(),
+  "caseId": zod.number(),
   "caseNumber": zod.string().nullish(),
-  "quoteSnapshotId": zod.number().nullish(),
-  "paymentSource": zod.string().optional(),
-  "verificationStatus": zod.string().optional(),
-  "payuTxnId": zod.string().nullish(),
-  "payuPaymentId": zod.string().nullish(),
-  "payuAmount": zod.number().nullish(),
-  "verifiedAt": zod.string().nullish(),
   "serviceFee": zod.number(),
   "advancePaid": zod.number(),
   "pendingAmount": zod.number(),
@@ -2017,42 +1996,7 @@ export const GetCurrentQuoteResponse = zod.object({
 })),
   "total": zod.number(),
   "ruleVersion": zod.number(),
-  "acceptedAt": zod.string().nullish(),
   "createdAt": zod.string()
-})
-
-
-/**
- * @summary Accept an approved immutable quote and create a PayU checkout
- */
-export const CreateQuoteCheckoutParams = zod.object({
-  "id": zod.coerce.number()
-})
-
-export const CreateQuoteCheckoutBody = zod.object({
-  "accept": zod.literal(true)
-})
-
-export const CreateQuoteCheckoutResponse = zod.object({
-  "paymentId": zod.number(),
-  "quoteId": zod.number(),
-  "payuUrl": zod.string(),
-  "params": zod.record(zod.string(), zod.string())
-})
-
-
-/**
- * @summary Create checkout for an existing manual case payment
- */
-export const CreateLegacyPayUCheckoutBody = zod.object({
-  "paymentId": zod.number()
-})
-
-export const CreateLegacyPayUCheckoutResponse = zod.object({
-  "paymentId": zod.number(),
-  "quoteId": zod.number(),
-  "payuUrl": zod.string(),
-  "params": zod.record(zod.string(), zod.string())
 })
 
 

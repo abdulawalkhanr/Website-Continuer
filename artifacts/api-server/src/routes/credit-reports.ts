@@ -133,7 +133,7 @@ router.post("/credit-reports/finalize", async (req, res): Promise<void> => {
   const objectPath = body.objectPath;
   const originalFilename = body.originalFilename;
   const contentType = body.contentType as "application/pdf" | "image/jpeg" | "image/png";
-  try { await validateReportObject(objectPath, customerId, contentType, body.size); } catch { req.log.warn({ customerId }, "Rejected report upload"); res.status(400).json({ error: "Uploaded object could not be validated" }); return; }
+  try { await validateReportObject(objectPath, customerId, contentType, body.size); } catch (error) { req.log.warn({ err: error }, "Rejected report upload"); res.status(400).json({ error: "Uploaded object could not be validated" }); return; }
   await db.update(creditReportsTable).set({ isCurrent: false }).where(eq(creditReportsTable.customerId, customerId));
   const [report] = await db.insert(creditReportsTable).values({ customerId, objectPath, originalFilename: originalFilename.slice(0, 255), contentType, uploaderId: user.id, bureau: body.bureau?.slice(0, 100) || null, version: body.version ?? "ORIGINAL" }).returning();
   res.status(201).json(reportResponse(report));
@@ -147,7 +147,7 @@ router.post("/credit-reports/upload-url", async (req, res): Promise<void> => {
   if (!body.size || body.size > MAX_BYTES || !["application/pdf", "image/jpeg", "image/png"].includes(body.contentType ?? "")) { res.status(400).json({ error: "Only PDF, JPG, or PNG up to 15MB is allowed" }); return; }
   const [customer] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.id, customerId)).limit(1);
   if (!customer) { res.status(404).json({ error: "Customer not found" }); return; }
-  try { res.json(await createReportUpload(customerId, body.contentType!)); } catch { req.log.error({ customerId }, "Could not create report upload URL"); res.status(500).json({ error: "Could not create upload URL" }); }
+  try { res.json(await createReportUpload(customerId, body.contentType!)); } catch (error) { req.log.error({ err: error }, "Could not create report upload URL"); res.status(500).json({ error: "Could not create upload URL" }); }
 });
 
 router.get("/credit-reports/:id/download", async (req, res): Promise<void> => {
@@ -183,7 +183,7 @@ router.post("/credit-reports/:id/process", async (req, res): Promise<void> => {
       } catch (error) {
         req.log.warn({ err: error, reportId: report.id }, "AI analysis unavailable; manual review retained");
       }
-    } catch { req.log.warn({ reportId: report.id }, "PDF extraction requires manual review"); }
+    } catch (error) { req.log.warn({ err: error, reportId: report.id }, "PDF extraction requires manual review"); }
   }
   const [updated] = await db.update(creditReportsTable).set(update).where(eq(creditReportsTable.id, report.id)).returning();
   req.log.warn({ reportId: report.id }, "Credit report queued for manual review");
@@ -227,9 +227,8 @@ router.get("/quotes/current", async (req, res): Promise<void> => {
   const items = [{ code: "BASE", amount: Number(rule.baseFee) }, ...Object.entries(issueFees).filter(([key]) => flagTypes.has(key)).map(([code, amount]) => ({ code, amount: Number(amount) }))];
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
   const total = rule.capFee == null ? subtotal : Math.min(subtotal, Number(rule.capFee));
-  const [existingQuote] = await db.select().from(quoteSnapshotsTable).where(and(eq(quoteSnapshotsTable.customerId, user.id), eq(quoteSnapshotsTable.reportId, report.id), eq(quoteSnapshotsTable.pricingRuleId, rule.id))).limit(1);
-  const quote = existingQuote ?? (await db.insert(quoteSnapshotsTable).values({ customerId: user.id, reportId: report.id, pricingRuleId: rule.id, items, total: total.toFixed(2) }).returning())[0];
-  res.json({ ...quote, total: Number(quote.total), ruleVersion: rule.version });
+  const [quote] = await db.insert(quoteSnapshotsTable).values({ customerId: user.id, reportId: report?.id ?? null, pricingRuleId: rule.id, items, total: total.toFixed(2) }).returning();
+  res.json({ ...quote, total, ruleVersion: rule.version });
 });
 
 router.get("/admin/pricing-rules", async (req, res): Promise<void> => { if (!(await requireAdmin(req))) { res.status(403).json({ error: "Admin access required" }); return; } res.json(await db.select().from(pricingRulesTable).orderBy(desc(pricingRulesTable.version))); });

@@ -30,8 +30,6 @@ type EnrichedPayment = {
   advancePaid: number;
   pendingAmount: number;
   paymentStatus: string;
-  paymentSource?: string;
-  verificationStatus?: string;
   createdAt: string | Date;
 };
 
@@ -220,17 +218,16 @@ export default function AdminPayments() {
               <TableHead>Paid</TableHead>
               <TableHead>Pending</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Verification</TableHead>
               <TableHead>Date</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={10} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : !payments?.length ? (
               <TableRow>
-                <TableCell colSpan={10} className="text-center py-12">
+                <TableCell colSpan={9} className="text-center py-12">
                   <div className="flex flex-col items-center gap-3 text-muted-foreground">
                     <IndianRupee size={32} className="opacity-30" />
                     <p>No payment records yet</p>
@@ -255,10 +252,6 @@ export default function AdminPayments() {
                 <TableCell className="text-orange-600">₹{p.pendingAmount.toLocaleString()}</TableCell>
                 <TableCell>
                   <Badge className={`text-xs border ${STATUS_COLORS[p.paymentStatus] || ""}`}>{p.paymentStatus}</Badge>
-                </TableCell>
-                <TableCell className="text-xs">
-                  <div className="font-medium">{p.verificationStatus || "MANUAL"}</div>
-                  <div className="text-muted-foreground">{p.paymentSource === "QUOTE_PAYU" ? "Quote / PayU" : "Manual"}</div>
                 </TableCell>
                 <TableCell className="text-xs text-muted-foreground">{new Date(p.createdAt).toLocaleDateString("en-IN")}</TableCell>
                 <TableCell>

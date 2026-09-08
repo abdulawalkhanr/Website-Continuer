@@ -3,7 +3,7 @@ import {
   useGetMe, getGetMeQueryKey, 
   useListCreditReports, getListCreditReportsQueryKey,
   useCreateCreditReportUploadUrl, useFinalizeCreditReportUpload,
-  useProcessCreditReport, useGetCurrentQuote, getGetCurrentQuoteQueryKey, useCreateQuoteCheckout,
+  useProcessCreditReport, useGetCurrentQuote, getGetCurrentQuoteQueryKey,
   useCompareCreditReports, getCompareCreditReportsQueryKey
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,7 +33,6 @@ export default function DashboardCreditReport() {
   const uploadUrlMut = useCreateCreditReportUploadUrl();
   const finalizeMut = useFinalizeCreditReportUpload();
   const processMut = useProcessCreditReport();
-  const checkoutMut = useCreateQuoteCheckout();
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -130,18 +129,6 @@ export default function DashboardCreditReport() {
     }
     setPdfPassword("");
     setProcessingId(null);
-  };
-  const acceptAndPay = async () => {
-    if (!quote) return;
-    try {
-      const checkout = await checkoutMut.mutateAsync({ id: quote.id, data: { accept: true } });
-      const form = document.createElement("form");
-      form.method = "POST"; form.action = checkout.payuUrl; form.style.display = "none";
-      Object.entries(checkout.params).forEach(([key, value]) => { const input = document.createElement("input"); input.type = "hidden"; input.name = key; input.value = value; form.appendChild(input); });
-      document.body.appendChild(form); form.submit();
-    } catch (error) {
-      toast({ title: "Could not start secure checkout", description: (error as Error).message, variant: "destructive" });
-    }
   };
 
   if (reportsLoading) return <div className="p-8 text-center text-muted-foreground">{t("common.loading")}</div>;
@@ -357,9 +344,7 @@ export default function DashboardCreditReport() {
                     <div className="space-y-3">
                       {quote.items.map((item, i) => (
                         <div key={i} className="flex justify-between items-center text-sm">
-                          <span className="text-muted-foreground">
-                            {(item.code || (item as { label?: string }).label || "Service item").replace(/_/g, " ")}
-                          </span>
+                          <span className="text-muted-foreground">{item.code.replace(/_/g, " ")}</span>
                           <span className="font-medium flex items-center"><IndianRupee size={12} className="mr-0.5"/>{item.amount}</span>
                         </div>
                       ))}
@@ -368,10 +353,6 @@ export default function DashboardCreditReport() {
                       <span>Total</span>
                       <span className="flex items-center text-primary"><IndianRupee size={16} className="mr-0.5"/>{quote.total}</span>
                     </div>
-                    <Button className="btn-gradient text-white w-full" onClick={acceptAndPay} disabled={checkoutMut.isPending}>
-                      {checkoutMut.isPending ? "Preparing secure checkout..." : quote.acceptedAt ? "Resume secure payment" : "Accept quote & pay securely"}
-                    </Button>
-                    {quote.acceptedAt && <p className="text-xs text-muted-foreground">You can safely resume a pending checkout or start a new secure attempt after a failed payment.</p>}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
