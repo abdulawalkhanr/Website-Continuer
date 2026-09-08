@@ -12,7 +12,8 @@ import {
   FileText,
   LogOut,
   Menu,
-  X
+  X,
+  PhoneCall
 } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
@@ -35,9 +36,11 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/leads", label: "Leads", icon: Users },
     { href: "/admin/customers", label: "Customers", icon: Users },
+    { href: "/admin/callbacks", label: "Callbacks", icon: PhoneCall },
     { href: "/admin/staff", label: "Staff", icon: Briefcase },
     { href: "/admin/cases", label: "Cases", icon: Briefcase },
     { href: "/admin/payments", label: "Payments", icon: CreditCard },
+    { href: "/admin/pricing", label: "Pricing Rules", icon: CreditCard },
     { href: "/admin/documents", label: "Documents", icon: FileText },
     { href: "/admin/referrals", label: "Referrals", icon: Share2 },
     { href: "/admin/tickets", label: "Tickets", icon: MessageSquare },

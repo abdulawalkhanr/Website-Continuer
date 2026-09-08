@@ -1446,8 +1446,339 @@ paths:
               schema:
                 $ref: "#/components/schemas/StaffDetail"
 
+  # CREDIT REPORT ONBOARDING
+  /onboarding:
+    get:
+      operationId: getOnboarding
+      tags: [customers]
+      responses:
+        "200": { description: Onboarding, content: { application/json: { schema: { $ref: "#/components/schemas/Onboarding" } } } }
+    put:
+      operationId: updateOnboarding
+      tags: [customers]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/OnboardingUpdate" } } } }
+      responses:
+        "200": { description: Updated onboarding, content: { application/json: { schema: { $ref: "#/components/schemas/Onboarding" } } } }
+  /callback-requests:
+    post:
+      operationId: createCallbackRequest
+      tags: [customers]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CallbackRequestInput" } } } }
+      responses:
+        "201": { description: Callback requested, content: { application/json: { schema: { $ref: "#/components/schemas/CallbackRequest" } } } }
+  /admin/callback-requests:
+    get:
+      operationId: listAdminCallbackRequests
+      tags: [admin]
+      parameters: [{ in: query, name: status, schema: { type: string, enum: [REQUESTED, CONTACTED, CLOSED] } }]
+      responses:
+        "200": { description: Callback requests, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/AdminCallbackRequest" } } } } }
+  /admin/callback-requests/{id}:
+    patch:
+      operationId: updateAdminCallbackRequest
+      tags: [admin]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CallbackRequestAdminUpdate" } } } }
+      responses:
+        "200": { description: Updated callback request, content: { application/json: { schema: { $ref: "#/components/schemas/CallbackRequest" } } } }
+  /credit-reports:
+    get:
+      operationId: listCreditReports
+      tags: [documents]
+      responses:
+        "200": { description: Reports, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/CreditReport" } } } } }
+  /credit-reports/finalize:
+    post:
+      operationId: finalizeCreditReportUpload
+      tags: [documents]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReportUpload" } } } }
+      responses:
+        "201": { description: Report created, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReport" } } } }
+  /credit-reports/upload-url:
+    post:
+      operationId: createCreditReportUploadUrl
+      tags: [documents]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReportUploadRequest" } } } }
+      responses:
+        "200": { description: Private presigned upload URL, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReportUploadUrl" } } } }
+  /credit-reports/{id}:
+    get:
+      operationId: getCreditReport
+      tags: [documents]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Report, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReport" } } } }
+  /credit-reports/{id}/download:
+    get:
+      operationId: downloadCreditReport
+      tags: [documents]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Private report binary }
+  /credit-reports/{id}/process:
+    post:
+      operationId: processCreditReport
+      tags: [documents]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      requestBody: { required: false, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReportProcessInput" } } } }
+      responses:
+        "200": { description: Processing result, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReport" } } } }
+  /credit-reports/{id}/reprocess:
+    post:
+      operationId: reprocessCreditReport
+      tags: [admin]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Reprocessing result, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReport" } } } }
+  /credit-reports/{id}/comparison/{otherId}:
+    get:
+      operationId: compareCreditReports
+      tags: [documents]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }, { in: path, name: otherId, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Informational comparison, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReportComparison" } } } }
+  /admin/customers/{customerId}/credit-reports:
+    get:
+      operationId: listAdminCustomerCreditReports
+      tags: [admin]
+      parameters: [{ in: path, name: customerId, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Customer reports, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/CreditReport" } } } } }
+  /admin/credit-reports/{id}:
+    patch:
+      operationId: updateAdminCreditReport
+      tags: [admin]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReportAdminUpdate" } } } }
+      responses:
+        "200": { description: Corrected report, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReport" } } } }
+  /admin/credit-reports/{id}/approve:
+    post:
+      operationId: approveCreditReport
+      tags: [admin]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReportApproval" } } } }
+      responses:
+        "200": { description: Approved report, content: { application/json: { schema: { $ref: "#/components/schemas/CreditReport" } } } }
+  /quotes/current:
+    get:
+      operationId: getCurrentQuote
+      tags: [customers]
+      responses:
+        "200": { description: Deterministic quote, content: { application/json: { schema: { $ref: "#/components/schemas/Quote" } } } }
+  /admin/pricing-rules:
+    get:
+      operationId: listPricingRules
+      tags: [admin]
+      responses:
+        "200": { description: Rules, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/PricingRule" } } } } }
+    post:
+      operationId: createPricingRule
+      tags: [admin]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PricingRuleInput" } } } }
+      responses:
+        "201": { description: Created rule, content: { application/json: { schema: { $ref: "#/components/schemas/PricingRule" } } } }
+  /admin/pricing-rules/{id}:
+    patch:
+      operationId: updatePricingRule
+      tags: [admin]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PricingRuleUpdate" } } } }
+      responses:
+        "200": { description: Updated pricing rule, content: { application/json: { schema: { $ref: "#/components/schemas/PricingRule" } } } }
+    delete:
+      operationId: deletePricingRule
+      tags: [admin]
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      responses:
+        "200": { description: Deleted or safely deactivated, content: { application/json: { schema: { $ref: "#/components/schemas/PricingRuleDeleteResult" } } } }
+
 components:
   schemas:
+    Onboarding:
+      type: object
+      required: [userId, preferredLanguage]
+      properties:
+        userId: { type: integer }
+        preferredLanguage: { type: string, enum: [ENGLISH, HINDI, ASSAMESE] }
+        panName: { type: ["string", "null"] }
+        panMasked: { type: ["string", "null"] }
+        consentedAt: { type: ["string", "null"] }
+        completedAt: { type: ["string", "null"] }
+    OnboardingUpdate:
+      type: object
+      required: [preferredLanguage, consent]
+      properties:
+        preferredLanguage: { type: string, enum: [ENGLISH, HINDI, ASSAMESE] }
+        panName: { type: string }
+        pan: { type: string, writeOnly: true }
+        consent: { type: boolean, const: true }
+        complete: { type: boolean }
+    CallbackRequest:
+      type: object
+      required: [id, userId, status, createdAt]
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        message: { type: ["string", "null"] }
+        preferredTime: { type: ["string", "null"] }
+        status: { type: string, enum: [REQUESTED, CONTACTED, CLOSED] }
+        createdAt: { type: string }
+    CallbackRequestInput:
+      type: object
+      properties:
+        message: { type: string, maxLength: 1000 }
+        preferredTime: { type: string, maxLength: 100 }
+    AdminCallbackRequest:
+      allOf:
+        - $ref: "#/components/schemas/CallbackRequest"
+        - type: object
+          required: [customerName, customerEmail]
+          properties:
+            customerName: { type: string }
+            customerMobile: { type: ["string", "null"] }
+            customerEmail: { type: string }
+            preferredLanguage: { type: ["string", "null"], enum: [ENGLISH, HINDI, ASSAMESE, null] }
+            assignedToId: { type: ["integer", "null"] }
+            adminNotes: { type: ["string", "null"] }
+    CallbackRequestAdminUpdate:
+      type: object
+      properties:
+        status: { type: string, enum: [REQUESTED, CONTACTED, CLOSED] }
+        assignedToId: { type: ["integer", "null"] }
+        adminNotes: { type: ["string", "null"], maxLength: 2000 }
+    CreditReport:
+      type: object
+      required: [id, customerId, originalFilename, contentType, version, isCurrent, processingStatus, createdAt]
+      properties:
+        id: { type: integer }
+        customerId: { type: integer }
+        originalFilename: { type: string }
+        contentType: { type: string }
+        bureau: { type: ["string", "null"] }
+        version: { type: string, enum: [ORIGINAL, UPDATED, RECTIFIED] }
+        isCurrent: { type: boolean }
+        processingStatus: { type: string, enum: [UPLOADED, PROCESSING, PROCESSED, NEEDS_MANUAL_REVIEW, FAILED] }
+        manualReviewReason: { type: ["string", "null"] }
+        score: { type: ["integer", "null"] }
+        reportDate: { type: ["string", "null"] }
+        analysis: {}
+        accounts: {}
+        factors: {}
+        flags: {}
+        summaries: {}
+        confidence: { type: ["number", "null"] }
+        createdAt: { type: string }
+    CreditReportUpload:
+      type: object
+      required: [objectPath, originalFilename, contentType, size]
+      properties:
+        objectPath: { type: string, writeOnly: true }
+        originalFilename: { type: string }
+        contentType: { type: string, enum: [application/pdf, image/jpeg, image/png] }
+        size: { type: integer, maximum: 15728640 }
+        customerId: { type: integer }
+        bureau: { type: string }
+        version: { type: string, enum: [ORIGINAL, UPDATED, RECTIFIED] }
+    CreditReportUploadRequest:
+      type: object
+      required: [contentType, size]
+      properties:
+        contentType: { type: string, enum: [application/pdf, image/jpeg, image/png] }
+        size: { type: integer, maximum: 15728640 }
+        customerId: { type: integer }
+    CreditReportProcessInput:
+      type: object
+      properties:
+        password: { type: string, writeOnly: true, maxLength: 256 }
+    CreditReportUploadUrl:
+      type: object
+      required: [uploadURL, objectPath, headers]
+      properties:
+        uploadURL: { type: string, format: uri, writeOnly: true }
+        objectPath: { type: string, writeOnly: true }
+        headers:
+          type: object
+          required: [Content-Type]
+          properties:
+            Content-Type: { type: string, enum: [application/pdf, image/jpeg, image/png] }
+    CreditReportAdminUpdate:
+      type: object
+      properties:
+        analysis: {}
+        accounts: {}
+        factors: {}
+        flags: {}
+        summaries: {}
+        score: { type: ["integer", "null"] }
+        reportDate: { type: ["string", "null"] }
+        version: { type: string, enum: [ORIGINAL, UPDATED, RECTIFIED] }
+        isCurrent: { type: boolean }
+        manualReviewReason: { type: ["string", "null"] }
+    CreditReportApproval:
+      type: object
+      properties:
+        notes: { type: string, maxLength: 2000 }
+    CreditReportComparison:
+      type: object
+      required: [reportId, otherReportId, currentReport, comparedReport, disclaimer]
+      properties:
+        reportId: { type: integer }
+        otherReportId: { type: integer }
+        scoreChange: { type: ["integer", "null"] }
+        currentReport: { $ref: "#/components/schemas/CreditReport" }
+        comparedReport: { $ref: "#/components/schemas/CreditReport" }
+        disclaimer: { type: string }
+    PricingRule:
+      type: object
+      required: [id, version, name, baseFee, issueFees, isActive, createdAt]
+      properties:
+        id: { type: integer }
+        version: { type: integer }
+        name: { type: string }
+        serviceInfo: { type: ["string", "null"] }
+        baseFee: { type: number }
+        issueFees: { type: object, additionalProperties: { type: number } }
+        capFee: { type: ["number", "null"] }
+        isActive: { type: boolean }
+        createdAt: { type: string }
+    PricingRuleInput:
+      type: object
+      required: [name, baseFee, issueFees]
+      properties:
+        name: { type: string }
+        serviceInfo: { type: ["string", "null"], maxLength: 2000 }
+        baseFee: { type: number, minimum: 0 }
+        issueFees: { type: object, additionalProperties: { type: number, minimum: 0 } }
+        capFee: { type: ["number", "null"], minimum: 0 }
+        isActive: { type: boolean }
+    PricingRuleUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        serviceInfo: { type: ["string", "null"], maxLength: 2000 }
+        baseFee: { type: number, minimum: 0 }
+        issueFees: { type: object, additionalProperties: { type: number, minimum: 0 } }
+        capFee: { type: ["number", "null"], minimum: 0 }
+        isActive: { type: boolean }
+    PricingRuleDeleteResult:
+      type: object
+      required: [success, deactivated, message]
+      properties:
+        success: { type: boolean }
+        deactivated: { type: boolean }
+        message: { type: string }
+    Quote:
+      type: object
+      required: [id, customerId, pricingRuleId, items, total, ruleVersion, createdAt]
+      properties:
+        id: { type: integer }
+        customerId: { type: integer }
+        pricingRuleId: { type: integer }
+        items: { type: array, items: { type: object, required: [code, amount], properties: { code: { type: string }, amount: { type: number } } } }
+        total: { type: number }
+        ruleVersion: { type: integer }
+        createdAt: { type: string }
     HealthStatus:
       type: object
       properties:

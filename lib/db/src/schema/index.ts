@@ -7,3 +7,4 @@ export * from "./referrals";
 export * from "./tickets";
 export * from "./notifications";
 export * from "./staff";
+export * from "./creditReports";

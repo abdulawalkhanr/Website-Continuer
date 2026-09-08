@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
-import { useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useGetMe, getGetMeQueryKey, useGetOnboarding, getGetOnboardingQueryKey } from "@workspace/api-client-react";
 import { Layout } from "@/components/Layout";
 import { AdminLayout } from "@/components/AdminLayout";
 import { DashboardLayout } from "@/components/DashboardLayout";
@@ -72,16 +72,28 @@ import { StaffLayout } from "@/components/StaffLayout";
 import { InstallAppPrompt } from "@/components/InstallAppPrompt";
 import { isStandaloneApp } from "@/lib/pwa";
 
+import { TranslationProvider } from "@/contexts/TranslationContext";
+import OnboardingPage from "@/pages/OnboardingPage";
+import DashboardCreditReport from "@/pages/dashboard/DashboardCreditReport";
+import AdminPricing from "@/pages/admin/AdminPricing";
+import AdminCustomerReports from "@/pages/admin/AdminCustomerReports";
+import AdminCallbacks from "@/pages/admin/AdminCallbacks";
+
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1, staleTime: 30000 } },
 });
 
 function ProtectedDashboard({ children, customerOnly = false }: { children: React.ReactNode; customerOnly?: boolean }) {
-  const { data: user, isLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
-  if (isLoading) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted-foreground">Loading...</div></div>;
+  const { data: user, isLoading: userLoading } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const { data: onboarding, isLoading: obLoading } = useGetOnboarding({ query: { queryKey: getGetOnboardingQueryKey(), enabled: !!user && user.role === "CUSTOMER" } });
+
+  if (userLoading || (user?.role === "CUSTOMER" && obLoading)) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted-foreground">Loading...</div></div>;
   if (!user) return <Redirect to="/login" />;
   if (user.role === "STAFF") return <Redirect to={customerOnly ? "/login" : "/staff"} />;
   if (user.role !== "CUSTOMER") return <Redirect to={customerOnly ? "/login" : "/admin"} />;
+  
+  if (!onboarding?.completedAt) return <Redirect to="/onboarding" />;
+
   return <DashboardLayout>{children}</DashboardLayout>;
 }
 
@@ -109,8 +121,10 @@ function Router() {
       <Switch>
         <Route path="/login" component={LoginPage} />
         <Route path="/register" component={RegisterPage} />
+        <Route path="/onboarding" component={OnboardingPage} />
         <Route path="/dashboard" component={() => <ProtectedDashboard customerOnly><DashboardHome /></ProtectedDashboard>} />
         <Route path="/dashboard/case" component={() => <ProtectedDashboard customerOnly><DashboardCase /></ProtectedDashboard>} />
+        <Route path="/dashboard/credit-report" component={() => <ProtectedDashboard customerOnly><DashboardCreditReport /></ProtectedDashboard>} />
         <Route path="/dashboard/documents" component={() => <ProtectedDashboard customerOnly><DashboardDocuments /></ProtectedDashboard>} />
         <Route path="/dashboard/payments" component={() => <ProtectedDashboard customerOnly><DashboardPayments /></ProtectedDashboard>} />
         <Route path="/dashboard/tickets" component={() => <ProtectedDashboard customerOnly><DashboardTickets /></ProtectedDashboard>} />
@@ -162,9 +176,11 @@ function Router() {
       <Route path="/register" component={RegisterPage} />
       <Route path="/admin/login" component={AdminLoginPage} />
 
+      <Route path="/onboarding" component={OnboardingPage} />
       {/* Customer Dashboard */}
       <Route path="/dashboard" component={() => <ProtectedDashboard><DashboardHome /></ProtectedDashboard>} />
       <Route path="/dashboard/case" component={() => <ProtectedDashboard><DashboardCase /></ProtectedDashboard>} />
+      <Route path="/dashboard/credit-report" component={() => <ProtectedDashboard><DashboardCreditReport /></ProtectedDashboard>} />
       <Route path="/dashboard/documents" component={() => <ProtectedDashboard><DashboardDocuments /></ProtectedDashboard>} />
       <Route path="/dashboard/payments" component={() => <ProtectedDashboard><DashboardPayments /></ProtectedDashboard>} />
       <Route path="/dashboard/tickets" component={() => <ProtectedDashboard><DashboardTickets /></ProtectedDashboard>} />
@@ -174,8 +190,11 @@ function Router() {
       <Route path="/admin" component={() => <ProtectedAdmin><AdminDashboard /></ProtectedAdmin>} />
       <Route path="/admin/leads" component={() => <ProtectedAdmin><AdminLeads /></ProtectedAdmin>} />
       <Route path="/admin/customers" component={() => <ProtectedAdmin><AdminCustomers /></ProtectedAdmin>} />
+      <Route path="/admin/customers/:id/reports" component={() => <ProtectedAdmin><AdminCustomerReports /></ProtectedAdmin>} />
+      <Route path="/admin/callbacks" component={() => <ProtectedAdmin><AdminCallbacks /></ProtectedAdmin>} />
       <Route path="/admin/cases" component={() => <ProtectedAdmin><AdminCases /></ProtectedAdmin>} />
       <Route path="/admin/payments" component={() => <ProtectedAdmin><AdminPayments /></ProtectedAdmin>} />
+      <Route path="/admin/pricing" component={() => <ProtectedAdmin><AdminPricing /></ProtectedAdmin>} />
       <Route path="/admin/documents" component={() => <ProtectedAdmin><AdminDocuments /></ProtectedAdmin>} />
       <Route path="/admin/referrals" component={() => <ProtectedAdmin><AdminReferrals /></ProtectedAdmin>} />
       <Route path="/admin/tickets" component={() => <ProtectedAdmin><AdminTickets /></ProtectedAdmin>} />
@@ -200,12 +219,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <TranslationProvider>
+        <TooltipProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <Router />
+          </WouterRouter>
+          <Toaster />
+        </TooltipProvider>
+      </TranslationProvider>
     </QueryClientProvider>
   );
 }

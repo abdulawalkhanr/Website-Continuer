@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const STATUS_STEPS = [
   { key: "DOCUMENTS_SUBMITTED", label: "Documents Submitted", desc: "Your case documents have been received and logged in our system.", pct: 10 },
@@ -15,6 +16,7 @@ const STATUS_STEPS = [
 ];
 
 export default function DashboardCase() {
+  const { t } = useTranslation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: cases, isLoading } = useListCases(
     user ? { customerId: user.id } : {},
@@ -24,21 +26,21 @@ export default function DashboardCase() {
   const activeCase = cases?.[0];
   const currentStepIdx = activeCase ? STATUS_STEPS.findIndex(s => s.key === activeCase.status) : -1;
 
-  if (isLoading) return <div className="glass-card rounded-2xl p-8 animate-pulse text-center text-muted-foreground">Loading case details...</div>;
+  if (isLoading) return <div className="glass-card rounded-2xl p-8 animate-pulse text-center text-muted-foreground">{t("common.loading")}</div>;
 
   if (!activeCase) return (
     <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground">
-      <p className="font-medium">No case found. Contact our support team to register your case.</p>
+      <p className="font-medium">{t("dashboard.noActiveCase")}</p>
     </div>
   );
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Case Details</h2>
+      <h2 className="text-2xl font-bold">{t("nav.myCase")}</h2>
       <div className="glass-card rounded-2xl p-6">
         <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
           <div>
-            <div className="text-xs text-muted-foreground mb-1">Case Number</div>
+            <div className="text-xs text-muted-foreground mb-1">{t("dashboard.caseNumber")}</div>
             <div className="text-2xl font-bold gradient-text">{activeCase.caseNumber}</div>
           </div>
           <Badge className={activeCase.status === "COMPLETED" ? "bg-green-100 text-green-700" : "bg-primary/10 text-primary border-primary/20"}>
@@ -46,16 +48,16 @@ export default function DashboardCase() {
           </Badge>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-sm">
-          <div><div className="text-muted-foreground text-xs">Service</div><div className="font-medium">{activeCase.serviceType}</div></div>
+          <div><div className="text-muted-foreground text-xs">{t("dashboard.serviceType")}</div><div className="font-medium">{activeCase.serviceType}</div></div>
           <div><div className="text-muted-foreground text-xs">Customer</div><div className="font-medium">{user?.name}</div></div>
-          {!!(activeCase as unknown as Record<string, unknown>).assignedToName && <div><div className="text-muted-foreground text-xs">Assigned To</div><div className="font-medium">{(activeCase as unknown as Record<string, unknown>).assignedToName as string}</div></div>}
-          {activeCase.expectedCompletionDate && <div><div className="text-muted-foreground text-xs">Expected Completion</div><div className="font-medium">{activeCase.expectedCompletionDate}</div></div>}
+          {!!(activeCase as unknown as Record<string, unknown>).assignedToName && <div><div className="text-muted-foreground text-xs">{t("dashboard.assignedTo")}</div><div className="font-medium">{(activeCase as unknown as Record<string, unknown>).assignedToName as string}</div></div>}
+          {activeCase.expectedCompletionDate && <div><div className="text-muted-foreground text-xs">{t("dashboard.expectedCompletion")}</div><div className="font-medium">{activeCase.expectedCompletionDate}</div></div>}
           <div><div className="text-muted-foreground text-xs">Registered On</div><div className="font-medium">{new Date(activeCase.createdAt).toLocaleDateString()}</div></div>
           <div><div className="text-muted-foreground text-xs">Last Updated</div><div className="font-medium">{new Date(activeCase.updatedAt).toLocaleDateString()}</div></div>
         </div>
         <div>
           <div className="flex justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Overall Progress</span>
+            <span className="text-muted-foreground">{t("dashboard.progress")}</span>
             <span className="font-bold text-primary">{activeCase.progressPercentage}%</span>
           </div>
           <Progress value={activeCase.progressPercentage} className="h-3 mb-1" />
@@ -70,7 +72,7 @@ export default function DashboardCase() {
 
       {/* Full Timeline */}
       <div className="glass-card rounded-2xl p-6">
-        <h3 className="font-bold text-lg mb-6">Case Timeline</h3>
+        <h3 className="font-bold text-lg mb-6">{t("dashboard.viewTimeline")}</h3>
         <div className="space-y-6">
           {STATUS_STEPS.map((step, i) => {
             const isDone = i <= currentStepIdx;

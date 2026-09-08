@@ -12,6 +12,7 @@ import ticketsRouter from "./tickets";
 import notificationsRouter from "./notifications";
 import adminRouter from "./admin";
 import staffRouter from "./staff";
+import creditReportsRouter from "./credit-reports";
 
 const router: IRouter = Router();
 
@@ -28,5 +29,6 @@ router.use(referralsRouter);
 router.use(ticketsRouter);
 router.use(notificationsRouter);
 router.use(adminRouter);
+router.use(creditReportsRouter);
 
 export default router;

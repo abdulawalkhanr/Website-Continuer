@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { useGetMe, useListCases, useListDocuments, getListCasesQueryKey, getListDocumentsQueryKey, getGetMeQueryKey } from "@workspace/api-client-react";
+import { useGetMe, useListCases, getListCasesQueryKey, getGetMeQueryKey, useListCreditReports, getListCreditReportsQueryKey } from "@workspace/api-client-react";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { FileText, CreditCard, MessageSquare, Bell, CheckCircle, Clock, ArrowRight } from "lucide-react";
+import { FileText, CreditCard, MessageSquare, CheckCircle, Clock, ArrowRight, Activity, TrendingUp } from "lucide-react";
+import { useTranslation } from "@/contexts/TranslationContext";
 
 const STATUS_STEPS = [
   { key: "DOCUMENTS_SUBMITTED", label: "Documents Submitted", pct: 10 },
@@ -23,13 +24,18 @@ function getStatusColor(status: string) {
 }
 
 export default function DashboardHome() {
+  const { t, language } = useTranslation();
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: cases, isLoading: casesLoading } = useListCases(
     user ? { customerId: user.id } : {},
     { query: { enabled: !!user, queryKey: getListCasesQueryKey(user ? { customerId: user.id } : {}) } }
   );
+  const { data: reports } = useListCreditReports(
+    { query: { enabled: !!user, queryKey: getListCreditReportsQueryKey() } }
+  );
 
   const activeCase = cases?.[0];
+  const activeReport = reports?.find(r => r.isCurrent) || reports?.[0];
   const currentStepIdx = activeCase ? STATUS_STEPS.findIndex(s => s.key === activeCase.status) : -1;
 
   return (
@@ -37,18 +43,44 @@ export default function DashboardHome() {
       {/* Welcome */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
         <div className="glass-card rounded-2xl p-6">
-          <h1 className="text-2xl font-bold mb-1">Welcome back, {user?.name?.split(" ")[0] || "Customer"}</h1>
-          <p className="text-muted-foreground text-sm">Here's a summary of your credit case and recent activity.</p>
+          <h1 className="text-2xl font-bold mb-1">{t("dashboard.welcome", { name: user?.name?.split(" ")[0] || "Customer" })}</h1>
+          <p className="text-muted-foreground text-sm">{t("dashboard.summary")}</p>
         </div>
       </motion.div>
+
+      {/* Report Intelligence Summary */}
+      {activeReport && activeReport.processingStatus === "PROCESSED" && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/10 via-accent/5 to-secondary/10 border border-primary/20 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 opacity-10 pointer-events-none">
+              <Activity size={120} />
+            </div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp size={20} className="text-primary" />
+                <h3 className="font-bold text-lg">{t("dashboard.creditHealth")}</h3>
+                <Badge variant="outline" className="ml-2 bg-white/50">{activeReport.score}</Badge>
+              </div>
+              <p className="text-sm leading-relaxed max-w-3xl text-foreground/80 mb-4">
+                {(activeReport.summaries as any)?.[language] || (activeReport.summaries as any)?.ENGLISH || "Credit report analyzed successfully. Pending manual verification of extracted data."}
+              </p>
+              <Link href="/dashboard/credit-report">
+                <Button size="sm" variant="outline" className="bg-white/50 hover:bg-white text-primary border-primary/20">
+                  {t("dashboard.viewFullReport")} <ArrowRight size={14} className="ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "My Case", href: "/dashboard/case", icon: <FileText size={22} />, color: "bg-primary/10 text-primary" },
-          { label: "Documents", href: "/dashboard/documents", icon: <FileText size={22} />, color: "bg-accent/20 text-accent-foreground" },
-          { label: "Payments", href: "/dashboard/payments", icon: <CreditCard size={22} />, color: "bg-secondary/50 text-secondary-foreground" },
-          { label: "Support", href: "/dashboard/tickets", icon: <MessageSquare size={22} />, color: "bg-green-100 text-green-700" },
+          { label: t("nav.myCase"), href: "/dashboard/case", icon: <FileText size={22} />, color: "bg-primary/10 text-primary" },
+          { label: t("nav.creditReport"), href: "/dashboard/credit-report", icon: <Activity size={22} />, color: "bg-accent/20 text-accent-foreground" },
+          { label: t("nav.payments"), href: "/dashboard/payments", icon: <CreditCard size={22} />, color: "bg-secondary/50 text-secondary-foreground" },
+          { label: t("nav.support"), href: "/dashboard/tickets", icon: <MessageSquare size={22} />, color: "bg-green-100 text-green-700" },
         ].map(action => (
           <Link key={action.label} href={action.href}>
             <div className="glass-card rounded-xl p-4 flex flex-col items-center gap-2 cursor-pointer hover:shadow-md transition-shadow text-center h-full">

@@ -2,3 +2,4 @@
 - [Decimal columns in payments](decimal-columns.md) — Drizzle decimal columns (serviceFee, advancePaid, pendingAmount) require string values for insert; parse to number before API response.
 - [Codegen inline body naming](codegen-inline-body.md) — inline request body objects in OpenAPI spec generate conflicting names in api-zod; always use a named `$ref` schema for request bodies.
 - [City field added to users](city-field.md) — `city` column was added to usersTable after initial build; required `pnpm --filter @workspace/db run push` to migrate.
+- [App Storage URL signing](app-storage-url-signing.md) — sign private upload URLs through Replit's local sidecar; GCS service-account signing lacks `client_email`.

@@ -2,14 +2,33 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, notificationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { createHash } from "crypto";
+import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "crypto";
+import { promisify } from "util";
 import https from "https";
 import { LoginBody, RegisterBody, UpdateProfileBody } from "@workspace/api-zod";
 
 const router = Router();
 
-function hashPassword(password: string): string {
+const scrypt = promisify(scryptCallback);
+function legacyHashPassword(password: string): string {
   return createHash("sha256").update(password + "cir_salt_2026").digest("hex");
+}
+async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16).toString("hex");
+  const hash = await scrypt(password, salt, 64) as Buffer;
+  return `scrypt$${salt}$${hash.toString("hex")}`;
+}
+async function verifyPassword(password: string, stored: string): Promise<{ valid: boolean; upgrade: boolean }> {
+  if (!stored.startsWith("scrypt$")) {
+    const expected = Buffer.from(stored, "hex");
+    const actual = Buffer.from(legacyHashPassword(password), "hex");
+    return { valid: expected.length === actual.length && timingSafeEqual(actual, expected), upgrade: true };
+  }
+  const [, salt, expected] = stored.split("$");
+  if (!salt || !expected) return { valid: false, upgrade: false };
+  const actual = await scrypt(password, salt, 64) as Buffer;
+  const expectedBuffer = Buffer.from(expected, "hex");
+  return { valid: expectedBuffer.length === actual.length && timingSafeEqual(actual, expectedBuffer), upgrade: false };
 }
 
 type SessionReq = { session: Record<string, unknown>; sessionId: string };
@@ -77,33 +96,16 @@ async function sendSmsOtp(mobile: string, otp: string): Promise<{ sent: boolean;
 
 // POST /auth/otp/send
 router.post("/auth/otp/send", async (req, res): Promise<void> => {
-  const { mobile } = req.body as { mobile?: string };
-  if (!mobile) { res.status(400).json({ error: "Mobile number is required" }); return; }
-  const phone = normalisePhone(mobile);
-  if (phone.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit Indian mobile number" }); return; }
-
-  // Rate-limit: 1 OTP per 60 seconds
-  const existing = otpStore.get(phone);
-  if (existing && existing.expiry - Date.now() > 9 * 60 * 1000) {
-    res.status(429).json({ error: "OTP already sent. Please wait 60 seconds before requesting again." });
-    return;
-  }
-
-  const otp = generateOtp();
-  otpStore.set(phone, { otp, expiry: Date.now() + 10 * 60 * 1000, attempts: 0 });
-
-  const result = await sendSmsOtp(phone, otp);
-
-  if (result.sent) {
-    res.json({ success: true, message: `OTP sent to +91 ${phone}` });
-  } else {
-    // Dev/fallback mode — include OTP in response (remove in production with a real SMS provider)
-    res.json({ success: true, message: `OTP sent to +91 ${phone}`, devOtp: result.devOtp });
-  }
+  req.log.warn("Disabled OTP authentication attempted");
+  res.status(410).json({ error: "OTP authentication is disabled. Use password login." });
 });
 
 // POST /auth/otp/verify  — verifies OTP, logs in if account exists, creates account if new
 router.post("/auth/otp/verify", async (req, res): Promise<void> => {
+  req.log.warn("Disabled OTP authentication attempted");
+  res.status(410).json({ error: "OTP authentication is disabled. Use password login." });
+  return;
+  /*
   const { mobile, otp, name, city } = req.body as { mobile?: string; otp?: string; name?: string; city?: string };
   if (!mobile || !otp) { res.status(400).json({ error: "Mobile and OTP are required" }); return; }
 
@@ -180,6 +182,7 @@ router.post("/auth/otp/verify", async (req, res): Promise<void> => {
   const { passwordHash: _, ...safeNewUser } = newUser;
   getSession(req).userId = newUser.id;
   res.status(201).json({ user: safeNewUser, isNewUser: true });
+  */
 });
 
 // POST /auth/login
@@ -187,12 +190,13 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Email and password required" }); return; }
   const { email, password } = parsed.data;
-  const hash = hashPassword(password);
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase().trim())).limit(1);
-  if (!user || user.passwordHash !== hash) {
+  if (!user || !(await verifyPassword(password, user.passwordHash)).valid) {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
+  const verification = await verifyPassword(password, user.passwordHash);
+  if (verification.upgrade) await db.update(usersTable).set({ passwordHash: await hashPassword(password) }).where(eq(usersTable.id, user.id));
   const { passwordHash: _, ...safeUser } = user;
   getSession(req).userId = user.id;
   res.json({ user: safeUser, token: `session_${user.id}` });
@@ -212,7 +216,7 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     res.status(409).json({ error: "An account with this email already exists. Please login instead." });
     return;
   }
-  const passwordHash = hashPassword(password);
+  const passwordHash = await hashPassword(password);
   const [user] = await db.insert(usersTable).values({ ...data, email, passwordHash, role: "CUSTOMER" }).returning();
   await db.insert(notificationsTable).values({
     userId: user.id,
@@ -231,12 +235,13 @@ router.post("/auth/login-mobile", async (req, res): Promise<void> => {
   if (!mobile || !password) { res.status(400).json({ error: "Mobile number and password are required" }); return; }
   const phone = normalisePhone(mobile);
   if (phone.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit mobile number" }); return; }
-  const hash = hashPassword(password);
   const [user] = await db.select().from(usersTable).where(eq(usersTable.mobile, phone)).limit(1);
-  if (!user || user.passwordHash !== hash) {
+  if (!user || !(await verifyPassword(password, user.passwordHash)).valid) {
     res.status(401).json({ error: "Invalid mobile number or password" });
     return;
   }
+  const verification = await verifyPassword(password, user.passwordHash);
+  if (verification.upgrade) await db.update(usersTable).set({ passwordHash: await hashPassword(password) }).where(eq(usersTable.id, user.id));
   const { passwordHash: _, ...safeUser } = user;
   getSession(req).userId = user.id;
   res.json({ user: safeUser });
@@ -269,11 +274,11 @@ router.patch("/auth/profile", async (req, res): Promise<void> => {
   if (!existing) { res.status(404).json({ error: "User not found" }); return; }
   const updateData: Record<string, unknown> = { ...profileData };
   if (password) {
-    if (currentPassword && existing.passwordHash !== hashPassword(currentPassword)) {
+    if (currentPassword && !(await verifyPassword(currentPassword, existing.passwordHash)).valid) {
       res.status(400).json({ error: "Current password is incorrect" });
       return;
     }
-    updateData.passwordHash = hashPassword(password);
+    updateData.passwordHash = await hashPassword(password);
   }
   const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, userId)).returning();
   const { passwordHash: _, ...safeUser } = user;
