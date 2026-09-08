@@ -1,14 +1,9 @@
 import "./Screen01Splash.css";
 
-function CirMark() {
-  return (
-    <svg className="cir-splash__mark" viewBox="0 0 66 66" aria-hidden="true">
-      <rect x="9" y="9" width="35" height="43" rx="2.5" fill="none" stroke="currentColor" strokeWidth="3.2" />
-      <path d="M17 43V32h7v11m4 0V24h7v19m4 0V17h7v26" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinejoin="round" />
-      <path d="M9 52h43" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" />
-    </svg>
-  );
-}
+const officialLogo = new URL(
+  "../../../../../cir-website/public/cir-logo.jpg",
+  import.meta.url,
+).href;
 
 export function Screen01Splash() {
   return (
@@ -22,13 +17,11 @@ export function Screen01Splash() {
       </svg>
 
       <section className="cir-splash__content">
-        <div className="cir-splash__brand" aria-label="CIR Consultation Service logo">
-          <CirMark />
-          <div className="cir-splash__wordmark">
-            <span className="cir-splash__name">CIR</span>
-            <span className="cir-splash__descriptor">CONSULTATION SERVICE</span>
-          </div>
-        </div>
+        <img
+          className="cir-splash__official-logo"
+          src={officialLogo}
+          alt="CIR Consultation Service"
+        />
         <div className="cir-splash__copy">
           <p className="cir-splash__tagline">Analyse. Dispute. Improve.</p>
           <p className="cir-splash__supporting">Your credit journey starts here.</p>
