@@ -189,7 +189,16 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   const { email, password } = parsed.data;
   const hash = hashPassword(password);
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase().trim())).limit(1);
-  if (!user || user.passwordHash !== hash) {
+  const ownerPasswordHash = process.env.ADMIN_OWNER_PASSWORD
+    ? hashPassword(process.env.ADMIN_OWNER_PASSWORD)
+    : null;
+  const validStoredPassword = user?.passwordHash === hash;
+  const validOwnerSecret =
+    user?.role === "OWNER" &&
+    ownerPasswordHash !== null &&
+    ownerPasswordHash === hash;
+
+  if (!user || (!validStoredPassword && !validOwnerSecret)) {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
