@@ -2,5 +2,6 @@
 type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/cir-credit-journey/Current.tsx": () => import("../components/mockups/cir-credit-journey/Current.tsx"),
-  "./components/mockups/cir-credit-journey/Proposed.tsx": () => import("../components/mockups/cir-credit-journey/Proposed.tsx")
+  "./components/mockups/cir-credit-journey/Proposed.tsx": () => import("../components/mockups/cir-credit-journey/Proposed.tsx"),
+  "./components/mockups/cir-mobile-app/Screen01Splash.tsx": () => import("../components/mockups/cir-mobile-app/Screen01Splash.tsx")
 };
