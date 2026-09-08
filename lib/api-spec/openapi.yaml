@@ -1566,6 +1566,34 @@ paths:
       tags: [customers]
       responses:
         "200": { description: Deterministic quote, content: { application/json: { schema: { $ref: "#/components/schemas/Quote" } } } }
+  /quotes/{id}/checkout:
+    post:
+      operationId: createQuoteCheckout
+      tags: [payments, customers]
+      summary: Accept an approved immutable quote and create a PayU checkout
+      parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/QuoteAcceptance" } } } }
+      responses:
+        "200": { description: PayU checkout parameters, content: { application/json: { schema: { $ref: "#/components/schemas/PayUCheckout" } } } }
+        "400": { description: Quote cannot be accepted }
+        "403": { description: Not quote owner }
+        "404": { description: Quote not found }
+  /payu/callback:
+    post:
+      operationId: handlePayUCallback
+      tags: [payments]
+      summary: PayU server callback
+      requestBody: { required: true, content: { application/x-www-form-urlencoded: { schema: { $ref: "#/components/schemas/PayUCallback" } } } }
+      responses:
+        "302": { description: Redirects customer to payment status }
+  /payu/initiate:
+    post:
+      operationId: createLegacyPayUCheckout
+      tags: [payments]
+      summary: Create checkout for an existing manual case payment
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PayUPaymentInitiation" } } } }
+      responses:
+        "200": { description: PayU checkout parameters, content: { application/json: { schema: { $ref: "#/components/schemas/PayUCheckout" } } } }
   /admin/pricing-rules:
     get:
       operationId: listPricingRules
@@ -1778,7 +1806,45 @@ components:
         items: { type: array, items: { type: object, required: [code, amount], properties: { code: { type: string }, amount: { type: number } } } }
         total: { type: number }
         ruleVersion: { type: integer }
+        acceptedAt: { type: ["string", "null"] }
         createdAt: { type: string }
+    QuoteAcceptance:
+      type: object
+      required: [accept]
+      properties:
+        accept: { type: boolean, enum: [true] }
+    PayUCheckout:
+      type: object
+      required: [paymentId, quoteId, payuUrl, params]
+      properties:
+        paymentId: { type: integer }
+        quoteId: { type: integer }
+        payuUrl: { type: string }
+        params: { type: object, additionalProperties: { type: string } }
+    PayUPaymentInitiation:
+      type: object
+      required: [paymentId]
+      properties:
+        paymentId: { type: integer }
+    PayUCallback:
+      type: object
+      required: [status, txnid, amount, productinfo, firstname, email, hash]
+      properties:
+        status: { type: string }
+        txnid: { type: string }
+        amount: { type: string }
+        productinfo: { type: string }
+        firstname: { type: string }
+        email: { type: string }
+        hash: { type: string }
+        mihpayid: { type: string }
+        udf1: { type: string }
+        udf2: { type: string }
+        udf3: { type: string }
+        udf4: { type: string }
+        udf5: { type: string }
+        additionalCharges: { type: string }
+        additional_charges: { type: string }
     HealthStatus:
       type: object
       properties:
@@ -2055,11 +2121,18 @@ components:
     # PAYMENTS
     Payment:
       type: object
-      required: [id, caseId, serviceFee, advancePaid, pendingAmount, paymentStatus, createdAt]
+      required: [id, serviceFee, advancePaid, pendingAmount, paymentStatus, createdAt]
       properties:
         id: { type: integer }
-        caseId: { type: integer }
+        caseId: { type: ["integer", "null"] }
         caseNumber: { type: ["string", "null"] }
+        quoteSnapshotId: { type: ["integer", "null"] }
+        paymentSource: { type: string }
+        verificationStatus: { type: string }
+        payuTxnId: { type: ["string", "null"] }
+        payuPaymentId: { type: ["string", "null"] }
+        payuAmount: { type: ["number", "null"] }
+        verifiedAt: { type: ["string", "null"] }
         serviceFee: { type: number }
         advancePaid: { type: number }
         pendingAmount: { type: number }

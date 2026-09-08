@@ -227,8 +227,9 @@ router.get("/quotes/current", async (req, res): Promise<void> => {
   const items = [{ code: "BASE", amount: Number(rule.baseFee) }, ...Object.entries(issueFees).filter(([key]) => flagTypes.has(key)).map(([code, amount]) => ({ code, amount: Number(amount) }))];
   const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
   const total = rule.capFee == null ? subtotal : Math.min(subtotal, Number(rule.capFee));
-  const [quote] = await db.insert(quoteSnapshotsTable).values({ customerId: user.id, reportId: report?.id ?? null, pricingRuleId: rule.id, items, total: total.toFixed(2) }).returning();
-  res.json({ ...quote, total, ruleVersion: rule.version });
+  const [existingQuote] = await db.select().from(quoteSnapshotsTable).where(and(eq(quoteSnapshotsTable.customerId, user.id), eq(quoteSnapshotsTable.reportId, report.id), eq(quoteSnapshotsTable.pricingRuleId, rule.id))).limit(1);
+  const quote = existingQuote ?? (await db.insert(quoteSnapshotsTable).values({ customerId: user.id, reportId: report.id, pricingRuleId: rule.id, items, total: total.toFixed(2) }).returning())[0];
+  res.json({ ...quote, total: Number(quote.total), ruleVersion: rule.version });
 });
 
 router.get("/admin/pricing-rules", async (req, res): Promise<void> => { if (!(await requireAdmin(req))) { res.status(403).json({ error: "Admin access required" }); return; } res.json(await db.select().from(pricingRulesTable).orderBy(desc(pricingRulesTable.version))); });

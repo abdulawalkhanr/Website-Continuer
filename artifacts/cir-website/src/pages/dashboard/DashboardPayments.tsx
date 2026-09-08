@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useGetMe, useListCases, useListPayments, getGetMeQueryKey, getListCasesQueryKey, getListPaymentsQueryKey } from "@workspace/api-client-react";
+import { useGetMe, useListCases, useListPayments, useCreateQuoteCheckout, getGetMeQueryKey, getListCasesQueryKey, getListPaymentsQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,10 +37,12 @@ export default function DashboardPayments() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: cases } = useListCases(user ? { customerId: user.id } : {}, { query: { enabled: !!user, queryKey: getListCasesQueryKey(user ? { customerId: user.id } : {}) } });
   const activeCase = cases?.[0];
-  const { data: payments, isLoading } = useListPayments({ caseId: activeCase?.id }, { query: { enabled: !!activeCase, queryKey: getListPaymentsQueryKey({ caseId: activeCase?.id }) } });
+  // The API scopes this list to the signed-in customer, including quote payments before their case exists.
+  const { data: payments, isLoading } = useListPayments({}, { query: { enabled: !!user, queryKey: getListPaymentsQueryKey({}) } });
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [payLoading, setPayLoading] = useState(false);
+  const quoteCheckout = useCreateQuoteCheckout();
 
   const payment = payments?.[0];
   const serviceFee = typeof payment?.serviceFee === "number" ? payment.serviceFee : parseFloat(String(payment?.serviceFee || 0));
@@ -53,7 +55,7 @@ export default function DashboardPayments() {
     const payuStatus = searchParams.get("payu");
     if (payuStatus === "success") {
       toast({ title: "Payment successful! 🎉", description: `Transaction ID: ${searchParams.get("txn") || ""}` });
-      queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey({ caseId: activeCase?.id }) });
+      queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey({}) });
     } else if (payuStatus === "failed") {
       toast({ title: "Payment failed", description: "Your payment was not completed. Please try again.", variant: "destructive" });
     } else if (payuStatus === "error") {
@@ -79,6 +81,17 @@ export default function DashboardPayments() {
       submitPayUForm(payuUrl, params);
     } catch (e) {
       toast({ title: "Payment initiation failed", description: (e as Error).message, variant: "destructive" });
+      setPayLoading(false);
+    }
+  };
+  const resumeQuotePayment = async () => {
+    if (!payment?.quoteSnapshotId) return;
+    setPayLoading(true);
+    try {
+      const checkout = await quoteCheckout.mutateAsync({ id: payment.quoteSnapshotId, data: { accept: true } });
+      submitPayUForm(checkout.payuUrl, checkout.params);
+    } catch (error) {
+      toast({ title: "Could not resume secure payment", description: (error as Error).message, variant: "destructive" });
       setPayLoading(false);
     }
   };
@@ -146,7 +159,7 @@ export default function DashboardPayments() {
       ) : !payment ? (
         <div className="glass-card rounded-2xl p-10 text-center text-muted-foreground">
           <CreditCard size={40} className="mx-auto mb-3 text-primary/30" />
-          <p>No payment details available yet. Our team will update this once your case is registered.</p>
+          <p>No payment details available yet. Accept an approved quote from Credit Report to begin secure checkout.</p>
           {activeCase && (
             <Button variant="outline" className="mt-4 gap-2" onClick={handleGenerateAgreement}>
               <FileSignature size={15} /> Download Agreement
@@ -185,10 +198,16 @@ export default function DashboardPayments() {
                 <p className="text-sm text-green-800 font-medium">Full payment received. Thank you!</p>
               </div>
             )}
+            {payment.verificationStatus === "PENDING" && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-center gap-2">
+                <Loader2 size={18} className="text-blue-600 animate-spin" />
+                <p className="text-sm text-blue-800 font-medium">Payment is awaiting PayU verification. A case is created only after verification succeeds.</p>
+              </div>
+            )}
           </div>
 
           {/* Pay Now card */}
-          {pendingAmount > 0 && (
+            {pendingAmount > 0 && payment.paymentSource !== "QUOTE_PAYU" && (
             <div className="glass-card rounded-2xl p-6 border-2 border-primary/20">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div>
@@ -217,6 +236,17 @@ export default function DashboardPayments() {
               </div>
             </div>
           )}
+            {payment.paymentSource === "QUOTE_PAYU" && payment.verificationStatus !== "VERIFIED" && (
+              <div className="glass-card rounded-2xl p-6 border-2 border-primary/20 flex items-center justify-between gap-4 flex-wrap">
+                <div>
+                  <h3 className="font-semibold text-lg">{payment.verificationStatus === "FAILED" ? "Payment attempt failed" : "Resume secure payment"}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">Your accepted quote remains available until PayU verifies a successful payment.</p>
+                </div>
+                <Button className="btn-gradient text-white gap-2" onClick={resumeQuotePayment} disabled={payLoading || quoteCheckout.isPending}>
+                  {payLoading || quoteCheckout.isPending ? <><Loader2 size={16} className="animate-spin" /> Preparing...</> : <><CreditCard size={16} /> {payment.verificationStatus === "FAILED" ? "Try again" : "Resume checkout"}</>}
+                </Button>
+              </div>
+            )}
 
           {/* Documents */}
           <div className="glass-card rounded-2xl p-6">
@@ -239,10 +269,11 @@ export default function DashboardPayments() {
           <div className="glass-card rounded-2xl p-6">
             <h3 className="font-semibold mb-3">Payment Details</h3>
             <div className="grid sm:grid-cols-2 gap-4 text-sm">
-              <div><div className="text-muted-foreground text-xs">Case Number</div><div className="font-medium">{activeCase?.caseNumber}</div></div>
+              <div><div className="text-muted-foreground text-xs">Case Number</div><div className="font-medium">{payment.caseNumber || activeCase?.caseNumber || "Created after verification"}</div></div>
               <div><div className="text-muted-foreground text-xs">Service Type</div><div className="font-medium">{activeCase?.serviceType?.replace(/_/g, " ")}</div></div>
               <div><div className="text-muted-foreground text-xs">Payment Status</div><div className="font-medium">{payment.paymentStatus}</div></div>
               <div><div className="text-muted-foreground text-xs">Payment ID</div><div className="font-medium font-mono">#{payment.id}</div></div>
+              <div><div className="text-muted-foreground text-xs">Verification</div><div className="font-medium">{payment.verificationStatus || "NOT APPLICABLE"}</div></div>
             </div>
           </div>
         </>

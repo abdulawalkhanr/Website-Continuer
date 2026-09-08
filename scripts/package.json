@@ -6,6 +6,7 @@
   "scripts": {
     "hello": "tsx ./src/hello.ts",
     "seed": "tsx ./src/seed.ts",
+    "verify-payu-quote-flow": "tsx ./src/verify-payu-quote-flow.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

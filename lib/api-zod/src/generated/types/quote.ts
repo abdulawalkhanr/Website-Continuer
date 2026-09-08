@@ -14,5 +14,7 @@ export interface Quote {
   items: QuoteItemsItem[];
   total: number;
   ruleVersion: number;
+  /** @nullable */
+  acceptedAt?: string | null;
   createdAt: string;
 }
