@@ -11,8 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Link } from "wouter";
-import { FileText, Search, Phone, Plus, Pencil, Trash2, UserCheck } from "lucide-react";
+import { Search, Phone, Plus, Pencil, Trash2, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type Customer = { id: number; name: string; email: string; mobile: string; city?: string | null; createdAt: string };
@@ -157,11 +156,6 @@ export default function AdminCustomers() {
                 <TableCell className="text-xs text-muted-foreground">{new Date(customer.createdAt).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 justify-end">
-                    <Link href={`/admin/customers/${customer.id}/reports`}>
-                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="Credit Reports">
-                        <FileText size={13} className="text-primary" />
-                      </Button>
-                    </Link>
                     <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditCustomer(customer as Customer)} title="Edit">
                       <Pencil size={13} className="text-primary" />
                     </Button>

@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { LayoutDashboard, FileText, CreditCard, MessageSquare, Bell, LogOut, Menu, X, ChevronRight } from "lucide-react";
 import { useState } from "react";
-import { useTranslation } from "@/contexts/TranslationContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { isStandaloneApp } from "@/lib/pwa";
 
@@ -15,7 +14,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const standalone = isStandaloneApp();
-  const { t } = useTranslation();
 
   const handleLogout = () => {
     logout.mutate(undefined, {
@@ -27,13 +25,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   };
 
   const navItems = [
-    { href: "/dashboard", label: t("nav.overview"), icon: LayoutDashboard },
-    { href: "/dashboard/case", label: t("nav.myCase"), icon: FileText },
-    { href: "/dashboard/credit-report", label: t("nav.creditReport"), icon: FileText },
-    { href: "/dashboard/documents", label: t("nav.documents"), icon: FileText },
-    { href: "/dashboard/payments", label: t("nav.payments"), icon: CreditCard },
-    { href: "/dashboard/tickets", label: t("nav.support"), icon: MessageSquare },
-    { href: "/dashboard/notifications", label: t("nav.notifications"), icon: Bell },
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/dashboard/case", label: "My Case", icon: FileText },
+    { href: "/dashboard/documents", label: "Documents", icon: FileText },
+    { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
+    { href: "/dashboard/tickets", label: "Support Tickets", icon: MessageSquare },
+    { href: "/dashboard/notifications", label: "Notifications", icon: Bell },
   ];
 
   const SidebarContent = () => (
@@ -83,7 +80,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           {!standalone && (
             <Link href="/">
               <div className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-muted-foreground hover:bg-muted cursor-pointer transition-colors mb-2">
-                {t("nav.backToWebsite")}
+                Back to Website
               </div>
             </Link>
           )}
@@ -93,7 +90,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             onClick={handleLogout}
           >
             <LogOut size={18} className="mr-2" />
-            {t("nav.logout")}
+            Log out
           </Button>
         </div>
       </div>
