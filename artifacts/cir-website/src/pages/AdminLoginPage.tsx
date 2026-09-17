@@ -31,8 +31,17 @@ export default function AdminLoginPage() {
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
         setLocation("/admin");
       },
-      onError: () => {
-        toast({ title: "Invalid credentials", variant: "destructive" });
+      onError: (error: unknown) => {
+        const response = (error as { response?: { status?: number; data?: { error?: string } } })?.response;
+        if (response?.status && response.status >= 500) {
+          toast({
+            title: "Login service temporarily unavailable",
+            description: "Please try again after the production database is available.",
+            variant: "destructive",
+          });
+          return;
+        }
+        toast({ title: response?.data?.error || "Invalid credentials", variant: "destructive" });
       },
     });
   };
