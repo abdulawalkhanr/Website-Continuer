@@ -27,23 +27,6 @@ export interface RegisterInput {
   city?: string;
 }
 
-export interface OtpSendInput {
-  /** @pattern ^[0-9]{10}$ */
-  mobile: string;
-}
-
-export interface OtpVerifyInput {
-  /** @pattern ^[0-9]{10}$ */
-  mobile: string;
-  /** @pattern ^[0-9]{6}$ */
-  otp: string;
-}
-
-export interface OtpSendResponse {
-  success: boolean;
-  message: string;
-}
-
 export interface ProfileUpdate {
   name?: string;
   mobile?: string;

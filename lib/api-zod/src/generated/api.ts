@@ -51,48 +51,6 @@ export const RegisterBody = zod.object({
 
 
 /**
- * @summary Send a login OTP to an existing customer
- */
-export const sendOtpBodyMobileRegExp = new RegExp('^[0-9]{10}$');
-
-
-export const SendOtpBody = zod.object({
-  "mobile": zod.string().regex(sendOtpBodyMobileRegExp)
-})
-
-export const SendOtpResponse = zod.object({
-  "success": zod.boolean(),
-  "message": zod.string()
-})
-
-
-/**
- * @summary Verify a customer login OTP
- */
-export const verifyOtpBodyMobileRegExp = new RegExp('^[0-9]{10}$');
-export const verifyOtpBodyOtpRegExp = new RegExp('^[0-9]{6}$');
-
-
-export const VerifyOtpBody = zod.object({
-  "mobile": zod.string().regex(verifyOtpBodyMobileRegExp),
-  "otp": zod.string().regex(verifyOtpBodyOtpRegExp)
-})
-
-export const VerifyOtpResponse = zod.object({
-  "user": zod.object({
-  "id": zod.number(),
-  "email": zod.string(),
-  "name": zod.string(),
-  "mobile": zod.string().nullish(),
-  "city": zod.string().nullish(),
-  "role": zod.enum(['OWNER', 'MANAGER', 'EXECUTIVE', 'SUPPORT', 'CUSTOMER', 'STAFF']),
-  "createdAt": zod.string()
-}),
-  "token": zod.string()
-})
-
-
-/**
  * @summary Get current user
  */
 export const GetMeResponse = zod.object({
