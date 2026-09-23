@@ -54,7 +54,9 @@ export default function LoginPage() {
   };
 
   const getApiError = (error: unknown, fallback: string) =>
-    (error as { response?: { data?: { error?: string } } })?.response?.data?.error || fallback;
+    (error as { data?: { error?: string }; response?: { data?: { error?: string } } })?.data?.error ||
+    (error as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+    fallback;
 
   const handleSendOtp = () => {
     const phone = mobile.replace(/\D/g, "");

@@ -36,10 +36,17 @@ function otpMatches(expectedHash: string, mobile: string, otp: string): boolean 
   return timingSafeEqual(Buffer.from(expectedHash, "hex"), Buffer.from(actualHash, "hex"));
 }
 
-async function sendSmsOtp(mobile: string, otp: string): Promise<boolean> {
+interface SmsSendResult {
+  sent: boolean;
+  providerStatus?: string;
+  providerMessage?: string;
+  httpStatus?: number;
+}
+
+async function sendSmsOtp(mobile: string, otp: string): Promise<SmsSendResult> {
   const authKey = process.env.APITXT_AUTH_KEY;
   if (!authKey) {
-    return false;
+    return { sent: false, providerStatus: "MISSING_SERVER_KEY" };
   }
 
   const body = new URLSearchParams({
@@ -65,19 +72,27 @@ async function sendSmsOtp(mobile: string, otp: string): Promise<boolean> {
       res.on("data", (c) => (data += c));
       res.on("end", () => {
         try {
-          const json = JSON.parse(data) as { status?: string };
-          resolve(
-            (res.statusCode ?? 500) >= 200 &&
-            (res.statusCode ?? 500) < 300 &&
-            json.status?.toLowerCase() === "success",
-          );
+          const json = JSON.parse(data) as { status?: string; message?: string };
+          const httpStatus = res.statusCode ?? 500;
+          resolve({
+            sent:
+              httpStatus >= 200 &&
+              httpStatus < 300 &&
+              json.status?.toLowerCase() === "success",
+            providerStatus: json.status,
+            providerMessage: json.message,
+            httpStatus,
+          });
         } catch {
-          resolve(false);
+          resolve({ sent: false, providerStatus: "INVALID_RESPONSE", httpStatus: res.statusCode });
         }
       });
     });
     reqHttp.setTimeout(10_000, () => reqHttp.destroy());
-    reqHttp.on("error", () => resolve(false));
+    reqHttp.on("error", (error) => resolve({
+      sent: false,
+      providerStatus: error.message === "socket hang up" ? "TIMEOUT" : "NETWORK_ERROR",
+    }));
     reqHttp.write(body);
     reqHttp.end();
   });
@@ -123,12 +138,17 @@ router.post("/auth/otp/send", async (req, res): Promise<void> => {
     },
   });
 
-  const sent = await sendSmsOtp(phone, otp);
-  if (!sent) {
+  const smsResult = await sendSmsOtp(phone, otp);
+  if (!smsResult.sent) {
     await db.delete(otpChallengesTable).where(
       and(eq(otpChallengesTable.mobile, phone), eq(otpChallengesTable.otpHash, otpHash)),
     );
-    req.log.error({ mobileSuffix: phone.slice(-4) }, "API TXT failed to send login OTP");
+    req.log.error({
+      mobileSuffix: phone.slice(-4),
+      providerStatus: smsResult.providerStatus,
+      providerMessage: smsResult.providerMessage,
+      providerHttpStatus: smsResult.httpStatus,
+    }, "API TXT failed to send login OTP");
     res.status(502).json({ error: "We could not send the OTP right now. Please try again shortly." });
     return;
   }
