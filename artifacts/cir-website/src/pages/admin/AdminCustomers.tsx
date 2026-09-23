@@ -16,6 +16,14 @@ import { useToast } from "@/hooks/use-toast";
 
 type Customer = { id: number; name: string; email: string; mobile: string; city?: string | null; createdAt: string };
 
+function getApiError(error: unknown, fallback: string): string {
+  const apiError = error as {
+    data?: { error?: string };
+    response?: { data?: { error?: string } };
+  };
+  return apiError.data?.error || apiError.response?.data?.error || fallback;
+}
+
 function CustomerForm({ initial, onSave, onCancel, isSaving }: {
   initial: Partial<Customer & { password: string }>;
   onSave: (data: Record<string, string>) => void;
@@ -79,7 +87,10 @@ export default function AdminCustomers() {
   const handleCreate = (form: Record<string, string>) => {
     createCustomer.mutate({ data: { name: form.name, email: form.email, mobile: form.mobile, city: form.city || undefined, password: form.password } }, {
       onSuccess: () => { refreshList(); setShowCreate(false); toast({ title: "Customer created" }); },
-      onError: (e: unknown) => toast({ title: (e as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to create customer", variant: "destructive" }),
+      onError: (error: unknown) => toast({
+        title: getApiError(error, "Failed to create customer"),
+        variant: "destructive",
+      }),
     });
   };
 
@@ -94,7 +105,10 @@ export default function AdminCustomers() {
         setEditCustomer(null);
         toast({ title: form.password ? "Customer and password updated" : "Customer updated" });
       },
-      onError: (e: unknown) => toast({ title: (e as { response?: { data?: { error?: string } } })?.response?.data?.error || "Failed to update customer", variant: "destructive" }),
+      onError: (error: unknown) => toast({
+        title: getApiError(error, "Failed to update customer"),
+        variant: "destructive",
+      }),
     });
   };
 

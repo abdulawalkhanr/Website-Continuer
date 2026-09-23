@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, casesTable, paymentsTable, ticketsTable, documentsTable, notificationsTable } from "@workspace/db";
-import { eq, desc, like, or, and } from "drizzle-orm";
+import { eq, desc, like, or, and, ne } from "drizzle-orm";
 import { createHash } from "crypto";
 import {
   ListCustomersQueryParams, CreateCustomerBody, UpdateCustomerParams, UpdateCustomerBody, DeleteCustomerParams
@@ -47,8 +47,17 @@ router.post("/customers", async (req, res): Promise<void> => {
   const email = data.email.toLowerCase().trim();
   const mobile = normalisePhone(data.mobile);
   if (mobile.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit Indian mobile number." }); return; }
-  const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-  if (existing.length > 0) { res.status(409).json({ error: "A customer with this email already exists." }); return; }
+  const [existing] = await db.select({
+    email: usersTable.email,
+    mobile: usersTable.mobile,
+  }).from(usersTable).where(
+    or(eq(usersTable.email, email), eq(usersTable.mobile, mobile)),
+  ).limit(1);
+  if (existing) {
+    const field = existing.email === email ? "email address" : "mobile number";
+    res.status(409).json({ error: `An account with this ${field} already exists.` });
+    return;
+  }
   const passwordHash = hashPassword(password);
   const [user] = await db.insert(usersTable).values({ ...data, email, mobile, passwordHash, role: "CUSTOMER" }).returning();
   const { passwordHash: _, ...safe } = user;
@@ -77,6 +86,23 @@ router.patch("/customers/:id", async (req, res): Promise<void> => {
   if (updateData.mobile) {
     updateData.mobile = normalisePhone(updateData.mobile);
     if (updateData.mobile.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit Indian mobile number." }); return; }
+  }
+  if (updateData.email || updateData.mobile) {
+    const conditions = [];
+    if (updateData.email) conditions.push(eq(usersTable.email, updateData.email));
+    if (updateData.mobile) conditions.push(eq(usersTable.mobile, updateData.mobile));
+    const [existing] = await db.select({
+      email: usersTable.email,
+      mobile: usersTable.mobile,
+    }).from(usersTable).where(and(
+      ne(usersTable.id, pParsed.data.id),
+      or(...conditions),
+    )).limit(1);
+    if (existing) {
+      const field = updateData.email && existing.email === updateData.email ? "email address" : "mobile number";
+      res.status(409).json({ error: `Another account with this ${field} already exists.` });
+      return;
+    }
   }
   if (password) updateData.passwordHash = hashPassword(password);
   const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, pParsed.data.id)).returning();
