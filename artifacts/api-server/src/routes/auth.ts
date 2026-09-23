@@ -37,37 +37,48 @@ function otpMatches(expectedHash: string, mobile: string, otp: string): boolean 
 }
 
 async function sendSmsOtp(mobile: string, otp: string): Promise<boolean> {
-  const apiKey = process.env.FAST2SMS_API_KEY;
-  if (!apiKey) {
+  const authKey = process.env.APITXT_AUTH_KEY;
+  if (!authKey) {
     return false;
   }
+
+  const body = new URLSearchParams({
+    authkey: authKey,
+    mobile: `91${mobile}`,
+    otp,
+    channel: "sms",
+  }).toString();
+
   return new Promise((resolve) => {
-    const params = new URLSearchParams({
-      authorization: apiKey,
-      variables_values: otp,
-      route: "otp",
-      numbers: mobile,
-    });
     const options = {
-      hostname: "www.fast2sms.com",
-      path: `/dev/bulkV2?${params.toString()}`,
-      method: "GET",
-      headers: { "cache-control": "no-cache" },
+      hostname: "apitxt.com",
+      path: "/api/sendOTP",
+      method: "POST",
+      headers: {
+        "content-type": "application/x-www-form-urlencoded",
+        "content-length": Buffer.byteLength(body),
+        "cache-control": "no-cache",
+      },
     };
     const reqHttp = https.request(options, (res) => {
       let data = "";
       res.on("data", (c) => (data += c));
       res.on("end", () => {
         try {
-           const json = JSON.parse(data) as { return?: boolean };
-           resolve(json.return === true);
+          const json = JSON.parse(data) as { status?: string };
+          resolve(
+            (res.statusCode ?? 500) >= 200 &&
+            (res.statusCode ?? 500) < 300 &&
+            json.status?.toLowerCase() === "success",
+          );
         } catch {
-           resolve(false);
+          resolve(false);
         }
       });
     });
     reqHttp.setTimeout(10_000, () => reqHttp.destroy());
     reqHttp.on("error", () => resolve(false));
+    reqHttp.write(body);
     reqHttp.end();
   });
 }
@@ -117,7 +128,7 @@ router.post("/auth/otp/send", async (req, res): Promise<void> => {
     await db.delete(otpChallengesTable).where(
       and(eq(otpChallengesTable.mobile, phone), eq(otpChallengesTable.otpHash, otpHash)),
     );
-    req.log.error({ mobileSuffix: phone.slice(-4) }, "Fast2SMS failed to send login OTP");
+    req.log.error({ mobileSuffix: phone.slice(-4) }, "API TXT failed to send login OTP");
     res.status(502).json({ error: "We could not send the OTP right now. Please try again shortly." });
     return;
   }
