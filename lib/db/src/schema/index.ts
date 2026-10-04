@@ -3,6 +3,7 @@ export * from "./leads";
 export * from "./cases";
 export * from "./documents";
 export * from "./payments";
+export * from "./payu-transactions";
 export * from "./referrals";
 export * from "./tickets";
 export * from "./notifications";

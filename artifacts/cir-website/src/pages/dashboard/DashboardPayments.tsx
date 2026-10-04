@@ -37,7 +37,7 @@ export default function DashboardPayments() {
   const { data: user } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
   const { data: cases } = useListCases(user ? { customerId: user.id } : {}, { query: { enabled: !!user, queryKey: getListCasesQueryKey(user ? { customerId: user.id } : {}) } });
   const activeCase = cases?.[0];
-  const { data: payments, isLoading } = useListPayments({ caseId: activeCase?.id }, { query: { enabled: !!activeCase, queryKey: getListPaymentsQueryKey({ caseId: activeCase?.id }) } });
+  const { data: payments, isLoading } = useListPayments({ caseId: activeCase?.id }, { query: { enabled: !!activeCase, queryKey: getListPaymentsQueryKey({ caseId: activeCase?.id }), refetchInterval: 5000, refetchOnWindowFocus: true, staleTime: 0 } });
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [payLoading, setPayLoading] = useState(false);
@@ -49,17 +49,20 @@ export default function DashboardPayments() {
   const paidPct = serviceFee > 0 ? Math.round((advancePaid / serviceFee) * 100) : 0;
 
   // Handle PayU redirect-back status
+  const payuStatus = searchParams.get("payu");
+  const transactionId = searchParams.get("txn");
   useEffect(() => {
-    const payuStatus = searchParams.get("payu");
     if (payuStatus === "success") {
-      toast({ title: "Payment successful! 🎉", description: `Transaction ID: ${searchParams.get("txn") || ""}` });
-      queryClient.invalidateQueries({ queryKey: getListPaymentsQueryKey({ caseId: activeCase?.id }) });
+      toast({ title: "Payment successful!", description: `Transaction ID: ${transactionId || ""}` });
+      queryClient.invalidateQueries({ queryKey: ["/api/payments"] });
     } else if (payuStatus === "failed") {
       toast({ title: "Payment failed", description: "Your payment was not completed. Please try again.", variant: "destructive" });
+    } else if (payuStatus === "pending") {
+      toast({ title: "Payment processing", description: "Waiting for PayU confirmation. Your payment status will refresh automatically." });
     } else if (payuStatus === "error") {
       toast({ title: "Payment error", description: "Something went wrong. Please contact support.", variant: "destructive" });
     }
-  }, [searchParams]);
+  }, [payuStatus, transactionId, queryClient, toast]);
 
   const handlePayNow = async () => {
     if (!payment) return;

@@ -1,8 +1,9 @@
 import { Router } from "express";
 import crypto from "crypto";
 import { db } from "@workspace/db";
-import { paymentsTable, casesTable, usersTable } from "@workspace/db";
+import { paymentsTable, casesTable, usersTable, payuTransactionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
+import { verifyPayuHash, recordPayuResult } from "../lib/payu";
 
 const router = Router();
 
@@ -32,22 +33,22 @@ function generateHash(params: {
   return sha512(hashStr);
 }
 
-// Verify PayU response hash: sha512(salt|status||||||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
-function verifyHash(body: Record<string, string>) {
-  const hashStr = `${PAYU_SALT}|${body.status}||||||||||${body.udf5 || ""}|${body.udf4 || ""}|${body.udf3 || ""}|${body.udf2 || ""}|${body.udf1 || ""}|${body.email}|${body.firstname}|${body.productinfo}|${body.amount}|${body.txnid}|${PAYU_KEY}`;
-  return sha512(hashStr) === body.hash;
-}
-
 function getBaseUrl(req: import("express").Request) {
-  const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
+  if (process.env.NODE_ENV === "production") {
+    const url = process.env.PAYU_CALLBACK_BASE_URL;
+    if (!url) throw new Error("PAYU_CALLBACK_BASE_URL is not configured");
+    return new URL(url).origin;
+  }
+  const domain = process.env.REPLIT_DEV_DOMAIN;
   if (domain) return `https://${domain}`;
   return `${req.protocol}://${req.get("host")}`;
 }
 
 // POST /payu/initiate — create a PayU transaction for a payment record
 router.post("/payu/initiate", async (req, res): Promise<void> => {
+  if (!PAYU_KEY || !PAYU_SALT) { res.status(503).json({ error: "Payment gateway is not configured" }); return; }
   const { paymentId } = req.body as { paymentId?: number };
-  if (!paymentId) { res.status(400).json({ error: "paymentId required" }); return; }
+  if (!Number.isSafeInteger(paymentId) || !paymentId || paymentId <= 0) { res.status(400).json({ error: "Valid paymentId required" }); return; }
 
   const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.id, paymentId)).limit(1);
   if (!payment) { res.status(404).json({ error: "Payment not found" }); return; }
@@ -69,8 +70,11 @@ router.post("/payu/initiate", async (req, res): Promise<void> => {
   const mobile = user?.mobile || "9999999999";
   const baseUrl = getBaseUrl(req);
 
-  // Save txnid
-  await db.update(paymentsTable).set({ payuTxnId: txnid }).where(eq(paymentsTable.id, paymentId));
+  // Persist each attempt, so a retry does not lose an earlier confirmation.
+  await db.transaction(async tx => {
+    await tx.insert(payuTransactionsTable).values({ txnid, paymentId, amount });
+    await tx.update(paymentsTable).set({ payuTxnId: txnid }).where(eq(paymentsTable.id, paymentId));
+  });
 
   const hash = generateHash({ txnid, amount, productinfo, firstname, email });
 
@@ -96,46 +100,25 @@ router.post("/payu/initiate", async (req, res): Promise<void> => {
 // POST /payu/callback — PayU posts here after payment
 router.post("/payu/callback", async (req, res): Promise<void> => {
   const body = req.body as Record<string, string>;
-
-  // Verify hash
-  if (!verifyHash(body)) {
-    res.redirect("/dashboard/payments?payu=error&reason=hash_mismatch");
+  const webhook = req.query.webhook === "1";
+  if (!body || !verifyPayuHash(body, PAYU_KEY, PAYU_SALT)) {
+    if (webhook) res.status(400).json({ error: "Invalid PayU confirmation" });
+    else res.redirect(303, "/dashboard/payments?payu=error&reason=hash_mismatch");
     return;
   }
-
-  const { txnid, status, mihpayid } = body;
-
-  // Find payment by txnid
-  const [payment] = await db
-    .select()
-    .from(paymentsTable)
-    .where(eq(paymentsTable.payuTxnId, txnid))
-    .limit(1);
-
-  if (!payment) {
-    res.redirect("/dashboard/payments?payu=error&reason=not_found");
-    return;
-  }
-
-  if (status === "success") {
-    const serviceFee = parseFloat(payment.serviceFee as string);
-    const paid = parseFloat(payment.advancePaid as string) + parseFloat(body.amount);
-    const pending = Math.max(0, serviceFee - paid);
-    const paymentStatus = pending <= 0 ? "PAID" : "PARTIAL";
-
-    await db
-      .update(paymentsTable)
-      .set({
-        advancePaid: String(paid),
-        pendingAmount: String(pending),
-        paymentStatus,
-        payuTxnId: mihpayid || txnid,
-      })
-      .where(eq(paymentsTable.id, payment.id));
-
-    res.redirect(`/dashboard/payments?payu=success&txn=${mihpayid || txnid}`);
-  } else {
-    res.redirect(`/dashboard/payments?payu=failed&txn=${txnid}`);
+  try {
+    const { result } = await recordPayuResult(body);
+    if (webhook) {
+      const statusCode = result === "not_found" ? 404 : result === "amount_mismatch" ? 400 : 200;
+      res.status(statusCode).json({ result });
+    } else {
+      const outcome = result === "not_found" || result === "amount_mismatch" ? "error" : result;
+      res.redirect(303, `/dashboard/payments?payu=${outcome}&txn=${encodeURIComponent(body.mihpayid || body.txnid)}`);
+    }
+  } catch {
+    req.log.error("Could not save PayU confirmation; payment confirmation must be retried");
+    if (webhook) res.status(503).json({ error: "Payment confirmation could not be saved. Retry required." });
+    else res.redirect(303, "/dashboard/payments?payu=error&reason=save_failed");
   }
 });
 

@@ -42,8 +42,8 @@ const STATUS_COLORS: Record<string, string> = {
 const PAYMENT_STATUSES = ["PENDING", "PARTIAL", "PAID"];
 
 export default function AdminPayments() {
-  const { data: payments, isLoading } = useListPayments({}, { query: { queryKey: getListPaymentsQueryKey({}) } });
-  const { data: stats } = useGetPaymentStats({ query: { queryKey: getGetPaymentStatsQueryKey() } });
+  const { data: payments, isLoading } = useListPayments({}, { query: { queryKey: getListPaymentsQueryKey({}), refetchInterval: 5000, refetchOnWindowFocus: true, staleTime: 0 } });
+  const { data: stats } = useGetPaymentStats({ query: { queryKey: getGetPaymentStatsQueryKey(), refetchInterval: 5000, refetchOnWindowFocus: true, staleTime: 0 } });
   const { data: cases } = useListCases({});
   const createPayment = useCreatePayment();
   const updatePayment = useUpdatePayment();
