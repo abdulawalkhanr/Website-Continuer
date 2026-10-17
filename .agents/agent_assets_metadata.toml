@@ -6,45 +6,67 @@ id = "qwEWKTPmROWbOUlrYKweP"
 uri = "file://exports/instagram-ads/ad1-loan-rejected.jpg"
 type = "image"
 title = "Ad 1 – Loan Rejected? (Pain Point)"
+logical_id = "afd90b35-11d0-41ca-ac50-0e81aa8f5ecc"
 
 [[outputs]]
 id = "lRTeIHRb7M8uwIhV0q4Na"
 uri = "file://exports/instagram-ads/ad2-boost-cibil-score.jpg"
 type = "image"
 title = "Ad 2 – Boost CIBIL Score in 90 Days (Outcome)"
+logical_id = "9ef0492f-cff3-4cfd-bd47-59485c6f7eae"
 
 [[outputs]]
 id = "z4009FXq7fVNKQZH0wCHt"
 uri = "file://exports/instagram-ads/ad3-500-families-helped.jpg"
 type = "image"
 title = "Ad 3 – 500+ Families Helped (Social Proof)"
+logical_id = "dff52783-0f65-43a2-991d-8bb7b84ca182"
 
 [[outputs]]
 id = "ZhARDMa2oPUIALP9kgueL"
 uri = "file://exports/instagram-ads/slide1-hook.jpg"
 type = "image"
 title = "Slide 1 – Hook (Low CIBIL Score Ruining Dreams?)"
+logical_id = "8d1617a7-1ae6-43ff-b77e-9829172dda49"
 
 [[outputs]]
 id = "3hSx9-S0e54jqn_5QxHMN"
 uri = "file://exports/instagram-ads/slide2-problem.jpg"
 type = "image"
 title = "Slide 2 – The Problem (Loans Rejected)"
+logical_id = "0bb5c3b0-8548-4bc1-8f18-4ca7790ce300"
 
 [[outputs]]
 id = "q19mhtCK7-ZPCCvaPAuqA"
 uri = "file://exports/instagram-ads/slide3-solution.jpg"
 type = "image"
 title = "Slide 3 – Our Solution (We Repair Your Credit Report)"
+logical_id = "b7f021de-40fc-4696-b713-ecce700c3bc9"
 
 [[outputs]]
 id = "sz-DGxV4o-WPsqE52KVKC"
 uri = "file://exports/instagram-ads/slide4-services.jpg"
 type = "image"
 title = "Slide 4 – Services List"
+logical_id = "79a48a9e-916a-47fc-a23c-85d12f599423"
 
 [[outputs]]
 id = "HPZuiLthC855JIw3XkJkw"
 uri = "file://exports/instagram-ads/slide5-cta.jpg"
 type = "image"
 title = "Slide 5 – CTA (WhatsApp + Call)"
+logical_id = "df5edd17-7eed-409c-921b-68e57ac3001f"
+
+[[outputs]]
+id = "yl3bQi0QiPXZeAijuujAw"
+uri = "file://exports/cir-consultation-service-migration.zip"
+type = "unspecified"
+title = "CIR website migration source ZIP"
+description = "Verified source package with hosting setup notes. Replit workspace metadata, secrets, build output, and demo seed passwords are excluded or sanitized."
+logical_id = "21ac3fee-302a-4036-bac9-f106707da70e"
+content_hash = "sha256:b05f6814e64a6b971e9b6b301edd416850fd792ed7ec66792ff6c0147a718224"
+size = 971351
+mtime_ms = 1792252355593
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e4e9c932-98dd-4169-986f-3332c0eec9e7/21ac3fee-302a-4036-bac9-f106707da70e/6a847c4e-a695-43db-8982-d505ded0c531"
+storage_version_token = "1792252367568970"
+content_type = "application/octet-stream"
