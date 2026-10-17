@@ -1,76 +1,127 @@
-import { createHash } from "crypto";
-import { db } from "@workspace/db";
-import { usersTable, staffProfilesTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
 import type { Request } from "express";
+import { promisify } from "node:util";
+import { and, eq } from "drizzle-orm";
+import { db, casesTable, staffAssignmentsTable, staffProfilesTable, usersTable } from "@workspace/db";
+import { getSession } from "./session";
 
-export function hashPassword(password: string): string {
-  return createHash("sha256").update(password + "cir_salt_2026").digest("hex");
-}
-
-type SessionReq = { session: Record<string, unknown>; sessionId: string };
-
-export function getSession(req: object): Record<string, unknown> {
-  return (req as unknown as SessionReq).session;
-}
-
-export function getSessionUserId(req: Request): number | undefined {
-  return getSession(req).userId as number | undefined;
-}
-
+const scrypt = promisify(scryptCallback);
+const SCRYPT_N = 16_384;
+const SCRYPT_R = 8;
+const SCRYPT_P = 1;
+const KEY_LENGTH = 32;
 const ADMIN_ROLES = ["OWNER", "MANAGER", "EXECUTIVE"] as const;
 const STAFF_ROLE = "STAFF" as const;
 
-export async function requireAdmin(req: Request): Promise<{ id: number; role: string } | null> {
-  const userId = getSessionUserId(req);
-  if (!userId) return null;
+export type AuthPrincipal = { id: number; role: string };
+
+export async function hashPassword(password: string): Promise<string> {
+  const salt = randomBytes(16);
+  const derived = await scrypt(password, salt, KEY_LENGTH, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: 64 * 1024 * 1024 }) as Buffer;
+  return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString("hex")}$${derived.toString("hex")}`;
+}
+
+export async function verifyPassword(password: string, stored: string): Promise<{ valid: boolean; needsUpgrade: boolean }> {
+  const parts = stored.split("$");
+  if (parts[0] === "scrypt" && parts.length === 6) {
+    const [, n, r, p, saltHex, hashHex] = parts;
+    const N = Number(n);
+    const R = Number(r);
+    const P = Number(p);
+    if (
+      !Number.isSafeInteger(N) || N < 16_384 || N > 131_072 ||
+      !Number.isSafeInteger(R) || R < 1 || R > 16 ||
+      !Number.isSafeInteger(P) || P < 1 || P > 4 ||
+      !/^[a-f0-9]{32}$/.test(saltHex) ||
+      !/^[a-f0-9]{64}$/.test(hashHex)
+    ) return { valid: false, needsUpgrade: false };
+
+    const expected = Buffer.from(hashHex, "hex");
+    const actual = await scrypt(password, Buffer.from(saltHex, "hex"), expected.length, {
+      N, r: R, p: P, maxmem: 64 * 1024 * 1024,
+    }) as Buffer;
+    return { valid: timingSafeEqual(expected, actual), needsUpgrade: false };
+  }
+
+  // Existing accounts use this legacy format. Keep it verifiable so a valid login
+  // can transparently replace the weak hash with a per-user scrypt hash.
+  if (/^[a-f0-9]{64}$/.test(stored)) {
+    const expected = Buffer.from(stored, "hex");
+    const actual = createHash("sha256").update(password + "cir_salt_2026").digest();
+    return { valid: timingSafeEqual(expected, actual), needsUpgrade: true };
+  }
+  return { valid: false, needsUpgrade: false };
+}
+
+export async function getRequestUser(req: Request): Promise<AuthPrincipal | null> {
+  const request = req as Request & { authPrincipal?: AuthPrincipal };
+  if (request.authPrincipal) return request.authPrincipal;
+  const userId = getSession(req).userId;
+  if (typeof userId !== "number" || !Number.isSafeInteger(userId)) return null;
   const [user] = await db.select({ id: usersTable.id, role: usersTable.role })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
     .limit(1);
-  if (!user) return null;
-  if (!(ADMIN_ROLES as readonly string[]).includes(user.role)) return null;
+  if (!user) {
+    getSession(req).userId = undefined;
+    return null;
+  }
+  request.authPrincipal = user;
   return user;
 }
 
+export function isAdmin(role: string): boolean {
+  return (ADMIN_ROLES as readonly string[]).includes(role);
+}
+
+export async function requireAdmin(req: Request): Promise<AuthPrincipal | null> {
+  const user = await getRequestUser(req);
+  return user && isAdmin(user.role) ? user : null;
+}
+
 async function isStaffProfileActive(userId: number): Promise<boolean> {
-  const [profile] = await db
-    .select({ accountStatus: staffProfilesTable.accountStatus })
+  const [profile] = await db.select({ accountStatus: staffProfilesTable.accountStatus })
     .from(staffProfilesTable)
     .where(eq(staffProfilesTable.userId, userId))
     .limit(1);
   return profile?.accountStatus === "ACTIVE";
 }
 
-export async function requireStaff(req: Request): Promise<{ id: number; role: string } | null> {
-  const userId = getSessionUserId(req);
-  if (!userId) return null;
-  const [user] = await db.select({ id: usersTable.id, role: usersTable.role })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId))
-    .limit(1);
-  if (!user) return null;
-  if (user.role !== STAFF_ROLE) return null;
-  // Enforce live profile status — stale sessions for suspended/inactive/archived accounts are rejected.
-  if (!(await isStaffProfileActive(userId))) return null;
+export async function requireStaff(req: Request): Promise<AuthPrincipal | null> {
+  const user = await getRequestUser(req);
+  if (!user || user.role !== STAFF_ROLE || !(await isStaffProfileActive(user.id))) return null;
   return user;
 }
 
-export async function requireAdminOrStaff(req: Request): Promise<{ id: number; role: string } | null> {
-  const userId = getSessionUserId(req);
-  if (!userId) return null;
-  const [user] = await db.select({ id: usersTable.id, role: usersTable.role })
-    .from(usersTable)
-    .where(eq(usersTable.id, userId))
-    .limit(1);
+export async function requireAdminOrStaff(req: Request): Promise<AuthPrincipal | null> {
+  const user = await getRequestUser(req);
   if (!user) return null;
-  const allowed = [...ADMIN_ROLES, STAFF_ROLE] as string[];
-  if (!allowed.includes(user.role)) return null;
-  // For STAFF callers, also enforce live profile account status.
-  if (user.role === STAFF_ROLE && !(await isStaffProfileActive(userId))) return null;
-  return user;
+  if (isAdmin(user.role)) return user;
+  if (user.role === STAFF_ROLE && await isStaffProfileActive(user.id)) return user;
+  return null;
 }
 
-export function isAdmin(role: string): boolean {
-  return (ADMIN_ROLES as readonly string[]).includes(role);
+export async function userOwnsCase(userId: number, caseId: number): Promise<boolean> {
+  const [caseRow] = await db.select({ id: casesTable.id })
+    .from(casesTable)
+    .where(and(eq(casesTable.id, caseId), eq(casesTable.customerId, userId)))
+    .limit(1);
+  return Boolean(caseRow);
+}
+
+export async function staffHasCase(userId: number, caseId: number): Promise<boolean> {
+  const [assignment] = await db.select({ id: staffAssignmentsTable.id })
+    .from(staffAssignmentsTable)
+    .where(and(
+      eq(staffAssignmentsTable.staffId, userId),
+      eq(staffAssignmentsTable.caseId, caseId),
+      eq(staffAssignmentsTable.isActive, true),
+    ))
+    .limit(1);
+  if (assignment) return true;
+  const [caseRow] = await db.select({ id: casesTable.id })
+    .from(casesTable)
+    .where(and(eq(casesTable.id, caseId), eq(casesTable.assignedToId, userId)))
+    .limit(1);
+  return Boolean(caseRow);
 }

@@ -2,27 +2,42 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { usersTable, notificationsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
-import { createHash } from "crypto";
+import { createHmac, randomBytes, randomInt, timingSafeEqual } from "crypto";
 import https from "https";
 import { LoginBody, RegisterBody, UpdateProfileBody } from "@workspace/api-zod";
+import { hashPassword, verifyPassword } from "../lib/auth";
+import { destroySession, getSession, regenerateSession } from "../lib/session";
 
 const router = Router();
 
-function hashPassword(password: string): string {
-  return createHash("sha256").update(password + "cir_salt_2026").digest("hex");
+async function establishSession(req: object, userId: number): Promise<void> {
+  await regenerateSession(req);
+  getSession(req).userId = userId;
 }
 
-type SessionReq = { session: Record<string, unknown>; sessionId: string };
-function getSession(req: object): Record<string, unknown> {
-  return (req as unknown as SessionReq).session;
-}
-
-// ─── In-memory OTP store ───────────────────────────────────────────────────
-interface OtpEntry { otp: string; expiry: number; attempts: number }
+// OTPs are kept only as keyed digests so a process memory dump does not expose them.
+interface OtpEntry { otpHash: string; expiry: number; attempts: number }
 const otpStore = new Map<string, OtpEntry>();
+const otpPepper = process.env.SESSION_SECRET || "development-only-otp-pepper";
 
 function generateOtp(): string {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 1_000_000));
+}
+
+function digestOtp(phone: string, otp: string): string {
+  return createHmac("sha256", otpPepper).update(`${phone}:${otp}`).digest("hex");
+}
+
+function matchesDigest(expectedHex: string, incomingHex: string): boolean {
+  const expected = Buffer.from(expectedHex, "hex");
+  const incoming = Buffer.from(incomingHex, "hex");
+  return expected.length === incoming.length && timingSafeEqual(expected, incoming);
+}
+
+function constantTimeEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
 }
 
 function normalisePhone(raw: string): string {
@@ -31,12 +46,9 @@ function normalisePhone(raw: string): string {
   return digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
 }
 
-async function sendSmsOtp(mobile: string, otp: string): Promise<{ sent: boolean; devOtp?: string }> {
+async function sendSmsOtp(mobile: string, otp: string): Promise<{ sent: boolean }> {
   const apiKey = process.env.FAST2SMS_API_KEY;
-  if (!apiKey) {
-    // Dev mode — return OTP in response
-    return { sent: false, devOtp: otp };
-  }
+  if (!apiKey) return { sent: false };
   return new Promise((resolve) => {
     const message = `Your CIR Consultation Service OTP is ${otp}. Valid for 10 minutes. Do not share with anyone.`;
     const params = new URLSearchParams({
@@ -60,15 +72,14 @@ async function sendSmsOtp(mobile: string, otp: string): Promise<{ sent: boolean;
           if (json.return === true) {
             resolve({ sent: true });
           } else {
-            // SMS failed — fall back to dev mode so at least it works
-            resolve({ sent: false, devOtp: otp });
+            resolve({ sent: false });
           }
         } catch {
-          resolve({ sent: false, devOtp: otp });
+          resolve({ sent: false });
         }
       });
     });
-    reqHttp.on("error", () => resolve({ sent: false, devOtp: otp }));
+    reqHttp.on("error", () => resolve({ sent: false }));
     // Suppress "message" field warning from Fast2SMS for OTP route
     void message;
     reqHttp.end();
@@ -90,15 +101,19 @@ router.post("/auth/otp/send", async (req, res): Promise<void> => {
   }
 
   const otp = generateOtp();
-  otpStore.set(phone, { otp, expiry: Date.now() + 10 * 60 * 1000, attempts: 0 });
+  otpStore.set(phone, { otpHash: digestOtp(phone, otp), expiry: Date.now() + 10 * 60 * 1000, attempts: 0 });
 
   const result = await sendSmsOtp(phone, otp);
 
   if (result.sent) {
     res.json({ success: true, message: `OTP sent to +91 ${phone}` });
   } else {
-    // Dev/fallback mode — include OTP in response (remove in production with a real SMS provider)
-    res.json({ success: true, message: `OTP sent to +91 ${phone}`, devOtp: result.devOtp });
+    otpStore.delete(phone);
+    if (process.env.NODE_ENV === "production") {
+      res.status(503).json({ error: "SMS delivery is unavailable. Please try again later." });
+      return;
+    }
+    res.json({ success: true, message: `Development OTP for +91 ${phone}`, devOtp: otp });
   }
 });
 
@@ -122,7 +137,7 @@ router.post("/auth/otp/verify", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Too many wrong attempts. Please request a new OTP." });
     return;
   }
-  if (entry.otp !== otp.trim()) {
+  if (!matchesDigest(entry.otpHash, digestOtp(phone, otp.trim()))) {
     res.status(400).json({ error: `Incorrect OTP. ${5 - entry.attempts} attempt(s) remaining.` });
     return;
   }
@@ -136,7 +151,7 @@ router.post("/auth/otp/verify", async (req, res): Promise<void> => {
   if (user) {
     // Existing user — log in
     const { passwordHash: _, ...safeUser } = user;
-    getSession(req).userId = user.id;
+    await establishSession(req, user.id);
     res.json({ user: safeUser, isNewUser: false });
     return;
   }
@@ -155,12 +170,12 @@ router.post("/auth/otp/verify", async (req, res): Promise<void> => {
   if (emailCheck) {
     // Account exists with this placeholder — log them in
     const { passwordHash: _, ...safeUser } = emailCheck;
-    getSession(req).userId = emailCheck.id;
+    await establishSession(req, emailCheck.id);
     res.json({ user: safeUser, isNewUser: false });
     return;
   }
 
-  const passwordHash = hashPassword(`otp_${phone}_${Date.now()}`);
+  const passwordHash = await hashPassword(randomBytes(32).toString("hex"));
   const [newUser] = await db.insert(usersTable).values({
     name: name.trim(),
     email: placeholderEmail,
@@ -178,7 +193,7 @@ router.post("/auth/otp/verify", async (req, res): Promise<void> => {
   }).catch(() => {});
 
   const { passwordHash: _, ...safeNewUser } = newUser;
-  getSession(req).userId = newUser.id;
+  await establishSession(req, newUser.id);
   res.status(201).json({ user: safeNewUser, isNewUser: true });
 });
 
@@ -187,24 +202,26 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   const parsed = LoginBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "Email and password required" }); return; }
   const { email, password } = parsed.data;
-  const hash = hashPassword(password);
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email.toLowerCase().trim())).limit(1);
-  const ownerPasswordHash = process.env.ADMIN_OWNER_PASSWORD
-    ? hashPassword(process.env.ADMIN_OWNER_PASSWORD)
-    : null;
-  const validStoredPassword = user?.passwordHash === hash;
+  const passwordVerification = user
+    ? await verifyPassword(password, user.passwordHash)
+    : { valid: false, needsUpgrade: false };
+  const ownerSecret = process.env.ADMIN_OWNER_PASSWORD;
   const validOwnerSecret =
     user?.role === "OWNER" &&
-    ownerPasswordHash !== null &&
-    ownerPasswordHash === hash;
+    Boolean(ownerSecret) &&
+    constantTimeEqual(password, ownerSecret || "");
 
-  if (!user || (!validStoredPassword && !validOwnerSecret)) {
+  if (!user || (!passwordVerification.valid && !validOwnerSecret)) {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
+  if (passwordVerification.valid && passwordVerification.needsUpgrade) {
+    await db.update(usersTable).set({ passwordHash: await hashPassword(password) }).where(eq(usersTable.id, user.id));
+  }
   const { passwordHash: _, ...safeUser } = user;
-  getSession(req).userId = user.id;
-  res.json({ user: safeUser, token: `session_${user.id}` });
+  await establishSession(req, user.id);
+  res.json({ user: safeUser });
 });
 
 // POST /auth/register
@@ -215,13 +232,17 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
   const { password, ...data } = parsed.data;
+  if (password.length < 12) {
+    res.status(400).json({ error: "Password must be at least 12 characters long." });
+    return;
+  }
   const email = data.email.toLowerCase().trim();
   const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
   if (existing.length > 0) {
     res.status(409).json({ error: "An account with this email already exists. Please login instead." });
     return;
   }
-  const passwordHash = hashPassword(password);
+  const passwordHash = await hashPassword(password);
   const [user] = await db.insert(usersTable).values({ ...data, email, passwordHash, role: "CUSTOMER" }).returning();
   await db.insert(notificationsTable).values({
     userId: user.id,
@@ -230,8 +251,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     type: "GENERAL",
   }).catch(() => {});
   const { passwordHash: _, ...safeUser } = user;
-  getSession(req).userId = user.id;
-  res.status(201).json({ user: safeUser, token: `session_${user.id}` });
+  await establishSession(req, user.id);
+  res.status(201).json({ user: safeUser });
 });
 
 // POST /auth/login-mobile — login with mobile number + password
@@ -240,20 +261,25 @@ router.post("/auth/login-mobile", async (req, res): Promise<void> => {
   if (!mobile || !password) { res.status(400).json({ error: "Mobile number and password are required" }); return; }
   const phone = normalisePhone(mobile);
   if (phone.length !== 10) { res.status(400).json({ error: "Enter a valid 10-digit mobile number" }); return; }
-  const hash = hashPassword(password);
   const [user] = await db.select().from(usersTable).where(eq(usersTable.mobile, phone)).limit(1);
-  if (!user || user.passwordHash !== hash) {
+  const passwordVerification = user
+    ? await verifyPassword(password, user.passwordHash)
+    : { valid: false, needsUpgrade: false };
+  if (!user || !passwordVerification.valid) {
     res.status(401).json({ error: "Invalid mobile number or password" });
     return;
   }
+  if (passwordVerification.needsUpgrade) {
+    await db.update(usersTable).set({ passwordHash: await hashPassword(password) }).where(eq(usersTable.id, user.id));
+  }
   const { passwordHash: _, ...safeUser } = user;
-  getSession(req).userId = user.id;
+  await establishSession(req, user.id);
   res.json({ user: safeUser });
 });
 
 // POST /auth/logout
 router.post("/auth/logout", async (req, res): Promise<void> => {
-  getSession(req).userId = undefined;
+  await destroySession(req, res);
   res.json({ success: true });
 });
 
@@ -278,11 +304,20 @@ router.patch("/auth/profile", async (req, res): Promise<void> => {
   if (!existing) { res.status(404).json({ error: "User not found" }); return; }
   const updateData: Record<string, unknown> = { ...profileData };
   if (password) {
-    if (currentPassword && existing.passwordHash !== hashPassword(currentPassword)) {
+    if (password.length < 12) {
+      res.status(400).json({ error: "Password must be at least 12 characters long." });
+      return;
+    }
+    if (!currentPassword) {
+      res.status(400).json({ error: "Enter your current password to change it." });
+      return;
+    }
+    const verification = await verifyPassword(currentPassword, existing.passwordHash);
+    if (!verification.valid) {
       res.status(400).json({ error: "Current password is incorrect" });
       return;
     }
-    updateData.passwordHash = hashPassword(password);
+    updateData.passwordHash = await hashPassword(password);
   }
   const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, userId)).returning();
   const { passwordHash: _, ...safeUser } = user;
