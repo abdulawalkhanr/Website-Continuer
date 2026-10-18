@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { paymentsTable, casesTable, usersTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, inArray } from "drizzle-orm";
 import { CreatePaymentBody, UpdatePaymentBody, ListPaymentsQueryParams } from "@workspace/api-zod";
+import { getRequestUser, isAdmin, userOwnsCase } from "../lib/auth";
 
 const router = Router();
 
@@ -16,13 +17,33 @@ router.get("/payments/stats", async (req, res): Promise<void> => {
 
 router.get("/payments", async (req, res): Promise<void> => {
   const parsed = ListPaymentsQueryParams.safeParse(req.query);
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
   let payments;
-  if (parsed.success && parsed.data.caseId) {
+  if (isAdmin(user.role)) {
+    if (parsed.success && parsed.data.caseId) {
+      payments = await db.select().from(paymentsTable)
+        .where(eq(paymentsTable.caseId, parsed.data.caseId))
+        .orderBy(desc(paymentsTable.createdAt));
+    } else {
+      payments = await db.select().from(paymentsTable).orderBy(desc(paymentsTable.createdAt));
+    }
+  } else if (user.role === "CUSTOMER" && parsed.success && parsed.data.caseId) {
+    if (!(await userOwnsCase(user.id, parsed.data.caseId))) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
     payments = await db.select().from(paymentsTable)
       .where(eq(paymentsTable.caseId, parsed.data.caseId))
       .orderBy(desc(paymentsTable.createdAt));
+  } else if (user.role === "CUSTOMER") {
+    const ownedCases = await db.select({ id: casesTable.id }).from(casesTable).where(eq(casesTable.customerId, user.id));
+    payments = ownedCases.length
+      ? await db.select().from(paymentsTable).where(inArray(paymentsTable.caseId, ownedCases.map(c => c.id))).orderBy(desc(paymentsTable.createdAt))
+      : [];
   } else {
-    payments = await db.select().from(paymentsTable).orderBy(desc(paymentsTable.createdAt));
+    res.status(403).json({ error: "Forbidden" });
+    return;
   }
   const enriched = await Promise.all(payments.map(async (p) => {
     const [c] = await db.select().from(casesTable).where(eq(casesTable.id, p.caseId)).limit(1);
@@ -65,8 +86,15 @@ router.post("/payments", async (req, res): Promise<void> => {
 
 router.get("/payments/:id", async (req, res): Promise<void> => {
   const id = parseInt(req.params.id);
+  if (!Number.isSafeInteger(id) || id <= 0) { res.status(400).json({ error: "Invalid ID" }); return; }
   const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.id, id)).limit(1);
   if (!payment) { res.status(404).json({ error: "Not found" }); return; }
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!isAdmin(user.role) && (user.role !== "CUSTOMER" || !(await userOwnsCase(user.id, payment.caseId)))) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
   const [c] = await db.select().from(casesTable).where(eq(casesTable.id, payment.caseId)).limit(1);
   res.json({ ...payment, caseNumber: c?.caseNumber || null, serviceFee: parseFloat(payment.serviceFee as string), advancePaid: parseFloat(payment.advancePaid as string), pendingAmount: parseFloat(payment.pendingAmount as string) });
 });

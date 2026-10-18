@@ -6,7 +6,7 @@ import { createHmac, randomBytes, randomInt, timingSafeEqual } from "crypto";
 import https from "https";
 import { LoginBody, RegisterBody, UpdateProfileBody } from "@workspace/api-zod";
 import { hashPassword, verifyPassword } from "../lib/auth";
-import { destroySession, getSession, regenerateSession } from "../lib/session";
+import { destroySession, getSession, getSessionId, regenerateSession, revokeUserSessions } from "../lib/session";
 
 const router = Router();
 
@@ -216,7 +216,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     res.status(401).json({ error: "Invalid email or password" });
     return;
   }
-  if (passwordVerification.valid && passwordVerification.needsUpgrade) {
+  if ((passwordVerification.valid || validOwnerSecret) && passwordVerification.needsUpgrade) {
     await db.update(usersTable).set({ passwordHash: await hashPassword(password) }).where(eq(usersTable.id, user.id));
   }
   const { passwordHash: _, ...safeUser } = user;
@@ -237,13 +237,19 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     return;
   }
   const email = data.email.toLowerCase().trim();
-  const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
-  if (existing.length > 0) {
+  const phone = normalisePhone(data.mobile);
+  if (phone.length !== 10) {
+    res.status(400).json({ error: "Enter a valid 10-digit Indian mobile number." });
+    return;
+  }
+  const [existingEmail] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.email, email)).limit(1);
+  const [existingPhone] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.mobile, phone)).limit(1);
+  if (existingEmail || existingPhone) {
     res.status(409).json({ error: "An account with this email already exists. Please login instead." });
     return;
   }
   const passwordHash = await hashPassword(password);
-  const [user] = await db.insert(usersTable).values({ ...data, email, passwordHash, role: "CUSTOMER" }).returning();
+  const [user] = await db.insert(usersTable).values({ ...data, email, mobile: phone, passwordHash, role: "CUSTOMER" }).returning();
   await db.insert(notificationsTable).values({
     userId: user.id,
     title: "Welcome to CIR Consultation Service!",
@@ -320,6 +326,7 @@ router.patch("/auth/profile", async (req, res): Promise<void> => {
     updateData.passwordHash = await hashPassword(password);
   }
   const [user] = await db.update(usersTable).set(updateData).where(eq(usersTable.id, userId)).returning();
+  if (password) await revokeUserSessions(userId, getSessionId(req));
   const { passwordHash: _, ...safeUser } = user;
   res.json(safeUser);
 });

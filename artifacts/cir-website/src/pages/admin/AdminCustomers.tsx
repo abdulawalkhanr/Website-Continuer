@@ -45,11 +45,11 @@ function CustomerForm({ initial, onSave, onCancel, isSaving }: {
         </div>
         <div className="space-y-2">
           <Label>{isEdit ? "New Password (leave blank to keep)" : "Password *"}</Label>
-          <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder={isEdit ? "Leave blank to keep current" : "Min 6 chars"} />
+          <Input type="password" value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder={isEdit ? "Leave blank to keep current" : "At least 12 characters"} />
         </div>
       </div>
       <div className="flex gap-3 pt-2">
-        <Button className="flex-1 btn-gradient border-0 text-white" onClick={() => onSave(form)} disabled={isSaving || !form.name || !form.email || !form.mobile || (!isEdit && form.password.length < 6)}>
+        <Button className="flex-1 btn-gradient border-0 text-white" onClick={() => onSave(form)} disabled={isSaving || !form.name || !form.email || !form.mobile || (!isEdit && form.password.length < 12) || (isEdit && !!form.password && form.password.length < 12)}>
           {isSaving ? "Saving..." : isEdit ? "Update Customer" : "Create Customer"}
         </Button>
         <Button variant="outline" onClick={onCancel}>Cancel</Button>

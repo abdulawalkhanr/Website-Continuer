@@ -4,11 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle, Clock, Search } from "lucide-react";
 import { useTrackCase, getTrackCaseQueryKey } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
 
 const STATUS_STEPS = [
   { key: "DOCUMENTS_SUBMITTED", label: "Documents Submitted", pct: 10 },
@@ -23,16 +21,16 @@ const STATUS_STEPS = [
 export default function TrackCasePage() {
   const [caseNumber, setCaseNumber] = useState("");
   const [mobile, setMobile] = useState("");
-  const [query, setQuery] = useState<{ caseNumber?: string; mobile?: string } | null>(null);
-  const queryClient = useQueryClient();
+  const [query, setQuery] = useState<{ caseNumber: string; mobile: string } | null>(null);
 
-  const { data: caseData, isLoading, error } = useTrackCase(query || {}, {
-    query: { enabled: !!query, queryKey: getTrackCaseQueryKey(query || {}) },
+  const { data: caseData, isLoading, error } = useTrackCase(query || { caseNumber: "", mobile: "" }, {
+    query: { enabled: !!query, queryKey: getTrackCaseQueryKey(query || { caseNumber: "", mobile: "" }) },
   });
 
-  const handleSearch = (type: "case" | "mobile") => {
-    if (type === "case" && caseNumber) setQuery({ caseNumber });
-    if (type === "mobile" && mobile) setQuery({ mobile });
+  const handleSearch = () => {
+    if (caseNumber.trim() && mobile.trim()) {
+      setQuery({ caseNumber: caseNumber.trim(), mobile: mobile.trim() });
+    }
   };
 
   const currentStepIdx = caseData ? STATUS_STEPS.findIndex(s => s.key === caseData.status) : -1;
@@ -43,46 +41,31 @@ export default function TrackCasePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">Case Tracking</Badge>
           <h1 className="text-4xl sm:text-5xl font-bold mb-4">Track Your Case</h1>
-          <p className="text-lg text-muted-foreground">Enter your Case ID or mobile number to track real-time progress</p>
+          <p className="text-lg text-muted-foreground">Enter your Case ID and registered mobile number to view progress securely</p>
         </div>
       </section>
 
       <section className="py-20">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="glass-card rounded-2xl p-8 mb-8">
-            <Tabs defaultValue="case">
-              <TabsList className="w-full mb-6">
-                <TabsTrigger value="case" className="flex-1">Track by Case ID</TabsTrigger>
-                <TabsTrigger value="mobile" className="flex-1">Track by Mobile</TabsTrigger>
-              </TabsList>
-              <TabsContent value="case">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Case ID</Label>
-                    <Input data-testid="track-case-id" value={caseNumber} onChange={e => setCaseNumber(e.target.value)} placeholder="e.g. CIR-2026-1234" onKeyDown={e => e.key === "Enter" && handleSearch("case")} />
-                  </div>
-                  <Button className="w-full btn-gradient border-0 text-white" onClick={() => handleSearch("case")} disabled={!caseNumber || isLoading} data-testid="track-case-submit">
-                    <Search size={18} className="mr-2" /> {isLoading ? "Searching..." : "Track Case"}
-                  </Button>
-                </div>
-              </TabsContent>
-              <TabsContent value="mobile">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Mobile Number</Label>
-                    <Input data-testid="track-mobile" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Registered mobile number" onKeyDown={e => e.key === "Enter" && handleSearch("mobile")} />
-                  </div>
-                  <Button className="w-full btn-gradient border-0 text-white" onClick={() => handleSearch("mobile")} disabled={!mobile || isLoading} data-testid="track-mobile-submit">
-                    <Search size={18} className="mr-2" /> {isLoading ? "Searching..." : "Track Case"}
-                  </Button>
-                </div>
-              </TabsContent>
-            </Tabs>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="track-case-id">Case ID</Label>
+                <Input id="track-case-id" data-testid="track-case-id" value={caseNumber} onChange={e => setCaseNumber(e.target.value)} placeholder="e.g. CIR-2026-1234" autoComplete="off" onKeyDown={e => e.key === "Enter" && handleSearch()} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="track-mobile">Registered mobile number</Label>
+                <Input id="track-mobile" data-testid="track-mobile" type="tel" value={mobile} onChange={e => setMobile(e.target.value)} placeholder="10-digit mobile number" autoComplete="tel-national" onKeyDown={e => e.key === "Enter" && handleSearch()} />
+              </div>
+              <Button className="w-full btn-gradient border-0 text-white" onClick={handleSearch} disabled={!caseNumber.trim() || !mobile.trim() || isLoading} data-testid="track-case-submit">
+                <Search size={18} className="mr-2" /> {isLoading ? "Searching..." : "Track Case"}
+              </Button>
+            </div>
           </div>
 
           {error && (
             <div className="glass-card rounded-2xl p-6 text-center text-muted-foreground">
-              Case not found. Please check your Case ID or mobile number.
+              Case not found. Please check both your Case ID and registered mobile number.
             </div>
           )}
 

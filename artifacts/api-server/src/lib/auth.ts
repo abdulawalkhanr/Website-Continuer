@@ -1,11 +1,9 @@
-import { createHash, randomBytes, scrypt as scryptCallback, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import type { Request } from "express";
-import { promisify } from "node:util";
 import { and, eq } from "drizzle-orm";
 import { db, casesTable, staffAssignmentsTable, staffProfilesTable, usersTable } from "@workspace/db";
 import { getSession } from "./session";
 
-const scrypt = promisify(scryptCallback);
 const SCRYPT_N = 16_384;
 const SCRYPT_R = 8;
 const SCRYPT_P = 1;
@@ -15,9 +13,18 @@ const STAFF_ROLE = "STAFF" as const;
 
 export type AuthPrincipal = { id: number; role: string };
 
+function deriveKey(password: string, salt: Buffer, length: number, options: { N: number; r: number; p: number; maxmem: number }): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scrypt(password, salt, length, options, (error, key) => {
+      if (error) reject(error);
+      else resolve(key);
+    });
+  });
+}
+
 export async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16);
-  const derived = await scrypt(password, salt, KEY_LENGTH, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: 64 * 1024 * 1024 }) as Buffer;
+  const derived = await deriveKey(password, salt, KEY_LENGTH, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P, maxmem: 64 * 1024 * 1024 });
   return `scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString("hex")}$${derived.toString("hex")}`;
 }
 
@@ -37,9 +44,9 @@ export async function verifyPassword(password: string, stored: string): Promise<
     ) return { valid: false, needsUpgrade: false };
 
     const expected = Buffer.from(hashHex, "hex");
-    const actual = await scrypt(password, Buffer.from(saltHex, "hex"), expected.length, {
+    const actual = await deriveKey(password, Buffer.from(saltHex, "hex"), expected.length, {
       N, r: R, p: P, maxmem: 64 * 1024 * 1024,
-    }) as Buffer;
+    });
     return { valid: timingSafeEqual(expected, actual), needsUpgrade: false };
   }
 

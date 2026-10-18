@@ -27,7 +27,8 @@ import {
   CreateCaseCommBody,
   UpdateStaffPortalProfileBody,
 } from "@workspace/api-zod";
-import { hashPassword, requireAdmin, requireStaff, requireAdminOrStaff, isAdmin, getSession } from "../lib/auth";
+import { hashPassword, verifyPassword, requireAdmin, requireStaff, requireAdminOrStaff, isAdmin } from "../lib/auth";
+import { getSession, regenerateSession, revokeUserSessions } from "../lib/session";
 
 const router = Router();
 
@@ -157,7 +158,6 @@ router.post("/auth/staff/login", async (req, res): Promise<void> => {
     return;
   }
   const { identifier, password } = parsed.data;
-  const hash = hashPassword(password);
   const identifierTrimmed = identifier.trim().toLowerCase();
 
   // Find STAFF user by employeeId, email, or mobile
@@ -200,9 +200,13 @@ router.post("/auth/staff/login", async (req, res): Promise<void> => {
     return;
   }
 
-  if (candidateUser.passwordHash !== hash) {
+  const passwordVerification = await verifyPassword(password, candidateUser.passwordHash);
+  if (!passwordVerification.valid) {
     res.status(401).json({ error: "Invalid credentials" });
     return;
+  }
+  if (passwordVerification.needsUpgrade) {
+    await db.update(usersTable).set({ passwordHash: await hashPassword(password) }).where(eq(usersTable.id, candidateUser.id));
   }
 
   // Load profile
@@ -221,9 +225,9 @@ router.post("/auth/staff/login", async (req, res): Promise<void> => {
 
   staffProfile = profile;
   const { passwordHash: _, ...safeUser } = candidateUser;
-  const session = getSession(req) as Record<string, unknown>;
-  session.userId = candidateUser.id;
-  res.json({ user: safeUser, staffProfile, token: `session_${candidateUser.id}` });
+  await regenerateSession(req);
+  getSession(req).userId = candidateUser.id;
+  res.json({ user: safeUser, staffProfile });
 });
 
 // ─── Admin Staff Management ────────────────────────────────────────────────
@@ -298,6 +302,7 @@ router.post("/staff", async (req, res): Promise<void> => {
   }
 
   const { name, email, password, mobile, designation, department, staffRole, address, joiningDate, employmentStatus, permissions, profilePhotoUrl, emergencyContactName, emergencyContactMobile, allowMobileDisplay } = parsed.data;
+  if (password.length < 12) { res.status(400).json({ error: "Password must be at least 12 characters long." }); return; }
 
   const emailNorm = email.toLowerCase().trim();
   const [existing] = await db.select({ id: usersTable.id }).from(usersTable)
@@ -308,7 +313,7 @@ router.post("/staff", async (req, res): Promise<void> => {
   }
 
   const employeeId = await generateEmployeeId();
-  const passwordHash = hashPassword(password);
+  const passwordHash = await hashPassword(password);
 
   const [newUser] = await db.insert(usersTable).values({
     name,
@@ -699,11 +704,15 @@ router.patch("/staff/:id", async (req, res): Promise<void> => {
   if (name !== undefined) userUpdateData.name = name;
   if (email !== undefined) userUpdateData.email = email.toLowerCase().trim();
   if (mobile !== undefined) userUpdateData.mobile = mobile;
-  if (password !== undefined) userUpdateData.passwordHash = hashPassword(password);
+  if (password !== undefined) {
+    if (password.length < 12) { res.status(400).json({ error: "Password must be at least 12 characters long." }); return; }
+    userUpdateData.passwordHash = await hashPassword(password);
+  }
 
   if (Object.keys(userUpdateData).length > 0) {
     await db.update(usersTable).set(userUpdateData).where(eq(usersTable.id, profile.userId));
   }
+  if (password !== undefined) await revokeUserSessions(profile.userId);
 
   // Update profile record
   const profileUpdateData: Partial<typeof staffProfilesTable.$inferInsert> = {};
@@ -723,6 +732,7 @@ router.patch("/staff/:id", async (req, res): Promise<void> => {
   const [updatedProfile] = Object.keys(profileUpdateData).length > 0
     ? await db.update(staffProfilesTable).set(profileUpdateData).where(eq(staffProfilesTable.id, id)).returning()
     : [profile];
+  if (accountStatus && accountStatus !== "ACTIVE") await revokeUserSessions(profile.userId);
 
   const [updatedUser] = await db.select().from(usersTable).where(eq(usersTable.id, profile.userId)).limit(1);
   const workload = await getStaffWorkload(updatedUser.id);
@@ -745,6 +755,7 @@ router.delete("/staff/:id", async (req, res): Promise<void> => {
   await db.update(staffProfilesTable)
     .set({ accountStatus: "ARCHIVED" })
     .where(eq(staffProfilesTable.id, id));
+  await revokeUserSessions(profile.userId);
 
   // Deactivate all assignments
   await db.update(staffAssignmentsTable)

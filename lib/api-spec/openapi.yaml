@@ -454,14 +454,16 @@ paths:
     get:
       operationId: trackCase
       tags: [cases]
-      summary: Track case by case number or mobile
+      summary: Track case with case number and registered mobile
       parameters:
         - in: query
           name: caseNumber
+          required: true
           schema:
             type: string
         - in: query
           name: mobile
+          required: true
           schema:
             type: string
       responses:
@@ -1604,7 +1606,7 @@ components:
         mobile: { type: string }
         email: { type: string }
         city: { type: string }
-        password: { type: string, minLength: 6 }
+        password: { type: string, minLength: 12 }
 
     CustomerUpdate:
       type: object
@@ -1613,7 +1615,7 @@ components:
         mobile: { type: string }
         email: { type: string }
         city: { type: string }
-        password: { type: string, minLength: 6 }
+        password: { type: string, minLength: 12 }
 
     # CASES
     Case:

@@ -246,7 +246,7 @@ export const ListCustomersResponse = zod.array(ListCustomersResponseItem)
 /**
  * @summary Create a customer
  */
-export const createCustomerBodyPasswordMin = 6;
+export const createCustomerBodyPasswordMin = 12;
 
 
 
@@ -283,7 +283,7 @@ export const UpdateCustomerParams = zod.object({
   "id": zod.coerce.number()
 })
 
-export const updateCustomerBodyPasswordMin = 6;
+export const updateCustomerBodyPasswordMin = 12;
 
 
 
@@ -430,11 +430,11 @@ export const DeleteCaseResponse = zod.object({
 
 
 /**
- * @summary Track case by case number or mobile
+ * @summary Track case with case number and registered mobile
  */
 export const TrackCaseQueryParams = zod.object({
-  "caseNumber": zod.coerce.string().optional(),
-  "mobile": zod.coerce.string().optional()
+  "caseNumber": zod.coerce.string(),
+  "mobile": zod.coerce.string()
 })
 
 export const TrackCaseResponse = zod.object({

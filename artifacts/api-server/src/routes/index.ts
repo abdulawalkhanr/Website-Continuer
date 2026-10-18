@@ -12,7 +12,7 @@ import ticketsRouter from "./tickets";
 import notificationsRouter from "./notifications";
 import adminRouter from "./admin";
 import staffRouter from "./staff";
-import { getRequestUser, isAdmin, requireAdminOrStaff } from "../lib/auth";
+import { getRequestUser, isAdmin } from "../lib/auth";
 
 const router: IRouter = Router();
 
@@ -21,6 +21,7 @@ const publicRoutes = new Set([
   "POST /auth/login",
   "POST /auth/login-mobile",
   "POST /auth/register",
+  "POST /auth/staff/login",
   "POST /auth/otp/send",
   "POST /auth/otp/verify",
   "GET /cases/track",
@@ -37,6 +38,7 @@ function adminOnly(method: string, path: string): boolean {
   if (path === "/cases/stats" || ((method === "PATCH" || method === "DELETE") && /^\/cases\/\d+$/.test(path))) return true;
   if (path === "/documents/admin-all" || ((method === "PATCH" || method === "DELETE") && /^\/documents\/\d+$/.test(path))) return true;
   if (path === "/payments/stats" || ["POST", "PATCH", "DELETE"].includes(method) && (path === "/payments" || /^\/payments\/\d+$/.test(path))) return true;
+  if (method === "PATCH" && /^\/tickets\/\d+$/.test(path)) return true;
   if (method === "POST" && path === "/notifications") return true;
   return false;
 }
@@ -58,11 +60,7 @@ const apiAccessGuard: RequestHandler = (req, res, next) => {
       return;
     }
     if (adminOnly(req.method, req.path)) {
-      const isStaffTicketWrite = req.path.startsWith("/tickets/") && req.method === "PATCH";
-      const permitted = isStaffTicketWrite
-        ? await requireAdminOrStaff(req)
-        : isAdmin(user.role);
-      if (!permitted) {
+      if (!isAdmin(user.role)) {
         res.status(403).json({ error: "Forbidden" });
         return;
       }

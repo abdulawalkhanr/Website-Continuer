@@ -1745,7 +1745,7 @@ export const useDeleteCase = <TError = ErrorType<unknown>,
       return useMutation(getDeleteCaseMutationOptions(options));
     }
 
-export const getTrackCaseUrl = (params?: TrackCaseParams,) => {
+export const getTrackCaseUrl = (params: TrackCaseParams,) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1761,9 +1761,9 @@ export const getTrackCaseUrl = (params?: TrackCaseParams,) => {
 }
 
 /**
- * @summary Track case by case number or mobile
+ * @summary Track case with case number and registered mobile
  */
-export const trackCase = async (params?: TrackCaseParams, options?: RequestInit): Promise<CaseTracking> => {
+export const trackCase = async (params: TrackCaseParams, options?: RequestInit): Promise<CaseTracking> => {
 
   return customFetch<CaseTracking>(getTrackCaseUrl(params),
   {
@@ -1785,7 +1785,7 @@ export const getTrackCaseQueryKey = (params?: TrackCaseParams,) => {
     }
 
 
-export const getTrackCaseQueryOptions = <TData = Awaited<ReturnType<typeof trackCase>>, TError = ErrorType<void>>(params?: TrackCaseParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof trackCase>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getTrackCaseQueryOptions = <TData = Awaited<ReturnType<typeof trackCase>>, TError = ErrorType<void>>(params: TrackCaseParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof trackCase>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1808,11 +1808,11 @@ export type TrackCaseQueryError = ErrorType<void>
 
 
 /**
- * @summary Track case by case number or mobile
+ * @summary Track case with case number and registered mobile
  */
 
 export function useTrackCase<TData = Awaited<ReturnType<typeof trackCase>>, TError = ErrorType<void>>(
- params?: TrackCaseParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof trackCase>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ params: TrackCaseParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof trackCase>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 

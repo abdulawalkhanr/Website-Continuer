@@ -7,7 +7,7 @@ import { persistentSessionMiddleware } from "./lib/session";
 
 const app: Express = express();
 
-if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
+app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
 app.use(
@@ -60,6 +60,12 @@ app.use((req, res, next) => {
       ? { count: 15, windowMs: 15 * 60 * 1000 }
       : ["/api/auth/login", "/api/auth/login-mobile", "/api/auth/register"].includes(route)
         ? { count: 10, windowMs: 15 * 60 * 1000 }
+        : route === "/api/auth/staff/login"
+          ? { count: 10, windowMs: 15 * 60 * 1000 }
+        : route === "/api/leads" && req.method === "POST"
+          ? { count: 10, windowMs: 60 * 60 * 1000 }
+        : route === "/api/referrals" && req.method === "POST"
+          ? { count: 10, windowMs: 60 * 60 * 1000 }
         : route === "/api/cases/track"
           ? { count: 30, windowMs: 15 * 60 * 1000 }
           : null;

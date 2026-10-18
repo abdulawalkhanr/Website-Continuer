@@ -30,8 +30,8 @@ export default function RegisterPage() {
       toast({ title: "Enter a valid 10-digit mobile number", variant: "destructive" });
       return;
     }
-    if (form.password.length < 6) {
-      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+    if (form.password.length < 12) {
+      toast({ title: "Password must be at least 12 characters", variant: "destructive" });
       return;
     }
     if (form.password !== form.confirmPassword) {

@@ -5,13 +5,9 @@ import { eq, desc } from "drizzle-orm";
 import {
   ListDocumentsQueryParams, CreateDocumentBody, UpdateDocumentParams, UpdateDocumentBody, DeleteDocumentParams
 } from "@workspace/api-zod";
+import { getRequestUser, isAdmin, staffHasCase, userOwnsCase } from "../lib/auth";
 
 const router = Router();
-
-type SessionReq = { session: Record<string, unknown> };
-function getReqSession(req: object): Record<string, unknown> {
-  return (req as unknown as SessionReq).session;
-}
 
 function getMimeType(fileName: string): string {
   const ext = (fileName.split(".").pop() || "").toLowerCase();
@@ -29,11 +25,6 @@ function getMimeType(fileName: string): string {
 
 // GET /documents/admin-all — admin only, all documents with case & customer info
 router.get("/documents/admin-all", async (req, res): Promise<void> => {
-  const userId = getReqSession(req).userId as number | undefined;
-  if (!userId) { res.status(401).json({ error: "Unauthorized" }); return; }
-  const [adminUser] = await db.select({ role: usersTable.role }).from(usersTable).where(eq(usersTable.id, userId)).limit(1);
-  if (!adminUser || adminUser.role === "CUSTOMER") { res.status(403).json({ error: "Forbidden" }); return; }
-
   const docs = await db
     .select({
       id: documentsTable.id,
@@ -60,6 +51,12 @@ router.get("/documents/admin-all", async (req, res): Promise<void> => {
 router.get("/documents", async (req, res): Promise<void> => {
   const parsed = ListDocumentsQueryParams.safeParse(req.query);
   if (!parsed.success || !parsed.data.caseId) { res.status(400).json({ error: "caseId is required" }); return; }
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const permitted = isAdmin(user.role)
+    || (user.role === "CUSTOMER" && await userOwnsCase(user.id, parsed.data.caseId))
+    || (user.role === "STAFF" && await staffHasCase(user.id, parsed.data.caseId));
+  if (!permitted) { res.status(403).json({ error: "Forbidden" }); return; }
   const docs = await db.select().from(documentsTable)
     .where(eq(documentsTable.caseId, parsed.data.caseId))
     .orderBy(desc(documentsTable.createdAt));
@@ -70,6 +67,12 @@ router.get("/documents", async (req, res): Promise<void> => {
 router.post("/documents", async (req, res): Promise<void> => {
   const parsed = CreateDocumentBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "caseId, name, and type are required" }); return; }
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const permitted = isAdmin(user.role)
+    || (user.role === "CUSTOMER" && await userOwnsCase(user.id, parsed.data.caseId))
+    || (user.role === "STAFF" && await staffHasCase(user.id, parsed.data.caseId));
+  if (!permitted) { res.status(403).json({ error: "Forbidden" }); return; }
   const { fileData, fileName, fileUrl: inputFileUrl, ...docData } = parsed.data as typeof parsed.data & { fileData?: string; fileName?: string };
   let fileUrl = inputFileUrl;
   if (fileData && !fileUrl) {

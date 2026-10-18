@@ -231,7 +231,7 @@ export interface CustomerInput {
   mobile: string;
   email: string;
   city?: string;
-  /** @minLength 6 */
+  /** @minLength 12 */
   password: string;
 }
 
@@ -240,7 +240,7 @@ export interface CustomerUpdate {
   mobile?: string;
   email?: string;
   city?: string;
-  /** @minLength 6 */
+  /** @minLength 12 */
   password?: string;
 }
 
@@ -1166,8 +1166,8 @@ export const ListCasesStatus = {
 } as const;
 
 export type TrackCaseParams = {
-caseNumber?: string;
-mobile?: string;
+caseNumber: string;
+mobile: string;
 };
 
 export type ListDocumentsParams = {

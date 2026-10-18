@@ -6,19 +6,23 @@ import {
   ListNotificationsQueryParams, CreateNotificationBody, UpdateNotificationParams,
   UpdateNotificationBody, MarkAllNotificationsReadBody
 } from "@workspace/api-zod";
+import { getRequestUser, isAdmin } from "../lib/auth";
 
 const router = Router();
 
 // GET /notifications
 router.get("/notifications", async (req, res): Promise<void> => {
   const parsed = ListNotificationsQueryParams.safeParse(req.query);
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
   let notifications;
-  if (parsed.success && parsed.data.userId) {
+  if (isAdmin(user.role) && parsed.success && parsed.data.userId) {
     notifications = await db.select().from(notificationsTable)
       .where(eq(notificationsTable.userId, parsed.data.userId))
       .orderBy(desc(notificationsTable.createdAt));
   } else {
     notifications = await db.select().from(notificationsTable)
+      .where(eq(notificationsTable.userId, user.id))
       .orderBy(desc(notificationsTable.createdAt))
       .limit(100);
   }
@@ -29,8 +33,11 @@ router.get("/notifications", async (req, res): Promise<void> => {
 router.post("/notifications/mark-all-read", async (req, res): Promise<void> => {
   const parsed = MarkAllNotificationsReadBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: parsed.error.message }); return; }
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const targetUserId = isAdmin(user.role) ? parsed.data.userId : user.id;
   await db.update(notificationsTable).set({ isRead: true }).where(
-    and(eq(notificationsTable.userId, parsed.data.userId), eq(notificationsTable.isRead, false))
+    and(eq(notificationsTable.userId, targetUserId), eq(notificationsTable.isRead, false))
   );
   res.json({ success: true });
 });
@@ -54,7 +61,12 @@ router.patch("/notifications/:id", async (req, res): Promise<void> => {
   if (!pParsed.success) { res.status(400).json({ error: "Invalid ID" }); return; }
   const bParsed = UpdateNotificationBody.safeParse(req.body);
   if (!bParsed.success) { res.status(400).json({ error: bParsed.error.message }); return; }
-  const [notification] = await db.update(notificationsTable).set(bParsed.data).where(eq(notificationsTable.id, pParsed.data.id)).returning();
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const where = isAdmin(user.role)
+    ? and(eq(notificationsTable.id, pParsed.data.id))
+    : and(eq(notificationsTable.id, pParsed.data.id), eq(notificationsTable.userId, user.id));
+  const [notification] = await db.update(notificationsTable).set(bParsed.data).where(where).returning();
   if (!notification) { res.status(404).json({ error: "Not found" }); return; }
   res.json(notification);
 });

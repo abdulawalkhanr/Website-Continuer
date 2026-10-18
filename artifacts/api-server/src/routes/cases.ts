@@ -14,6 +14,7 @@ import {
   caseCommsTable,
 } from "@workspace/db";
 import { eq, desc, and, sql } from "drizzle-orm";
+import { getRequestUser, isAdmin, staffHasCase } from "../lib/auth";
 import {
   ListCasesQueryParams, CreateCaseBody, UpdateCaseParams, UpdateCaseBody, DeleteCaseParams,
   TrackCaseQueryParams
@@ -41,27 +42,24 @@ async function enrichCase(c: typeof casesTable.$inferSelect) {
 router.get("/cases/track", async (req, res): Promise<void> => {
   const parsed = TrackCaseQueryParams.safeParse(req.query);
   const { caseNumber, mobile } = parsed.success ? parsed.data : { caseNumber: undefined, mobile: undefined };
-  if (!caseNumber && !mobile) { res.status(400).json({ error: "Provide caseNumber or mobile" }); return; }
-  let caseRow;
-  if (caseNumber) {
-    [caseRow] = await db.select().from(casesTable).where(eq(casesTable.caseNumber, caseNumber.trim())).limit(1);
-  } else if (mobile) {
-    const [customer] = await db.select().from(usersTable).where(eq(usersTable.mobile, mobile.trim())).limit(1);
-    if (customer) {
-      [caseRow] = await db.select().from(casesTable).where(eq(casesTable.customerId, customer.id)).orderBy(desc(casesTable.createdAt)).limit(1);
-    }
-  }
-  if (!caseRow) { res.status(404).json({ error: "Case not found. Please check your Case ID or mobile number." }); return; }
-  const enriched = await enrichCase(caseRow);
+  if (!caseNumber || !mobile) { res.status(400).json({ error: "Provide both caseNumber and registered mobile number" }); return; }
+  const phone = mobile.replace(/\D/g, "").replace(/^91(?=\d{10}$)/, "");
+  const [caseRow] = await db.select().from(casesTable)
+    .where(eq(casesTable.caseNumber, caseNumber.trim().toUpperCase()))
+    .limit(1);
+  const [customer] = caseRow
+    ? await db.select({ id: usersTable.id }).from(usersTable)
+      .where(and(eq(usersTable.id, caseRow.customerId), eq(usersTable.mobile, phone)))
+      .limit(1)
+    : [undefined];
+  if (!caseRow || !customer) { res.status(404).json({ error: "Case not found. Please check your Case ID and registered mobile number." }); return; }
   res.json({
     caseNumber: caseRow.caseNumber,
-    customerName: enriched.customerName || "Customer",
+    customerName: "Verified customer",
     serviceType: caseRow.serviceType,
     status: caseRow.status,
     progressPercentage: caseRow.progressPercentage,
     expectedCompletionDate: caseRow.expectedCompletionDate,
-    assignedToName: enriched.assignedToName,
-    notes: caseRow.notes,
     updatedAt: caseRow.updatedAt.toISOString(),
   });
 });
@@ -81,12 +79,17 @@ router.get("/cases/stats", async (req, res): Promise<void> => {
 
 // GET /cases
 router.get("/cases", async (req, res): Promise<void> => {
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!isAdmin(user.role) && user.role !== "CUSTOMER") { res.status(403).json({ error: "Forbidden" }); return; }
   const parsed = ListCasesQueryParams.safeParse(req.query);
   const conditions = [];
-  if (parsed.success) {
+  if (user.role === "CUSTOMER") {
+    conditions.push(eq(casesTable.customerId, user.id));
+  } else if (parsed.success && parsed.data.customerId) {
     if (parsed.data.customerId) conditions.push(eq(casesTable.customerId, parsed.data.customerId));
-    if (parsed.data.status) conditions.push(eq(casesTable.status, parsed.data.status));
   }
+  if (parsed.success && parsed.data.status) conditions.push(eq(casesTable.status, parsed.data.status));
   const cases = conditions.length > 0
     ? await db.select().from(casesTable).where(and(...conditions)).orderBy(desc(casesTable.createdAt))
     : await db.select().from(casesTable).orderBy(desc(casesTable.createdAt));
@@ -98,12 +101,15 @@ router.get("/cases", async (req, res): Promise<void> => {
 router.post("/cases", async (req, res): Promise<void> => {
   const parsed = CreateCaseBody.safeParse(req.body);
   if (!parsed.success) { res.status(400).json({ error: "customerId and serviceType are required" }); return; }
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!isAdmin(user.role) && user.role !== "CUSTOMER") { res.status(403).json({ error: "Forbidden" }); return; }
   try {
     const caseNumber = await generateCaseNumber();
     // Build insert data explicitly to avoid passing undefined fields to Drizzle
     const insertData: typeof casesTable.$inferInsert = {
       caseNumber,
-      customerId: parsed.data.customerId,
+      customerId: isAdmin(user.role) ? parsed.data.customerId : user.id,
       serviceType: parsed.data.serviceType,
     };
     if (parsed.data.assignedToId !== undefined) insertData.assignedToId = parsed.data.assignedToId;
@@ -130,6 +136,12 @@ router.get("/cases/:id", async (req, res): Promise<void> => {
   if (isNaN(id)) { res.status(400).json({ error: "Invalid ID" }); return; }
   const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, id)).limit(1);
   if (!caseRow) { res.status(404).json({ error: "Case not found" }); return; }
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  const allowed = isAdmin(user.role)
+    || (user.role === "CUSTOMER" && caseRow.customerId === user.id)
+    || (user.role === "STAFF" && await staffHasCase(user.id, id));
+  if (!allowed) { res.status(403).json({ error: "Forbidden" }); return; }
   res.json(await enrichCase(caseRow));
 });
 

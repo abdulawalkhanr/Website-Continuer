@@ -4,6 +4,7 @@ import { db } from "@workspace/db";
 import { paymentsTable, casesTable, usersTable, payuTransactionsTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { verifyPayuHash, recordPayuResult } from "../lib/payu";
+import { getRequestUser, isAdmin, userOwnsCase } from "../lib/auth";
 
 const router = Router();
 
@@ -52,6 +53,14 @@ router.post("/payu/initiate", async (req, res): Promise<void> => {
 
   const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.id, paymentId)).limit(1);
   if (!payment) { res.status(404).json({ error: "Payment not found" }); return; }
+  const sessionUser = await getRequestUser(req);
+  if (!sessionUser) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!isAdmin(sessionUser.role) && (
+    sessionUser.role !== "CUSTOMER" || !(await userOwnsCase(sessionUser.id, payment.caseId))
+  )) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
   if (payment.paymentStatus === "PAID") { res.status(400).json({ error: "Already paid" }); return; }
 
   const [caseRow] = await db.select().from(casesTable).where(eq(casesTable.id, payment.caseId)).limit(1);
@@ -125,8 +134,15 @@ router.post("/payu/callback", async (req, res): Promise<void> => {
 // GET /payu/status/:paymentId — check txn status
 router.get("/payu/status/:paymentId", async (req, res): Promise<void> => {
   const id = parseInt(req.params.paymentId);
+  if (!Number.isSafeInteger(id) || id <= 0) { res.status(400).json({ error: "Invalid payment ID" }); return; }
   const [payment] = await db.select().from(paymentsTable).where(eq(paymentsTable.id, id)).limit(1);
   if (!payment) { res.status(404).json({ error: "Not found" }); return; }
+  const user = await getRequestUser(req);
+  if (!user) { res.status(401).json({ error: "Unauthorized" }); return; }
+  if (!isAdmin(user.role) && (user.role !== "CUSTOMER" || !(await userOwnsCase(user.id, payment.caseId)))) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
   res.json({ paymentStatus: payment.paymentStatus, payuTxnId: payment.payuTxnId });
 });
 

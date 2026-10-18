@@ -1,17 +1,26 @@
 import { db } from "@workspace/db";
 import * as schema from "@workspace/db";
-import { createHash } from "crypto";
+import { randomBytes, scryptSync } from "node:crypto";
 
-function hash(password: string) {
-  return createHash("sha256").update(password + "cir_salt_2026").digest("hex");
+function hash(password: string): string {
+  const salt = randomBytes(16);
+  const derived = scryptSync(password, salt, 32, { N: 16_384, r: 8, p: 1, maxmem: 64 * 1024 * 1024 });
+  return `scrypt$16384$8$1$${salt.toString("hex")}$${derived.toString("hex")}`;
 }
 
 async function seed() {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("The demo seed script is disabled in production.");
+  }
+  const seedPassword = process.env.SEED_DEMO_PASSWORD;
+  if (!seedPassword || seedPassword.length < 12) {
+    throw new Error("Set SEED_DEMO_PASSWORD to a unique password of at least 12 characters before seeding.");
+  }
   console.log("Seeding database...");
 
   const [admin] = await db.insert(schema.usersTable).values({
     email: "admin@circonsultationservice.in",
-    passwordHash: hash("Admin@2026"),
+    passwordHash: hash(seedPassword),
     name: "CIR Admin",
     mobile: "9999999999",
     role: "OWNER",
@@ -20,7 +29,7 @@ async function seed() {
 
   const [manager] = await db.insert(schema.usersTable).values({
     email: "manager@circonsultationservice.in",
-    passwordHash: hash("Manager@2026"),
+    passwordHash: hash(seedPassword),
     name: "Priya Sharma",
     mobile: "9888888888",
     role: "MANAGER",
@@ -28,7 +37,7 @@ async function seed() {
 
   const [exec] = await db.insert(schema.usersTable).values({
     email: "exec@circonsultationservice.in",
-    passwordHash: hash("Exec@2026"),
+    passwordHash: hash(seedPassword),
     name: "Rahul Verma",
     mobile: "9777777777",
     role: "EXECUTIVE",
@@ -36,7 +45,7 @@ async function seed() {
 
   const [customer] = await db.insert(schema.usersTable).values({
     email: "customer@example.com",
-    passwordHash: hash("Customer@2026"),
+    passwordHash: hash(seedPassword),
     name: "Arjun Kapoor",
     mobile: "9876543210",
     role: "CUSTOMER",
@@ -110,9 +119,7 @@ async function seed() {
   }
 
   console.log("\n=== SEED COMPLETE ===");
-  console.log("Admin:    admin@circonsultationservice.in  / Admin@2026");
-  console.log("Manager:  manager@circonsultationservice.in / Manager@2026");
-  console.log("Customer: customer@example.com / Customer@2026");
+  console.log("Seeded development accounts. Use the chosen SEED_DEMO_PASSWORD to sign in.");
   process.exit(0);
 }
 

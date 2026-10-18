@@ -7,6 +7,6 @@
  */
 
 export type TrackCaseParams = {
-caseNumber?: string;
-mobile?: string;
+caseNumber: string;
+mobile: string;
 };

@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import type { RequestHandler, Request, Response } from "express";
-import { eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 import { db, sessionsTable } from "@workspace/db";
 
 const COOKIE_NAME = "session_id";
@@ -80,6 +80,13 @@ export async function destroySession(req: object, res: Response): Promise<void> 
   res.clearCookie(COOKIE_NAME, { path: "/", httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production" });
 }
 
+export async function revokeUserSessions(userId: number, exceptSessionId?: string): Promise<void> {
+  const condition = exceptSessionId
+    ? and(eq(sessionsTable.userId, userId), ne(sessionsTable.sidHash, hashId(exceptSessionId)))
+    : eq(sessionsTable.userId, userId);
+  await db.delete(sessionsTable).where(condition);
+}
+
 export const persistentSessionMiddleware: RequestHandler = (req, res, next) => {
   void (async () => {
     const sessionId = parseCookie(req.cookies?.[COOKIE_NAME]);
@@ -101,7 +108,7 @@ export const persistentSessionMiddleware: RequestHandler = (req, res, next) => {
     context.session = session;
     context.sessionId = sessionId || randomBytes(32).toString("hex");
     context.persisted = persisted;
-    context.clearCookie = Boolean(req.cookies?.[COOKIE_NAME]) && !sessionId;
+    context.clearCookie = Boolean(req.cookies?.[COOKIE_NAME]) && (!sessionId || !persisted);
 
     const originalJson = res.json.bind(res);
     res.json = ((body: unknown) => {
