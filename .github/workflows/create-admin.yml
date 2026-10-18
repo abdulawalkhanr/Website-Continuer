@@ -1,0 +1,79 @@
+name: Create Admin Account
+
+on:
+  workflow_dispatch:
+
+jobs:
+  create-admin:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.24.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create administrator account
+        working-directory: lib/db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ADMIN_INITIAL_PASSWORD: ${{ secrets.ADMIN_INITIAL_PASSWORD }}
+        run: |
+          node --input-type=module <<'NODE'
+          import pg from "pg";
+          import { randomBytes, scryptSync } from "node:crypto";
+
+          const { Pool } = pg;
+          const email = "admin@circonsultationservice.site";
+          const password = process.env.ADMIN_INITIAL_PASSWORD;
+
+          if (!process.env.DATABASE_URL || !password) {
+            throw new Error("Required GitHub secrets are missing.");
+          }
+
+          const salt = randomBytes(16);
+          const hash = scryptSync(password, salt, 32, {
+            N: 16384,
+            r: 8,
+            p: 1,
+            maxmem: 64 * 1024 * 1024
+          });
+
+          const passwordHash =
+            `scrypt$16384$8$1$${salt.toString("hex")}$${hash.toString("hex")}`;
+
+          const pool = new Pool({
+            connectionString: process.env.DATABASE_URL,
+            connectionTimeoutMillis: 10000,
+            ssl: { rejectUnauthorized: false }
+          });
+
+          try {
+            await pool.query(
+              `INSERT INTO public.users
+                 (name, email, password_hash, role)
+               VALUES ($1, $2, $3, 'OWNER')
+               ON CONFLICT (email)
+               DO UPDATE SET
+                 password_hash = EXCLUDED.password_hash,
+                 role = 'OWNER'`,
+              ["CIR Administrator", email, passwordHash]
+            );
+
+            console.log("Administrator account created or reset successfully.");
+          } finally {
+            await pool.end();
+          }
+          NODE
