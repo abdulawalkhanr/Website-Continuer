@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLogin, getGetMeQueryKey } from "@workspace/api-client-react";
+import { ApiError, useLogin, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Lock } from "lucide-react";
@@ -22,9 +22,13 @@ export default function AdminLoginPage() {
       toast({ title: "Please fill all fields", variant: "destructive" });
       return;
     }
-    login.mutate({ data: { email, password } }, {
+    login.mutate({ data: { email: email.trim().toLowerCase(), password } }, {
       onSuccess: (data) => {
-        if (data.user.role === "CUSTOMER") {
+        if (!data?.user) {
+          toast({ title: "Login API configuration error", description: "The server did not return a sign-in response. Please check the Hostinger entry file.", variant: "destructive" });
+          return;
+        }
+        if (!["OWNER", "MANAGER", "EXECUTIVE"].includes(data.user.role)) {
           toast({ title: "Access denied", description: "This portal is for admin users only.", variant: "destructive" });
           return;
         }
@@ -32,16 +36,21 @@ export default function AdminLoginPage() {
         setLocation("/admin");
       },
       onError: (error: unknown) => {
-        const response = (error as { response?: { status?: number; data?: { error?: string } } })?.response;
-        if (response?.status && response.status >= 500) {
+        const status = error instanceof ApiError ? error.status : undefined;
+        const body = error instanceof ApiError ? error.data as { error?: string } | null : null;
+        if (status && status >= 500) {
           toast({
             title: "Login service temporarily unavailable",
-            description: "Please try again after the production database is available.",
+            description: body?.error || "The database or sign-in session could not be reached. Please check Hostinger runtime logs.",
             variant: "destructive",
           });
           return;
         }
-        toast({ title: response?.data?.error || "Invalid credentials", variant: "destructive" });
+        if (status) {
+          toast({ title: body?.error || `Sign-in request failed (${status})`, variant: "destructive" });
+        } else {
+          toast({ title: "Could not reach the login service", description: "Please refresh the page and check your internet connection. This is not a password error.", variant: "destructive" });
+        }
       },
     });
   };
@@ -61,11 +70,11 @@ export default function AdminLoginPage() {
           <div className="space-y-5">
             <div className="space-y-2">
               <Label className="text-slate-300">Email Address</Label>
-              <Input data-testid="admin-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@circonsultationservice.in" className="bg-slate-700 border-slate-600 text-white placeholder-slate-400" onKeyDown={e => e.key === "Enter" && handleLogin()} />
+              <Input data-testid="admin-email" type="email" autoComplete="username" value={email} onChange={e => setEmail(e.target.value)} placeholder="Your administrator email" className="bg-slate-700 border-slate-600 text-white placeholder-slate-400" onKeyDown={e => e.key === "Enter" && handleLogin()} />
             </div>
             <div className="space-y-2">
               <Label className="text-slate-300">Password</Label>
-              <Input data-testid="admin-password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" className="bg-slate-700 border-slate-600 text-white" onKeyDown={e => e.key === "Enter" && handleLogin()} />
+              <Input data-testid="admin-password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" className="bg-slate-700 border-slate-600 text-white" onKeyDown={e => e.key === "Enter" && handleLogin()} />
             </div>
             <Button className="w-full btn-gradient border-0 text-white py-6 text-base" onClick={handleLogin} disabled={login.isPending} data-testid="admin-login-submit">
               {login.isPending ? "Logging in..." : "Login to Admin Panel"}

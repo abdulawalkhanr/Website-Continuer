@@ -1,9 +1,10 @@
-import express, { type Express } from "express";
+import express, { type Express, type ErrorRequestHandler } from "express";
 import pinoHttp from "pino-http";
 import cookieParser from "cookie-parser";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { persistentSessionMiddleware } from "./lib/session";
+import { databaseErrorCode, databaseUnavailableMessage } from "./lib/database-error";
 
 const app: Express = express();
 
@@ -34,7 +35,11 @@ app.use((req, res, next) => {
   const origin = req.get("origin");
   if (origin) {
     try {
-      if (new URL(origin).origin !== `${req.protocol}://${req.get("host")}`) {
+      // Hostinger may preserve the public host in X-Forwarded-Host while
+      // forwarding to an internal Node host. trust proxy is limited to one hop.
+      const publicHost = req.get("x-forwarded-host")?.split(",")[0]?.trim() || req.get("host");
+      const requestOrigin = new URL(`${req.protocol}://${publicHost}`).origin;
+      if (new URL(origin).origin !== requestOrigin) {
         res.status(403).json({ error: "Cross-origin requests are not allowed" });
         return;
       }
@@ -94,9 +99,25 @@ app.use((req, res, next) => {
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(cookieParser());
-app.use(persistentSessionMiddleware);
+// A database outage must not prevent the static sign-in page from loading.
+app.use("/api", cookieParser(), persistentSessionMiddleware, router);
+app.use("/api", (_req, res) => {
+  res.status(404).json({ error: "API route not found" });
+});
 
-app.use("/api", router);
+const handleApiError: ErrorRequestHandler = (error: unknown, req, res, next) => {
+  if (res.headersSent) return next(error);
+  const code = databaseErrorCode(error);
+  req.log.error({ code }, "API request failed");
+  if (code === "23505") {
+    res.status(409).json({ error: "A record with these details already exists." });
+    return;
+  }
+  const isDatabaseError = Boolean(code) || (error instanceof Error && error.message.startsWith("Failed query:"));
+  res.status(isDatabaseError ? 503 : 500).json({
+    error: isDatabaseError ? databaseUnavailableMessage(error) : "The server could not complete this request. Please check runtime logs.",
+  });
+};
+app.use(handleApiError);
 
 export default app;

@@ -2,6 +2,7 @@ import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypt
 import type { RequestHandler, Request, Response } from "express";
 import { and, eq, ne } from "drizzle-orm";
 import { db, sessionsTable } from "@workspace/db";
+import { databaseErrorCode, databaseUnavailableMessage } from "./database-error";
 
 const COOKIE_NAME = "session_id";
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -132,10 +133,10 @@ export const persistentSessionMiddleware: RequestHandler = (req, res, next) => {
           originalJson(body);
         })
         .catch((error: unknown) => {
-          req.log.error({ err: error }, "Could not persist authenticated session");
+          req.log.error({ code: databaseErrorCode(error) }, "Could not persist authenticated session");
           if (!res.headersSent) {
-            res.statusCode = 500;
-            originalJson({ error: "Could not save the sign-in session. Please try again." });
+            res.statusCode = 503;
+            originalJson({ error: databaseUnavailableMessage(error), code: "SIGN_IN_SESSION_UNAVAILABLE" });
           }
         });
       return res;

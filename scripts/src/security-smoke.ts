@@ -24,7 +24,7 @@ let otherCustomerId: number | undefined;
 let caseId: number | undefined;
 
 async function startServer(instance: typeof server): Promise<string> {
-  await once(instance, "listening");
+  if (!instance.listening) await once(instance, "listening");
   const address = instance.address();
   if (!address || typeof address === "string") throw new Error("Security test server did not bind to a local port.");
   return `http://127.0.0.1:${address.port}`;

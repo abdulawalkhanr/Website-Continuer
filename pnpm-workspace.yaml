@@ -68,6 +68,13 @@ catalog:
 
 autoInstallPeers: false
 
+# pnpm 10 (pinned in packageManager); allowBuilds below also supports pnpm 11.
+onlyBuiltDependencies:
+  - esbuild
+  - '@swc/core'
+  - msw
+  - unrs-resolver
+
 allowBuilds:
   esbuild: true
   '@swc/core': true
