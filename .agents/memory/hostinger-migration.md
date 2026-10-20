@@ -20,3 +20,9 @@ GitHub source-control integration health is not proof that a workspace push is a
 **Why:** The integration reported healthy while native Git rejected the saved authentication; connection-card setup also failed. A local commit remained absent from the remote branch.
 
 **How to apply:** Verify the remote branch after uploading changes. If authentication is blocked, distinguish saved local changes from uploaded code and never imply Hostinger can pull an unpushed fix.
+
+Hostinger Node.js builds can reject a repository that pins a different pnpm version than the builder supplies.
+
+**Why:** The build stopped before running application scripts when Hostinger's pnpm 11.24.0 differed from the repository pin.
+
+**How to apply:** Check the Hostinger build log for its actual pnpm version. Avoid a strict packageManager pin when the builder's version cannot be selected; keep the lockfile/workspace settings compatible with both local and host pnpm.

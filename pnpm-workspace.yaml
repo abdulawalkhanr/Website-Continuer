@@ -68,7 +68,7 @@ catalog:
 
 autoInstallPeers: false
 
-# pnpm 10 (pinned in packageManager); allowBuilds below also supports pnpm 11.
+# Keep the install-script allowlists below compatible with pnpm 10 and 11.
 onlyBuiltDependencies:
   - esbuild
   - '@swc/core'

@@ -117,7 +117,7 @@ For a long-running backend, Supabase also recommends its session pooler on
    - Application type/framework: **Express** (not static React/Vite).
    - Root directory: **/** (repository root), not `artifacts/cir-website`.
    - Node.js: **22** (at least 22.12; 24 also satisfies the declared engines).
-   - Package manager: **pnpm**. The repository pins version **10.26.1**.
+   - Package manager: **pnpm**, using the version provided in Hostinger's build environment (the reported version was **11.24.0**). The repository intentionally does not pin a conflicting pnpm version.
    - Build script: **build**. If the box asks for a full command, use
      **pnpm run build**.
    - Entry file: **dist/index.mjs** (relative to repository root).
