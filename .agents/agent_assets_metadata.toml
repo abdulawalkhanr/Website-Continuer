@@ -70,3 +70,17 @@ mtime_ms = 1792257448107
 storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e4e9c932-98dd-4169-986f-3332c0eec9e7/21ac3fee-302a-4036-bac9-f106707da70e/75bc37c8-566b-4ed3-8920-9fcf4db225a7"
 storage_version_token = "1792257589606208"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "jbDyB3LWjXnvJiWUANTy_"
+uri = "file://generated-artifacts/CIR-Hostinger-Production-2026-10-20.zip"
+type = "unspecified"
+title = "CIR — verified Hostinger production files"
+description = "Prebuilt server and website, one complete create-only Supabase SQL script, and step-by-step Hostinger setup notes. No credentials or customer data included."
+logical_id = "7d1ec1e2-3947-4995-8a78-fdfaa79dc70c"
+content_hash = "sha256:63222e8030ccd2a99c513de53223632c61cb837c1ae0e29287f79bd4c82632b4"
+size = 1413648
+mtime_ms = 1792473601435
+storage_uri = "gcs://replit-rams-assets-pike/rams/assets/repl:e4e9c932-98dd-4169-986f-3332c0eec9e7/7d1ec1e2-3947-4995-8a78-fdfaa79dc70c/7f72b134-d14d-49b1-bf70-74c57608f344"
+storage_version_token = "1792473664308980"
+content_type = "application/octet-stream"

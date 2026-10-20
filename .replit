@@ -42,3 +42,6 @@ channel = "stable-25_05"
 
 [userenv.shared]
 PAYU_CALLBACK_BASE_URL = "https://circonsultationservice.in"
+
+[objectStorage]
+defaultBucketID = "replit-objstore-0666b31f-97bc-4e89-b95f-b2479da09ae9"

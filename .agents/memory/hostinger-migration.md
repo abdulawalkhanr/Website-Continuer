@@ -14,3 +14,9 @@ Preserve existing customer records and the existing Supabase users table when pr
 **Why:** The user explicitly required no data deletion/reset and no changes to the existing users table in the setup script.
 
 **How to apply:** Use create-only setup plus read-only compatibility checks. Report incompatible existing columns/types rather than silently rewriting them.
+
+GitHub source-control integration health is not proof that a workspace push is authenticated or has succeeded.
+
+**Why:** The integration reported healthy while native Git rejected the saved authentication; connection-card setup also failed. A local commit remained absent from the remote branch.
+
+**How to apply:** Verify the remote branch after uploading changes. If authentication is blocked, distinguish saved local changes from uploaded code and never imply Hostinger can pull an unpushed fix.
